@@ -1,7 +1,6 @@
 '''
 TODO:
 3) collision:
--vertical collisions doesn't work yet - fix this!
 -There should be an invisible frame of the screen - the robot should bounce from it
 4) randomness in motion
 5) robot "sensors"
@@ -18,7 +17,6 @@ while True:
 import sys
 import numpy as np
 import pygame as pg
-#from pygame.locals import *
 
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -38,7 +36,7 @@ class Robot(pg.sprite.Sprite):
         '''
         self.x = x
         self.y = y
-        self.radius = 5
+        self.radius = 10
         self._width = width
         self._height = height
 
@@ -50,52 +48,21 @@ class Robot(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.position = np.array([x, y], dtype=np.float64)
         self.velocity = np.asarray(velocity, dtype=np.float64)
-        self.n = 0
+        self.moved = False
 
     def update(self):
         self.position += self.velocity
         x, y = self.position
+        self.moved = False
 
-        '''
-        collide = [s for s in pg.sprite.spritecollide(self, self.groups()[0], False, pg.sprite.collide_mask) if s != self]
-        if collide:
-            # warning: this does not handle the case of the ball hits 
-            # the top or bottom of the paddle, only the sides.
-            self.n = self.n + 1
-            print("I hit another guy!", self.n)
-            self.velocity = [-self.velocity[0], self.velocity[1]]
-        '''            
-        # Periodic boundary conditions
-        if x < 0:
-            self.position[0] = self._width
-            x = self._width
-        if x > self._width:
-            self.position[0] = 0
-            x = 0
-        if y < 0:
-            self.position[1] = self._height
-            y = self._height
-        if y > self._height:
-            self.position[1] = 0
-            y = 0
+        #boundary parameters
+        if x < 0 or x > self._width - 2 * self.radius:
+            self.velocity[0] = -self.velocity[0]
+        if y < 0 or y > self._height - 2 *self.radius:
+            self.velocity[1] = -self.velocity[1]
 
         self.rect.x = x
         self.rect.y = y
-
-    def collision(self, direction):
-        self.n = self.n + 1
-        print("I hit another guy!", self.n)
-        self.velocity = [-self.velocity[0], self.velocity[1]]        
-
-'''
-#Collsion must be done here? Or in the Simulator?
-        collide = pg.sprite.spritecollide(self.swarm, self.swarm, False,
-                                            pg.sprite.collide_circle)
-        if collide:
-            self.
-'''
-        
-
 
 class Simulation:
     def __init__(self, width=640, height=400, N=10):
@@ -120,18 +87,22 @@ class Simulation:
             x = np.random.randint(0, self._width + 1)
             y = np.random.randint(0, self._height + 1)
             velocity = np.random.rand(2) * 2 - 1
-            robot = Robot(x, y, self._height, self._width, velocity)
+            robot = Robot(x, y, self._width, self._height, velocity)
             self.swarm.add(robot)
 
     def check_collisions(self):
         '''
-        For each robot in a swarm checks if the collision occurs. If so then the velocity is being changed accordingly
+        For each robot in a swarm checks if the collision occurs. If so then the velocity is being changed accordingly.
         '''
         for robot in self.swarm:
             collision_group = pg.sprite.Group([s for s in self.swarm if s != robot])
             collide = pg.sprite.spritecollide(robot, collision_group, False) 
             if collide:
-                robot.velocity = [-robot.velocity[0], robot.velocity[1]]
+                self.moved = True
+                for c in collide: #there can be numerous collisions however it is unlikely
+                    if c.moved == True:
+                        continue
+                    robot.velocity = [-robot.velocity[0], -robot.velocity[1]]
         
     def run(self):
         pg.init()
@@ -185,6 +156,6 @@ class App:
 '''
  
 if __name__ == "__main__" :
-    sim = Simulation(600, 400, 20)
+    sim = Simulation(600, 400, 10)
     sim.run()
 
