@@ -1,6 +1,5 @@
 '''
 TODO:
-2) Create a robot - a dot that will be able to move in any direction in the board
 3) Add multiple robots - collision should occur (never transparent motion)
 4)
 
@@ -68,19 +67,6 @@ class Robot(pg.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y
 
-        '''
-        I have no idea what the hell is this shit vel_norm
-        '''
-        vel_norm = np.linalg.norm(self.velocity)
-        if vel_norm > 3:
-            self.vel /= vel_norm
-            
-    def respawn(self, color, radius=5):
-        return Robot(
-            self.rect.x,
-            self.rect.y,
-            velocity=self.velocity
-        )
 '''
 #Collsion must be done here? Or in the Simulator?
         collide = pg.sprite.spritecollide(self.swarm, self.swarm, False,
@@ -100,19 +86,14 @@ class Simulation:
         self._height = height
         self.size = (width, height)
         
-        self._running = True #is it necessary?
-#        self._display = None #is it necessary?
-
         self.swarm = pg.sprite.Group()
         self.swarm_quantity = N
+
+        self.initialize_robots()
 
         '''
         Later -> here the variables such as robot number should be placed
         '''
-        
-#        pygame.init()
-#        self.display = pg.display.set_mode(self.size, pg.HWSURFACE | pg.DOUBLEBUF)
-        #Finished here by now!
 
     def initialize_robots(self):
         for i in range(self.swarm_quantity):
@@ -125,17 +106,16 @@ class Simulation:
     def run(self):
         pg.init()
         screen = pg.display.set_mode([self._width, self._height])
-        self.initialize_robots()
         clock = pg.time.Clock()
         for i in range(1000):
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     sys.exit()
             self.swarm.update()
-            self.swarm.draw(screen)
             screen.fill(BACKGROUND)
+            self.swarm.draw(screen)
             pg.display.flip()
-            clock.tick(10)
+            clock.tick(30)
         pg.quit()
 
 
@@ -174,7 +154,6 @@ class App:
 '''
  
 if __name__ == "__main__" :
-    sim = Simulation()
-    sim.swarm_quantity = 100
+    sim = Simulation(600, 400, 20)
     sim.run()
 
