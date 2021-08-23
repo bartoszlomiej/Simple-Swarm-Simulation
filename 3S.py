@@ -41,17 +41,21 @@ class Robot(pg.sprite.Sprite):
         self.velocity = np.asarray(velocity, dtype=np.float64)
         self.moved = False
 
+        self.state = "moving" #initially robots move (just for aggregation algorithm)
+
     def update(self):
         self.position += self.velocity
         x, y = self.position
         self.moved = False
 
+        self.aggregate()
+        
         #boundary parameters
         if x < 0 or x > self._width - 2 * self.radius:
             self.velocity[0] = -self.velocity[0]
         if y < 0 or y > self._height - 2 *self.radius:
             self.velocity[1] = -self.velocity[1]
-
+            
         self.neighbors.clear() #list of neighbors must be refreshed in each update
 
         self.rect.x = x
@@ -64,20 +68,29 @@ class Robot(pg.sprite.Sprite):
             self.neighbors[len(self.neighbors) + 1] = (x, y)
             
 
-    '''
     def aggregate(self):
-        if 
-    '''
+        if len(self.neighbors) == 0 and self.state != "moving":
+            self.velocity = np.random.rand(2) * 2 #start moving
+        a =  (np.random.rand(1)) * (len(self.neighbors))
+        p_coefficient = np.random.rand(1) * a * a
+        if p_coefficient >= 0.75 and self.state == "moving":
+            self.state = "stopped"
+            self.velocity[0] = 0
+            self.velocity[1] = 0
+        if self.state == "stopped" and p_coefficient < 0.4:
+            self.velocity = np.random.rand(2) * 2  #start moving
+            self.state = "moving"
+        
 
 class Simulation:
-    def __init__(self, width=640, height=400, N=10):
+    def __init__(self, width=640, height=400, N=10, s_range = 40):
         '''
         N - is a swarm quantity
         '''
         self._width = width
         self._height = height
         self.size = (width, height)
-        self.sensor_range = 35 #(as 20 is the delimiter of the robot)
+        self.sensor_range = s_range #(as 20 is the delimiter of the robot)
 #        self.board = []
         
         self.swarm = pg.sprite.Group()
@@ -89,7 +102,9 @@ class Simulation:
         for i in range(self.swarm_quantity):
             x = np.random.randint(0, self._width + 1)
             y = np.random.randint(0, self._height + 1)
-            velocity = np.random.rand(2) * 2 - 1
+            velocity = np.random.rand(2)
+            velocity[0] = (velocity[0] - 0.5) * 4
+            velocity[1] = (velocity[1] - 0.5) * 4
 
             '''
             TODO: Starting position could be checked here to avoid overlaping
@@ -125,7 +140,8 @@ class Simulation:
         pg.init()
         screen = pg.display.set_mode([self._width, self._height])
         clock = pg.time.Clock()
-        for i in range(1000):
+        Time = 100000
+        for i in range(Time):
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     sys.exit()
@@ -135,7 +151,7 @@ class Simulation:
             screen.fill(BACKGROUND)
             self.swarm.draw(screen)
             pg.display.flip()
-            clock.tick(30)
+            clock.tick(400)
         pg.quit()
 
 
@@ -174,6 +190,6 @@ class App:
 '''
  
 if __name__ == "__main__" :
-    sim = Simulation(600, 400, 30)
+    sim = Simulation(1024, 720, 15, 60)
     sim.run()
 
