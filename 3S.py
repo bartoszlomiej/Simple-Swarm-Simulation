@@ -1,8 +1,25 @@
 '''
 TODO:
-5) robot behaviors
-6) randomness in motion
-7) tweaking
+1. Autonomus System task allocation:
+
+  [-] -> First do prerequirements
+  [-] -> Further apply the algorithm:
+    [-] -> Ask for AS
+    [-] -> Create AS
+      [-] -> Color the robot with the random color
+    [-] -> Get AS of closest neighbor
+      [-] -> Get the color of the neighbor
+    [-] -> Propagate AS
+    [-] -> Check neighbors
+      [-] -> If the AS nearby have the same color -> change it within AS
+  [-] -> Reduce the speed of robots to see the results (good idea -> when robot enters the AS then decrease it's speed significantly)
+
+2. Improve aggregation:
+ [-] -> current problem is that none of the robots start moving after it was once stopped
+
+Legend:
+[-] -> the task is pending
+[*] -> the task is done
 '''
 import sys
 import numpy as np
@@ -19,10 +36,15 @@ HORRIBLE_YELLOW = (190, 175, 50)
 BACKGROUND = WHITE
 
 class Robot(pg.sprite.Sprite):
+    '''
+    The object of the class Robot represents the robot on a board.
+    
+    It inherit from the base class sprite as this class is a basic representation of a character in pygame.
+    '''
     def __init__(self, x, y, width, height, velocity = [0, 0]):
         super().__init__()
         '''
-        Creates a robot on board with the initial coordinates (x, y)
+        Creates a robot on board with the initial coordinates (x, y) and the given velocity.
         '''
         self.x = x
         self.y = y
@@ -30,6 +52,7 @@ class Robot(pg.sprite.Sprite):
         self._width = width
         self._height = height
         self.neighbors = {}
+        self.iterator = 0
 
         self.image = pg.Surface([self.radius * 2, self.radius * 2])
         self.image.fill(BACKGROUND)
@@ -44,6 +67,9 @@ class Robot(pg.sprite.Sprite):
         self.state = "moving" #initially robots move (just for aggregation algorithm)
 
     def update(self):
+        '''
+        Updates the robot position on board, as well as it's state. Necessary behaviors are to be applied here.
+        '''
         self.position += self.velocity
         x, y = self.position
         self.moved = False
@@ -62,36 +88,65 @@ class Robot(pg.sprite.Sprite):
         self.rect.y = y
 
     def spotted(self, x, y):
+        '''
+        Adds the coordinates of the newly spotted neighbors to the list.
+        '''
         if not self.neighbors:
             self.neighbors[1] = (x, y)
         else:
             self.neighbors[len(self.neighbors) + 1] = (x, y)
             
-
     def aggregate(self):
+        '''
+        Simple aggregation behavior
+        '''
         if len(self.neighbors) == 0 and self.state != "moving":
-            self.velocity = np.random.rand(2) * 2 #start moving
-        a =  (np.random.rand(1)) * (len(self.neighbors))
+            velocity = np.random.rand(2)
+            velocity[0] = (velocity[0] - 0.5) * 4
+            velocity[1] = (velocity[1] - 0.5) * 4  #start moving
+        a =  (np.random.rand(1)/2) * (len(self.neighbors))
         p_coefficient = np.random.rand(1) * a * a
         if p_coefficient >= 0.75 and self.state == "moving":
             self.state = "stopped"
             self.velocity[0] = 0
             self.velocity[1] = 0
-        if self.state == "stopped" and p_coefficient < 0.4:
-            self.velocity = np.random.rand(2) * 2  #start moving
+        if self.state == "stopped" and p_coefficient < 0.75:
+            velocity = np.random.rand(2)
+            velocity[0] = (velocity[0] - 0.5) * 4
+            velocity[1] = (velocity[1] - 0.5) * 4  #start moving
+#            self.state = "going to move"
             self.state = "moving"
+        '''
+        if self.state == "going to move":
+            self.iterator = self.iterator + 1
+            if self.iterator > 500:
+                self.state = "moving"
+                self.iterator = 0
+                print("Am I here?")
+        '''
         
+        def autonomus_system(self):
+            '''Shows the idea of the autonomus system task allocation
+            
+            Prerequires:
+            [] 1) Local communication between robots that are in the given range
+            exemplary solution to this problem:
+            -> Let the sensor in the Simulation class return the array of neighbors
+            '''
+
 
 class Simulation:
     def __init__(self, width=640, height=400, N=10, s_range = 40):
         '''
-        N - is a swarm quantity
+        width - the width of the screen
+        height - the height of the screen
+        N - a swarm quantity
+        s_range - sensor range in pixels (must be greater than 20)
         '''
         self._width = width
         self._height = height
         self.size = (width, height)
         self.sensor_range = s_range #(as 20 is the delimiter of the robot)
-#        self.board = []
         
         self.swarm = pg.sprite.Group()
         self.swarm_quantity = N
@@ -99,6 +154,9 @@ class Simulation:
         self.initialize_robots()
 
     def initialize_robots(self):
+        '''
+        Initializes robots on empty board.
+        '''
         for i in range(self.swarm_quantity):
             x = np.random.randint(0, self._width + 1)
             y = np.random.randint(0, self._height + 1)
@@ -128,6 +186,9 @@ class Simulation:
                     robot.velocity = [-robot.velocity[0], -robot.velocity[1]]
                     
     def robot_vision(self):
+        '''
+        Emulates the very basic vision sensor of each robot in the swarm.
+        '''
         for r in self.swarm:
             for i in self.swarm:
                 if r == i:
@@ -137,6 +198,9 @@ class Simulation:
                     r.spotted(i.position[0], i.position[1])
         
     def run(self):
+        '''
+        Runs the simulation. After certain time the simulation is closed.
+        '''
         pg.init()
         screen = pg.display.set_mode([self._width, self._height])
         clock = pg.time.Clock()
@@ -192,4 +256,3 @@ class App:
 if __name__ == "__main__" :
     sim = Simulation(1024, 720, 15, 60)
     sim.run()
-
