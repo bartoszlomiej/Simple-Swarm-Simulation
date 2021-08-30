@@ -2,7 +2,7 @@
 TODO:
 1. Autonomus System task allocation:
 
-  [-] -> First do prerequirements
+  [*] -> First do prerequirements
   [-] -> Further apply the algorithm:
     [-] -> Ask for AS
     [-] -> Create AS
@@ -49,11 +49,19 @@ class Robot(pg.sprite.Sprite):
         self.x = x
         self.y = y
         self.radius = 10
-        self._width = width
-        self._height = height
-        self.neighbors = {}
+        self.width = width
+        self.height = height
+        self.neighbors = []
         self.iterator = 0
-
+        self.messages = [] #obtained messages from other robots
+        self.broadcast = {} #messages to be broadcast
+        '''
+        Broadcast messages are the dictionary -> {msg_type : msg_value}
+        Messages are the list of gather broadcasts from the neighbors
+        It is assumed that it doesn't matter which robot place the massage
+        '''
+        self.AS = None
+        
         self.image = pg.Surface([self.radius * 2, self.radius * 2])
         self.image.fill(BACKGROUND)
         
@@ -74,12 +82,15 @@ class Robot(pg.sprite.Sprite):
         x, y = self.position
         self.moved = False
 
+        self.update_msg()
+        #place for the swarm behaviors
         self.aggregate()
+        self.autonomus_system()
         
         #boundary parameters
-        if x < 0 or x > self._width - 2 * self.radius:
+        if x < 0 or x > self.width - 2 * self.radius:
             self.velocity[0] = -self.velocity[0]
-        if y < 0 or y > self._height - 2 *self.radius:
+        if y < 0 or y > self.height - 2 *self.radius:
             self.velocity[1] = -self.velocity[1]
             
         self.neighbors.clear() #list of neighbors must be refreshed in each update
@@ -87,14 +98,11 @@ class Robot(pg.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y
 
-    def spotted(self, x, y):
+    def spotted(self, r):
         '''
-        Adds the coordinates of the newly spotted neighbors to the list.
+        Adds the newly spotted neighbor to the list.
         '''
-        if not self.neighbors:
-            self.neighbors[1] = (x, y)
-        else:
-            self.neighbors[len(self.neighbors) + 1] = (x, y)
+        self.neighbors.append(r)
             
     def aggregate(self):
         '''
@@ -124,15 +132,52 @@ class Robot(pg.sprite.Sprite):
                 self.iterator = 0
                 print("Am I here?")
         '''
-        
-        def autonomus_system(self):
-            '''Shows the idea of the autonomus system task allocation
+    def update_msg(self):
+        self.messages.clear()
+        for n in self.neighbors:
+            self.messages.append(n.broadcast)
+
+    def update_color(self):
+        color = (self.AS, self.AS, self.AS)
+        pg.draw.circle(self.image, color, (self.radius, self.radius), self.radius)
             
-            Prerequires:
-            [] 1) Local communication between robots that are in the given range
-            exemplary solution to this problem:
-            -> Let the sensor in the Simulation class return the array of neighbors
+    def create_AS(self):
+        self.AS = np.random.randint(0, 255) #arbitrary number to be changed in the future
+        self.broadcast['AS'] = self.AS
+        self.update_color()
+
+    def get_AS(self):
+        votes = {}
+        remain = False
+        for m in self.messages:
+            if 'AS' in m.keys():
+                if not m['AS'] in votes:
+                    votes[m['AS']] = 1
+                    if m['AS'] == self.AS: #don't change AS if you can still spot your colleagues
+                        remain = True
+                else:
+                    votes[m['AS']] = votes[m['AS']] + 1
+        if not votes: #or remain:
+            return None
+        k=list(votes.keys())
+        v=list(votes.values())
+        return k[v.index(max(v))] #getting the AS that is most common nearby
+            
+    def autonomus_system(self):
+        self.broadcast.clear() #clearing broadcast
+        '''
+            Shows the idea of the autonomus system task allocation
             '''
+        new_AS = self.get_AS()
+        if not new_AS and not self.AS:
+            self.create_AS()
+        elif new_AS:
+            self.AS = new_AS
+            self.broadcast['AS'] = new_AS
+            self.update_color()
+        else: #preserving the old AS
+            self.broadcast['AS'] = self.AS
+            
 
 
 class Simulation:
@@ -143,8 +188,8 @@ class Simulation:
         N - a swarm quantity
         s_range - sensor range in pixels (must be greater than 20)
         '''
-        self._width = width
-        self._height = height
+        self.width = width
+        self.height = height
         self.size = (width, height)
         self.sensor_range = s_range #(as 20 is the delimiter of the robot)
         
@@ -158,8 +203,8 @@ class Simulation:
         Initializes robots on empty board.
         '''
         for i in range(self.swarm_quantity):
-            x = np.random.randint(0, self._width + 1)
-            y = np.random.randint(0, self._height + 1)
+            x = np.random.randint(0, self.width + 1)
+            y = np.random.randint(0, self.height + 1)
             velocity = np.random.rand(2)
             velocity[0] = (velocity[0] - 0.5) * 4
             velocity[1] = (velocity[1] - 0.5) * 4
@@ -168,7 +213,7 @@ class Simulation:
             TODO: Starting position could be checked here to avoid overlaping
             self.board[i] = [x, y]
             '''
-            robot = Robot(x, y, self._width, self._height, velocity)
+            robot = Robot(x, y, self.width, self.height, velocity)
             self.swarm.add(robot)
 
     def check_collisions(self):
@@ -195,14 +240,15 @@ class Simulation:
                     continue
                 if (abs(r.position[0] - i.position[0]) < self.sensor_range) and (
                         abs(r.position[1] - i.position[1]) < self.sensor_range):
-                    r.spotted(i.position[0], i.position[1])
+                    r.spotted(i)
+            
         
     def run(self):
         '''
         Runs the simulation. After certain time the simulation is closed.
         '''
         pg.init()
-        screen = pg.display.set_mode([self._width, self._height])
+        screen = pg.display.set_mode([self.width, self.height])
         clock = pg.time.Clock()
         Time = 100000
         for i in range(Time):
@@ -215,7 +261,7 @@ class Simulation:
             screen.fill(BACKGROUND)
             self.swarm.draw(screen)
             pg.display.flip()
-            clock.tick(400)
+            clock.tick(30)
         pg.quit()
 
 
@@ -254,5 +300,5 @@ class App:
 '''
  
 if __name__ == "__main__" :
-    sim = Simulation(1024, 720, 15, 60)
+    sim = Simulation(1024, 720, 25, 60)
     sim.run()
