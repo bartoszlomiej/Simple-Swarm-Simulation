@@ -1,21 +1,16 @@
 '''
 TODO:
-1. Autonomus System task allocation:
-
-  [*] -> First do prerequirements
-  [*] -> Further apply the algorithm:
-    [*] -> Ask for AS
-    [*] -> Create AS
-      [*-] -> Color the robot with the random color
-    [*] -> Get AS of closest neighbor
-      [*] -> Get the color of the neighbor
-    [*] -> Propagate AS
-    [*] -> Check neighbors
-      [*] -> If the AS nearby have the same color -> change it within AS
-  [*] -> Reduce the speed of robots to see the results (good idea -> when robot enters the AS then decrease it's speed significantly)
-
-2. Improve aggregation:
- [*] -> current problem is that none of the robots start moving after it was once stopped
+1. Improve system:
+  [-] Make the change of speed easy to change (after stop speed must be multiplied as initially given)
+  [-] Others
+2. Changing phase of work
+  [-] Border robot indication
+    [-] Remember to make them resistant to "free electrons" -> the neighbor is a robot that don't move!
+  [-] Timer implementation
+    [-] Adjusting AS ID to be ready to become counter
+    [-] Prove that given counter is not random -> make it reasonable
+  [-] Broadcast phase change
+    [-] Show the result (eg. change shape to triangle)
 
 Legend:
 [-] -> the task is pending
@@ -129,7 +124,7 @@ class Robot(pg.sprite.Sprite):
             self.velocity[1] = (self.velocity[1] - 0.5) * 4  #start moving
         a = (np.random.rand(1) / 2) * (len(self.neighbors))
         p_coefficient = np.random.rand(1) * a * a
-        if p_coefficient >= 0.75 and self.state == "moving":
+        if p_coefficient >= 0.6 and self.state == "moving":
             '''
             if there are some neighbors -> the robot might stop
             '''
@@ -213,17 +208,24 @@ class Robot(pg.sprite.Sprite):
 
 
 class Simulation:
-    def __init__(self, width=640, height=400, N=10, s_range=40):
+    def __init__(self,
+                 width=640,
+                 height=400,
+                 N=10,
+                 s_range=40,
+                 velocity_lvl=4):
         '''
         width - the width of the screen
         height - the height of the screen
         N - a swarm quantity
         s_range - sensor range in pixels (must be greater than 20)
+        velocity_lvl 0 - multiplier of the velocity 
         '''
         self.width = width
         self.height = height
         self.size = (width, height)
         self.sensor_range = s_range  #(as 20 is the delimiter of the robot)
+        self.velocity_lvl = velocity_lvl
 
         self.swarm = pg.sprite.Group()
         self.swarm_quantity = N
@@ -238,8 +240,8 @@ class Simulation:
             x = np.random.randint(0, self.width + 1)
             y = np.random.randint(0, self.height + 1)
             velocity = np.random.rand(2)
-            velocity[0] = (velocity[0] - 0.5) * 4
-            velocity[1] = (velocity[1] - 0.5) * 4
+            velocity[0] = (velocity[0] - 0.5) * self.velocity_lvl
+            velocity[1] = (velocity[1] - 0.5) * self.velocity_lvl
             '''
             TODO: Starting position could be checked here to avoid overlaping
             self.board[i] = [x, y]
@@ -297,40 +299,22 @@ class Simulation:
         pg.quit()
 
 
-'''
-class App:
-    def __init__(self):
-        self._running = True
-        self._display_surf = None
-        self.size = self.weight, self.height = 640, 400
- 
-    def on_init(self):
-        pygame.init()
-        self._display_surf = pygame.display.set_mode(self.size, pygame.HWSURFACE | pygame.DOUBLEBUF)
-        self._running = True
- 
-    def on_event(self, event):
-        if event.type == pygame.QUIT:
-            self._running = False
-    def on_loop(self):
-        pass
-    def on_render(self):
-        pass
-    def on_cleanup(self):
-        pygame.quit()
- 
-    def on_execute(self):
-        if self.on_init() == False:
-            self._running = False
- 
-        while( self._running ):
-            for event in pygame.event.get():
-                self.on_event(event)
-            self.on_loop()
-            self.on_render()
-        self.on_cleanup()
-'''
-
 if __name__ == "__main__":
-    sim = Simulation(1024, 720, 25, 60)
+    '''
+    Reminder:
+    Simulation(width, height, N, s_range, velocity_lvl)
+        width - the width of the screen
+        height - the height of the screen
+        N - a swarm quantity
+        s_range - sensor range in pixels (must be greater than 20)
+        velocity_lvl 0 - multiplier of the velocity 
+    '''
+    sim = Simulation(1024, 720, 25, 60, 4)
     sim.run()
+    '''
+    OBSERVATION:
+    -There is a strong correlation between speed, p_coefficient and the number of clusters that will be created.
+    -The sensor range might also have the influence on the amount of clusters that are being created.
+
+    The higher the speed the more the system is likely to be homogeneous (MUST BE VERIFIED PROPERLY)
+    '''
