@@ -3,27 +3,31 @@ TODO:
 1. Autonomus System task allocation:
 
   [*] -> First do prerequirements
-  [-] -> Further apply the algorithm:
-    [-] -> Ask for AS
-    [-] -> Create AS
-      [-] -> Color the robot with the random color
-    [-] -> Get AS of closest neighbor
-      [-] -> Get the color of the neighbor
-    [-] -> Propagate AS
-    [-] -> Check neighbors
-      [-] -> If the AS nearby have the same color -> change it within AS
-  [-] -> Reduce the speed of robots to see the results (good idea -> when robot enters the AS then decrease it's speed significantly)
+  [*] -> Further apply the algorithm:
+    [*] -> Ask for AS
+    [*] -> Create AS
+      [*-] -> Color the robot with the random color
+    [*] -> Get AS of closest neighbor
+      [*] -> Get the color of the neighbor
+    [*] -> Propagate AS
+    [*] -> Check neighbors
+      [*] -> If the AS nearby have the same color -> change it within AS
+  [*] -> Reduce the speed of robots to see the results (good idea -> when robot enters the AS then decrease it's speed significantly)
 
 2. Improve aggregation:
- [-] -> current problem is that none of the robots start moving after it was once stopped
+ [*] -> current problem is that none of the robots start moving after it was once stopped
 
 Legend:
 [-] -> the task is pending
 [*] -> the task is done
+
+Notation used:
+AS - autonomus system -> represents the cluster of robots
 '''
 import sys
 import numpy as np
 import pygame as pg
+import math
 
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -110,6 +114,9 @@ class Robot(pg.sprite.Sprite):
     def aggregate(self):
         '''
         Simple aggregation behavior
+
+        variable self.iterator indicates for how long should robot stay in a given state.
+        In the future it might be good idea to use a number -1/other to indicate infinity
         '''
         if len(self.neighbors
                ) == 0 and self.state != "moving" and not self.velocity[
@@ -134,7 +141,7 @@ class Robot(pg.sprite.Sprite):
             if robot is stopped than there is possibility that robot will start moving
             '''
             self.iterator = self.iterator + 1
-            if self.iterator > 5000:
+            if self.iterator < -1:  #> 5000: #replace -1 with natural number to obtain move after stop behavior
                 self.state = "moving after stopped"
                 self.iterator = 0
                 self.velocity = np.random.rand(2)
@@ -156,13 +163,19 @@ class Robot(pg.sprite.Sprite):
             self.messages.append(n.broadcast)
 
     def update_color(self):
-        color = (self.AS, self.AS, self.AS)
+        '''
+        Mathematical operations are performed in order to get nicer colors
+        '''
+        red = self.AS % 256
+        green = math.floor(self.AS / 4) % 256
+        blue = math.floor(math.sqrt(self.AS)) % 256
+        color = (red, green, blue)
         pg.draw.circle(self.image, color, (self.radius, self.radius),
                        self.radius)
 
     def create_AS(self):
         self.AS = np.random.randint(
-            0, 255)  #arbitrary number to be changed in the future
+            0, 65025)  #arbitrary number to be changed in the future
         self.broadcast['AS'] = self.AS
         self.update_color()
 
