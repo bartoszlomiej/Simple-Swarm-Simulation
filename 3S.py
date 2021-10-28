@@ -203,7 +203,7 @@ class Robot(pg.sprite.Sprite):
         if self.state != "stopped":  #only robots that are not moving can use timers
             return
         if self.AS == self.timer[0]:
-            if len(self.neighbors) != self.timer[2]:
+            if len(self.neighbors) > self.timer[2]:
                 self.state == "waiting"  #number of neighbors changed -> we are not border robot
             else:
                 self.timer = (self.timer[0], self.timer[1] - 1, self.timer[2])
