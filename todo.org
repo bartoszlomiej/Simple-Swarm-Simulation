@@ -16,9 +16,28 @@ TODAY -*- mode: org -*-
 *** TODO Does # of neighbors change?
     Check periodically number of neighbors
    
+*** TODO Aggregation changes
+    there must be some switch off (after the transition to phase 2 occurs)
+    
 *** TODO Further work
 
 * Minors:
   Optional todos
 
 ** TODO All collisions should be smooth
+
+** TODO Make the change of speed easy to change
+   after stop speed must be multiplied as initially given
+   
+*** Other notes:
+  Changing phase of work
+  [-] Border robot indication
+    [-] Remember to make them resistant to "free electrons" -> the neighbor is a robot that don't move!
+  [-] Timer implementation
+    [-] Adjusting AS ID to be ready to become counter
+    [-] Prove that given counter is not random -> make it reasonable
+  [-] Broadcast phase change
+    [-] Show the result (eg. change shape to triangle)
+
+  Notation used:
+  AS - autonomus system -> represents the cluster of robots

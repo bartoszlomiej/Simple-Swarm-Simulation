@@ -42,7 +42,7 @@ class Robot(pg.sprite.Sprite):
         self.AS = None
         self.joined = True  #indicates if the AS was created by us or not
 
-        self.timer = (-1, -1, 0)  #tuple (AS number, timer_value)
+        self.timer = (-1, -1)  #tuple (AS number, timer_value)
         '''
         It is important to posses the AS number -> if it changes than timer must immediately stop!
         '''
@@ -72,8 +72,6 @@ class Robot(pg.sprite.Sprite):
         #place for the swarm behaviors
         self.aggregate()
         self.autonomus_system()
-
-        self.use_timer()
 
         #boundary parameters
         if x < 0 or x > self.width - 2 * self.radius:
@@ -109,7 +107,6 @@ class Robot(pg.sprite.Sprite):
             self.velocity = np.random.rand(2)
             self.velocity[0] = (self.velocity[0] - 0.5) * 4
             self.velocity[1] = (self.velocity[1] - 0.5) * 4  #start moving
-            self.state = "moving"
         a = (np.random.rand(1) / 2) * (len(self.neighbors))
         p_coefficient = np.random.rand(1) * a * a
         if p_coefficient >= 0.6 and self.state == "moving":
@@ -196,27 +193,10 @@ class Robot(pg.sprite.Sprite):
         else:  #preserving the old AS
             self.broadcast['AS'] = self.AS
 
-    def use_timer(self):
+    def timer(self):
         '''
         just the loop (with each iteration of the simulation loop decrease by 1)
         '''
-        if self.state != "stopped":  #only robots that are not moving can use timers
-            return
-        if self.AS == self.timer[0]:
-            if len(self.neighbors) != self.timer[2]:
-                self.state == "waiting"  #number of neighbors changed -> we are not border robot
-            else:
-                self.timer = (self.timer[0], self.timer[1] - 1, self.timer[2])
-                if self.timer[1] < 0:
-                    check_me = np.random.randint(0, 65025)
-                    red = check_me % 256
-                    green = math.floor(check_me / 4) % 256
-                    blue = math.floor(math.sqrt(check_me)) % 256
-                    color = (red, green, blue)
-                    pg.draw.circle(self.image, color,
-                                   (self.radius, self.radius), self.radius)
-        else:
-            self.timer = (self.AS, 500, len(self.neighbors))
 
 
 class Simulation:
