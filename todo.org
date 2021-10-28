@@ -1,0 +1,24 @@
+TODAY -*- mode: org -*-
+
+* Majors:
+  Only necesities will be listed here
+
+** DONE Improved collisions
+   Robots should move in the random direction after collision (but it should be restricted angle
+   -> at most 90 degrees between the point of collision)
+
+** DONE AS improval - if no other member of AS is visible -> create new AS
+   Important -> removes the robots that are outside of the given AS
+
+** TODO Timers
+   Sth here
+
+*** TODO Does # of neighbors change?
+    Check periodically number of neighbors
+   
+*** TODO Further work
+
+* Minors:
+  Optional todos
+
+** TODO All collisions should be smooth

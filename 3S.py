@@ -1,6 +1,7 @@
 '''
 TODO:
 1. Improve system:
+  [*] Collision -> fixed the temporary stacking
   [-] Make the change of speed easy to change (after stop speed must be multiplied as initially given)
   [-] Others
 2. Changing phase of work
@@ -55,6 +56,7 @@ class Robot(pg.sprite.Sprite):
         self.iterator = 0
         self.messages = []  #obtained messages from other robots
         self.broadcast = {}  #messages to be broadcast
+        self.joined = True  #indicates if the AS was created by us or not
         '''
         Broadcast messages are the dictionary -> {msg_type : msg_value}
         Messages are the list of gather broadcasts from the neighbors
@@ -197,9 +199,11 @@ class Robot(pg.sprite.Sprite):
             Shows the idea of the autonomus system task allocation
             '''
         new_AS = self.get_AS()
-        if not new_AS and not self.AS:
+        if (not new_AS and self.joined) or not self.AS:
             self.create_AS()
+            self.joined = False
         elif new_AS:
+            self.joined = True
             self.AS = new_AS
             self.broadcast['AS'] = new_AS
             self.update_color()
@@ -258,11 +262,28 @@ class Simulation:
                 [s for s in self.swarm if s != robot])
             collide = pg.sprite.spritecollide(robot, collision_group, False)
             if collide:
-                self.moved = True
+                #                robot.moved = True
                 for c in collide:  #there can be numerous collisions however it is unlikely
-                    if c.moved == True:
-                        continue
-                    robot.velocity = [-robot.velocity[0], -robot.velocity[1]]
+                    #                    if c.moved == True:
+                    #                        continue
+                    self.collision_movement(robot)
+
+    def collision_movement(self, robot):
+        '''
+        Robots should move in the semi-random direction after collision:
+        having velocity = (x, y) -> new velocity = (-random * sign(x), -random * sign(y))
+        as a result never two robots will go in the same direction after collision (no stucking)
+        '''
+        sign_x = np.sign(robot.velocity[0])
+        sign_y = np.sign(robot.velocity[1])
+        velocity = np.random.rand(2)
+        velocity[0] = (velocity[0]) * self.velocity_lvl / 2  #must be positive!
+        velocity[1] = (velocity[1]) * self.velocity_lvl / 2
+        robot.velocity = [-sign_x * velocity[0], -sign_y * velocity[1]]
+        '''
+        Previous solution:
+#        robot.velocity = [-robot.velocity[0], -robot.velocity[1]]
+        '''
 
     def robot_vision(self):
         '''
@@ -309,7 +330,7 @@ if __name__ == "__main__":
         s_range - sensor range in pixels (must be greater than 20)
         velocity_lvl 0 - multiplier of the velocity 
     '''
-    sim = Simulation(1024, 720, 25, 60, 4)
+    sim = Simulation(1024, 720, 25, 55, 4)
     sim.run()
     '''
     OBSERVATION:
