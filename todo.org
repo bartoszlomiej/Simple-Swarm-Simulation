@@ -9,6 +9,10 @@ TODAY -*- mode: org -*-
 
 ** DONE AS improval - if no other member of AS is visible -> create new AS
    Important -> removes the robots that are outside of the given AS
+   
+
+** DONE Structure the program
+   - extract classes to separet files
 
 ** TODO Timers
    Sth here
