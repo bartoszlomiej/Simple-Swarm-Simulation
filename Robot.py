@@ -33,9 +33,10 @@ class Robot(pg.sprite.Sprite):
         self.AS = None
         self.joined = True  #indicates if the AS was created by us or not
 
-        self.timer = (-1, -1, 0)  #tuple (AS number, timer_value)
+        self.timer = (-1, -1, 0)
         '''
         It is important to posses the AS number -> if it changes than timer must immediately stop!
+        tuple (AS number, timer_value, number_of_neighbors)
         '''
 
         self.image = pg.Surface([self.radius * 2, self.radius * 2])
@@ -61,9 +62,10 @@ class Robot(pg.sprite.Sprite):
 
         self.update_msg()
         #place for the swarm behaviors
-        self.aggregate()
+        aggregation_states = ("moving", "stopped", "moving after stopped")
+        if self.state in aggregation_states:
+            self.aggregate()
         self.autonomus_system()
-
         self.use_timer()
 
         #boundary parameters
@@ -191,14 +193,21 @@ class Robot(pg.sprite.Sprite):
         '''
         just the loop (with each iteration of the simulation loop decrease by 1)
         '''
-        if self.state != "stopped":  #only robots that are not moving can use timers
+        if self.state == "moving":  #only robots that are not moving can use timers
             return
+
         if self.AS == self.timer[0]:
-            if len(self.neighbors) > self.timer[2]:
-                self.state == "waiting"  #number of neighbors changed -> we are not border robot
-            else:
+            if len(self.neighbors
+                   ) > self.timer[2] and self.state != "Timer phase 1":
+                self.state = "waiting"  #number of neighbors changed -> we are not border robot
+            if self.state != "waiting":
                 self.timer = (self.timer[0], self.timer[1] - 1, self.timer[2])
                 if self.timer[1] < 0:
+                    self.state = "Timer phase 1"
+                    self.broadcast['Timer phase 1'] = self.timer
+                    #todo -> set here later timer (the second one)
+
+                    #just for dbg
                     check_me = np.random.randint(0, 65025)
                     red = check_me % 256
                     green = math.floor(check_me / 4) % 256
@@ -206,6 +215,16 @@ class Robot(pg.sprite.Sprite):
                     color = (red, green, blue)
                     pg.draw.circle(self.image, color,
                                    (self.radius, self.radius), self.radius)
+
+            for m in self.messages:
+                if "Timer phase 1" in m.keys():
+                    self.state = "Timer phase 1"
+                    if self.timer[1] > m["Timer phase 1"][1] or self.timer[
+                            1] == -1:
+                        self.timer = m["Timer phase 1"]
         else:
-            self.timer = (self.AS, np.random.randint(1000, 2000),
-                          len(self.neighbors))
+            self.set_timer()
+
+    def set_timer(self):
+        self.timer = (self.AS, np.random.randint(1000,
+                                                 2000), len(self.neighbors))

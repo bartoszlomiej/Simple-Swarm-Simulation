@@ -15,16 +15,28 @@ TODAY -*- mode: org -*-
    - extract classes to separet files
 
 ** TODO Timers
-   Sth here
+   Now it is a high time I create the timers that will allow to go to the phase 2
 
-*** TODO Does # of neighbors change?
+*** DONE Does # of neighbors change?
     Check periodically number of neighbors
+    
    
+*** TODO Broadcast message
+    Broadcast message of the neighbor's timer value;
+    Always propagate only the smallest value obtained
+
+    
+*** DONE Problem - how to propagate broadcast from the neighbor that is in the same AS only?
+    1. Propagate AS as a member of a tuple Timer
+    2. Check if a neighbor that propagates message is in the same AS
+       + Actually, it might be much simpler to implement on the real hardware as here
+	 I don't care who is sending the message (on the real hardware it probably the lasers will be used;
+	 or sth else that could either send more extensive pieces of information)
+    
 *** TODO Aggregation changes
     there must be some switch off (after the transition to phase 2 occurs)
     
-*** TODO Further work
-
+*** TODO Further 
 * Minors:
   Optional todos
 
