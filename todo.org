@@ -3,17 +3,6 @@ TODAY -*- mode: org -*-
 * Majors:
   Only necesities will be listed here
 
-** DONE Improved collisions
-   Robots should move in the random direction after collision (but it should be restricted angle
-   -> at most 90 degrees between the point of collision)
-
-** DONE AS improval - if no other member of AS is visible -> create new AS
-   Important -> removes the robots that are outside of the given AS
-   
-
-** DONE Structure the program
-   - extract classes to separet files
-
 ** DONE Timers
    Now it is a high time I create the timers that will allow to go to the phase 2
 
@@ -41,9 +30,34 @@ TODAY -*- mode: org -*-
 
     -Solution - The number which can be incremented only -> will indicate the state
     
-*** TODO Further 
+
+** TODO Phase 2 - collective movement
+   Main problems -> only one leader at time; leader switching; movement detection?
+   
+*** TODO Leader starts moving
+
+*** TODO Follower starts moving
+
+**** TODO Movement detection
+
+*** TODO Leader switching
+    -Signal must be sent if leader cannot move further -> the leader will be chosen again.
+
 * Minors:
   Optional todos
+
+  
+** DONE Improved collisions
+   Robots should move in the random direction after collision (but it should be restricted angle
+   -> at most 90 degrees between the point of collision)
+
+** DONE AS improval - if no other member of AS is visible -> create new AS
+   Important -> removes the robots that are outside of the given AS
+   
+
+** DONE Structure the program
+   - extract classes to separet files
+
 
 ** TODO **OPTIONAL**
    If no neighbors of the same AS are being spotted -> go to state 1
@@ -56,16 +70,16 @@ TODAY -*- mode: org -*-
    after stop speed must be multiplied as initially given
    
    
-*** Other notes:
-  Changing phase of work
-  [-] Border robot indication
-    [-] Remember to make them resistant to "free electrons" -> the neighbor is a robot that don't move!
-  [-] Timer implementation
-    [-] Adjusting AS ID to be ready to become counter
-    [-] Prove that given counter is not random -> make it reasonable
-  [-] Broadcast phase change
-    [-] Show the result (eg. change shape to triangle)
+* Other notes:
+Changing phase of work
+[-] Border robot indication
+  [-] Remember to make them resistant to "free electrons" -> the neighbor is a robot that don't move!
+[-] Timer implementation
+  [-] Adjusting AS ID to be ready to become counter
+  [-] Prove that given counter is not random -> make it reasonable
+[-] Broadcast phase change
+  [-] Show the result (eg. change shape to triangle)
 
-  Notation used:
-  AS - autonomus system -> represents the cluster of robots
+Notation used:
+AS - autonomus system -> represents the cluster of robots
 
