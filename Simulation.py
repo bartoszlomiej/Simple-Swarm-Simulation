@@ -96,6 +96,12 @@ class Simulation:
                            self.sensor_range):
                     r.spotted(i)
 
+    def dbg_timer(self, t):
+        for i in self.swarm:
+            if i.phase == 2:
+                print("Cluster: ", i.AS, "  TIME: ", t)  #just for dbg
+                i.phase = -1  #just for dbg!
+
     def run(self):
         '''
         Runs the simulation. After certain time the simulation is closed.
@@ -111,6 +117,7 @@ class Simulation:
             self.swarm.update()
             self.check_collisions()
             self.robot_vision()
+            #            self.dbg_timer(i)
             screen.fill((255, 255, 255))  #background color (white)
             self.swarm.draw(screen)
             pg.display.flip()

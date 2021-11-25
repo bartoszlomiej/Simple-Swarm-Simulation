@@ -37,6 +37,7 @@ class Robot(pg.sprite.Sprite):
         '''
         It is important to posses the AS number -> if it changes than timer must immediately stop!
         tuple (AS number, timer_value, number_of_neighbors)
+        timer_value = -1 -> indicates that no value of a timer was yet set, similarly with AS number
         '''
 
         self.image = pg.Surface([self.radius * 2, self.radius * 2])
@@ -51,6 +52,7 @@ class Robot(pg.sprite.Sprite):
         self.moved = False
 
         self.state = "moving"  #initially robots move (just for aggregation algorithm)
+        self.phase = 1  #the first phase is being currently run. This number can be only incremented!
 
     def update(self):
         '''
@@ -62,11 +64,17 @@ class Robot(pg.sprite.Sprite):
 
         self.update_msg()
         #place for the swarm behaviors
-        aggregation_states = ("moving", "stopped", "moving after stopped")
-        if self.state in aggregation_states:
-            self.aggregate()
-        self.autonomus_system()
-        self.use_timer()
+        #First phase bahaviors:
+        if self.phase == 1:
+            aggregation_states = ("moving", "stopped", "moving after stopped")
+            if self.state in aggregation_states:
+                self.aggregate()
+            self.autonomus_system()
+            self.use_timer()
+        elif self.phase == 1.5:
+            self.use_timer()
+        elif self.phase == 2:
+            pass
 
         #boundary parameters
         if x < 0 or x > self.width - 2 * self.radius:
@@ -202,19 +210,27 @@ class Robot(pg.sprite.Sprite):
                 self.state = "waiting"  #number of neighbors changed -> we are not border robot
             if self.state != "waiting":
                 self.timer = (self.timer[0], self.timer[1] - 1, self.timer[2])
-                if self.timer[1] < 0:
-                    self.state = "Timer phase 1"
-                    self.broadcast['Timer phase 1'] = self.timer
-                    #todo -> set here later timer (the second one)
 
+                if self.phase == 1.5:
+                    self.broadcast['Timer phase 1'] = self.timer
+
+                if self.timer[1] < 0:
+                    if self.phase == 1:
+                        self.set_timer(
+                        )  #The second timer is to be set -> it will be used for synchronization\
+                        self.state = "Timer phase 1"
+                        self.phase = 1.5
+                        return
+                    self.phase = 2  #finally, going to phase 2!!!
                     #just for dbg
-                    check_me = np.random.randint(0, 65025)
+                    check_me = self.AS + 2000  #np.random.randint(0, 65025)
                     red = check_me % 256
                     green = math.floor(check_me / 4) % 256
                     blue = math.floor(math.sqrt(check_me)) % 256
                     color = (red, green, blue)
                     pg.draw.circle(self.image, color,
                                    (self.radius, self.radius), self.radius)
+                    return
 
             for m in self.messages:
                 if "Timer phase 1" in m.keys():
@@ -222,6 +238,7 @@ class Robot(pg.sprite.Sprite):
                     if self.timer[1] > m["Timer phase 1"][1] or self.timer[
                             1] == -1:
                         self.timer = m["Timer phase 1"]
+                        self.phase = 1.5  #as we get the other timer, thus the second timer is to be used
         else:
             self.set_timer()
 
