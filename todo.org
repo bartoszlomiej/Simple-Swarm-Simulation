@@ -1,7 +1,7 @@
 TODAY -*- mode: org -*-
 
 * Majors:
-  Only necesities will be listed here
+  The problems concerning the most important tasks are shown below.
 
 ** DONE Timers
    Now it is a high time I create the timers that will allow to go to the phase 2
@@ -33,19 +33,37 @@ TODAY -*- mode: org -*-
 
 ** TODO Phase 2 - collective movement
    Main problems -> only one leader at time; leader switching; movement detection?
+
+   Good assumption -> order the leader robot to have constant speed!
    
+*** TODO Movement detection
+
+*** TODO Collective movement
+    The value of the velocity is given in two directions (x, y). As the velocity of the moving neighbor is in fact
+    the distance that it travelled in one loop iteration, hence it is equal to the square root of the distance that it has travelled.
+    As the robot is chasing the leader (it doesn't copy the same velocity), it tries to approach the leader with about the same velocity.
+    Hence, the velocity must be scaled properly. It is known that the distance that the robot needs to travel is equal to the velocity.
+    However, there must be calculated the proportions of V_x and V_y. There was used Pitagorean theorem to calculate given proportions.
+
+
+    ***IDEA***
+    The AS should spread the idea about the initial direction of movement - in order to remove confusion with other AS.
+    -the initial direction & speed of movement should be given with the timer value.
+    More detailed description is available in my notes
+
 *** TODO Leader starts moving
+    0. Determine the leader!
+    1. Find direction without any obstacles
+    2. Go in that direction
 
 *** TODO Follower starts moving
-
-**** TODO Movement detection
 
 *** TODO Leader switching
     -Signal must be sent if leader cannot move further -> the leader will be chosen again.
 
+
 * Minors:
   Optional todos
-
   
 ** DONE Improved collisions
    Robots should move in the random direction after collision (but it should be restricted angle
@@ -71,15 +89,6 @@ TODAY -*- mode: org -*-
    
    
 * Other notes:
-Changing phase of work
-[-] Border robot indication
-  [-] Remember to make them resistant to "free electrons" -> the neighbor is a robot that don't move!
-[-] Timer implementation
-  [-] Adjusting AS ID to be ready to become counter
-  [-] Prove that given counter is not random -> make it reasonable
-[-] Broadcast phase change
-  [-] Show the result (eg. change shape to triangle)
-
 Notation used:
 AS - autonomus system -> represents the cluster of robots
 

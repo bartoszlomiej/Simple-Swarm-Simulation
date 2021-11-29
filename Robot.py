@@ -22,6 +22,7 @@ class Robot(pg.sprite.Sprite):
         self.width = width
         self.height = height
         self.neighbors = []
+        self.in_range_robots = 0
         self.iterator = 0
         self.messages = []  #obtained messages from other robots
         self.broadcast = {}  #messages to be broadcast
@@ -54,6 +55,8 @@ class Robot(pg.sprite.Sprite):
         self.state = "moving"  #initially robots move (just for aggregation algorithm)
         self.phase = 1  #the first phase is being currently run. This number can be only incremented!
 
+        self.prev_coords = []  #previous coordinates of the neighbors
+
     def update(self):
         '''
         Updates the robot position on board, as well as it's state. Necessary behaviors are to be applied here.
@@ -74,7 +77,7 @@ class Robot(pg.sprite.Sprite):
         elif self.phase == 1.5:
             self.use_timer()
         elif self.phase == 2:
-            pass
+            self.collective_movement()
 
         #boundary parameters
         if x < 0 or x > self.width - 2 * self.radius:
@@ -84,6 +87,7 @@ class Robot(pg.sprite.Sprite):
 
         self.neighbors.clear(
         )  #list of neighbors must be refreshed in each update
+        self.in_range_robots = 0
 
         self.rect.x = x
         self.rect.y = y
@@ -94,13 +98,20 @@ class Robot(pg.sprite.Sprite):
         '''
         self.neighbors.append(r)
 
+    def in_range(self):
+        self.in_range_robots = self.in_range_robots + 1
+
     def aggregate(self):
         '''
         Simple aggregation behavior
 
         variable self.iterator indicates for how long should robot stay in a given state.
         In the future it might be good idea to use a number -1/other to indicate infinity
+
+        The robots can stop iff they are in the distance of 20%-80% of the sensor range
+        -the in_range_robots variable indicates the number of robots that are in that range.
         '''
+
         if len(self.neighbors
                ) == 0 and self.state != "moving" and not self.velocity[
                    0] and not self.velocity[1]:
@@ -111,7 +122,12 @@ class Robot(pg.sprite.Sprite):
             self.velocity[0] = (self.velocity[0] - 0.5) * 4
             self.velocity[1] = (self.velocity[1] - 0.5) * 4  #start moving
             self.state = "moving"
-        a = (np.random.rand(1) / 2) * (len(self.neighbors))
+
+        a = (
+            np.random.rand(1) / 2
+        ) * self.in_range_robots  #bad idea -> the clusters are mismatching!
+        #remove this in the Simulation.py as well!
+        #        a = (np.random.rand(1) / 2) * (len(self.neighbors))
         p_coefficient = np.random.rand(1) * a * a
         if p_coefficient >= 0.6 and self.state == "moving":
             '''
@@ -217,7 +233,7 @@ class Robot(pg.sprite.Sprite):
                 if self.timer[1] < 0:
                     if self.phase == 1:
                         self.set_timer(
-                        )  #The second timer is to be set -> it will be used for synchronization\
+                        )  #The second timer is to be set -> it will be used for synchronization
                         self.state = "Timer phase 1"
                         self.phase = 1.5
                         return
@@ -245,3 +261,52 @@ class Robot(pg.sprite.Sprite):
     def set_timer(self):
         self.timer = (self.AS, np.random.randint(1000,
                                                  2000), len(self.neighbors))
+
+    def collective_movement(self):
+        direction, velocity = self.movement_detection()
+        if not velocity:  # or not self.state == "moving":
+            self.velocity[0] = 0.1
+            self.velocity[1] = 0.1
+        else:
+            self.velocity[0] = (velocity * direction[0]) / (
+                math.sqrt(direction[0]**2 + direction[1]**2))
+            self.velocity[1] = (velocity * direction[1]) / (
+                math.sqrt(direction[0]**2 + direction[1]**2))
+
+
+#        print("V_x: ", self.velocity[0], "V_y: ", self.velocity[1])
+        self.state = "moving"
+
+    def movement_detection(self):
+        coords = []
+        for n in self.neighbors:
+            coords.append((n.x, n.y))
+        if not self.prev_coords:
+            self.prev_coords = coords
+        else:
+            if len(self.prev_coords) != len(coords):
+                print("Prev: ", self.prev_coords, "Current: ", coords,
+                      "my coords: ", (self.x, self.y))
+                #                print("Houston, we've got a problem here:(", self.AS)
+                return (0, 0), 0  #robot is unsure about the direction
+            else:
+                '''
+                Good idea -> use some uncertainty - if the coordinates differ of more than given value/percent than this is not the same robot!
+                '''
+                for i in range(len(coords)):
+                    if coords[i] != self.prev_coords[i]:
+                        direction = (coords[i][0] - self.x,
+                                     coords[i][1] - self.y)
+                        velocity = math.sqrt(
+                            (coords[i][0] - self.prev_coords[i][0])**2 +
+                            (coords[i][1] - self.prev_coords[i][1])**2)
+                        #the velocity value (not direction) is in fact the distance travelled. there is used Pythagorean thm to calculate it
+                        return direction, velocity
+            self.prev_coords = coords
+        return (0, 0), 0
+'''
+Major issues so far:
+-Robot should chase the leader! This means that the algorithm should look differently.
+// I was trying to do so:( still some work needs to be donep
+***THINK ABOUT THAT***
+'''
