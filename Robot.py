@@ -288,10 +288,10 @@ class Robot(pg.sprite.Sprite):
         for i in range(1, 12, 1):  #data for k = 13
             si = check_line(self, i)
             S.append(si)
-        direction = S.index(min(S))
+        direction = S.index(min(S, key=abs))
         if direction == 0:
             return (0, 1)
-        return (1, calc_y(direction, 1))
+        return (calc_x(direction, 1), calc_y(direction, 1))
 
     def leader_follower(self):
         '''
