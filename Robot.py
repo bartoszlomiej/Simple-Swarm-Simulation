@@ -277,6 +277,41 @@ class Robot(pg.sprite.Sprite):
 #        print("V_x: ", self.velocity[0], "V_y: ", self.velocity[1])
         self.state = "moving"
 
+    def find_direction(self):
+        '''
+        Finds the path without any obstacles (in radar range). If it is not possible, then some other direction is given
+
+        Returned value is the direction - pair (x, y). It should be multiplied by the velocity to start moving.
+        '''
+        S = []
+        S.append(check_x0_line(self))
+        for i in range(1, 12, 1):  #data for k = 13
+            si = check_line(self, i)
+            S.append(si)
+        direction = S.index(min(S))
+        if direction == 0:
+            return (0, 1)
+        return (1, calc_y(direction, 1))
+
+    def leader_follower(self):
+        '''
+        If robot doesn't have any neighbors, of the same AS, in the given direction, then this robot becomes a leader
+
+        The leader can change the direction, however, after the change of the direction the leader might loose the leadership
+        
+        Otherwise, the robot becomes a follower. The follower is chasing the robot in front of it (in the given direction); it must keep the distance between over robots
+
+
+        What's need to be done?
+        -Function "find_direction" - is needed to find the direction to which the robots would like to go
+        -Change in timers -> the direction that was found must be given as well. If Robot is close to the border, 
+        then direction should be changed (e.g. parallel to that direction)
+        -leader_follower - must be done.
+        -certain changes should be done in the function "movement_detection"
+        '''
+
+        pass
+
     def movement_detection(self):
         coords = []
         for n in self.neighbors:

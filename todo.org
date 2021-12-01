@@ -51,16 +51,21 @@ TODAY -*- mode: org -*-
     -the initial direction & speed of movement should be given with the timer value.
     More detailed description is available in my notes
 
-*** TODO Leader starts moving
-    0. Determine the leader!
-    1. Find direction without any obstacles
-    2. Go in that direction
+**** TODO Leader starts moving
+     0. Determine the leader!
+     1. Find direction without any obstacles
+     2. Go in that direction
 
-*** TODO Follower starts moving
+**** TODO Follower starts moving
 
-*** TODO Leader switching
-    -Signal must be sent if leader cannot move further -> the leader will be chosen again.
+**** TODO Leader switching
+     -Signal must be sent if leader cannot move further -> the leader will be chosen again.
 
+**** TODO Initial direction
+     -With the timer there should be given the information about the initial direction. All robots will start to move
+     in the given direction when timer go down. The robot that don't have any other robots of the same AS in given
+     direction becomes a leader.
+     -This decrease the confusion with other AS's, as well as the role of the leader 
 
 * Minors:
   Optional todos
