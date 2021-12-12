@@ -96,6 +96,8 @@ class Robot(pg.sprite.Sprite):
 
         self.rect.x = x
         self.rect.y = y
+        self.x = int(x)
+        self.y = int(y)
 
     def spotted(self, r):
         '''
@@ -284,26 +286,12 @@ class Robot(pg.sprite.Sprite):
         if self.state != "moving":
             self.initial_direction()
         self.movement()
-        '''
-        direction, velocity = self.movement_detection()
-
-        if not velocity:  # or not self.state == "moving":
-            self.velocity[0] = 0.1
-            self.velocity[1] = 0.1
-        else:
-            self.velocity[0] = (velocity * direction[0]) / (
-                math.sqrt(direction[0]**2 + direction[1]**2))
-            self.velocity[1] = (velocity * direction[1]) / (
-                math.sqrt(direction[0]**2 + direction[1]**2))
-        '''
-
-        #        print("V_x: ", self.velocity[0], "V_y: ", self.velocity[1])
-
-
-#        self.state = "moving"
 
     def initial_direction(self):
-        self.set_timer(200, False)
+        '''
+        Sets the initial direction for all robots in the AS
+        '''
+        self.set_timer(100, False)
         self.state = "moving"
         self.velocity[0] = 0.5 * self.dir_x
         self.velocity[1] = 0.5 * self.dir_y
@@ -313,6 +301,9 @@ class Robot(pg.sprite.Sprite):
             self.timer = (self.timer[0], self.timer[1] - 1, 0
                           )  #number of neighbors doesn't matter yet
         else:
+            self.leader_follower()
+            self.velocity[0] = self.dir_x * 0.5
+            self.velocity[1] = self.dir_y * 0.5
             '''
             Leader/follower
             '''
@@ -325,14 +316,22 @@ class Robot(pg.sprite.Sprite):
         Returned value is the direction - pair (x, y). It should be multiplied by the velocity to start moving.
         '''
         S = []
-        S.append(spot.check_x0_line(self))
-        for i in range(1, 12, 1):  #data for k = 13
-            si = spot.check_line(self, i)
+        radius = int(
+            55 *
+            1.4141)  #in simulation the range is not a circuit - it is a square
+        S.append(spot.check_x0_line(self, radius))
+        for i in range(1, 15, 1):  #data for k = 15
+            si = spot.check_line(self, i, 15, radius)
             S.append(si)
+
+
+#        print("My weight:", S)
+#        print("My neighbors", len(self.neighbors))
         direction = S.index(min(S, key=abs))
         if direction == 0:
             return (0, 1)
-        return (calc_x(direction, 1), calc_y(direction, 1))
+        return (spot.calc_x(direction, 100) / 100,
+                spot.calc_y(direction, 100) / 100)
 
     def leader_follower(self):
         '''
@@ -344,11 +343,11 @@ class Robot(pg.sprite.Sprite):
 
 
         What's need to be done?
-        -Function "find_direction" - is needed to find the direction to which the robots would like to go
-        -Change in timers -> the direction that was found must be given as well. If Robot is close to the border, 
-        then direction should be changed (e.g. parallel to that direction)
-        -leader_follower - must be done.
-        -certain changes should be done in the function "movement_detection"
+        [*] Function "find_direction" - is needed to find the direction to which the robots would like to go
+        [*] Change in timers -> the direction that was found must be given as well. If Robot is close to the border, 
+        [-] then direction should be changed (e.g. parallel to that direction)
+        [-] leader_follower - must be done.
+        [-] certain changes should be done in the function "movement_detection"
 
         leader - the robot that doesn't have any same AS robots in the movement direction
         '''
@@ -363,8 +362,27 @@ class Robot(pg.sprite.Sprite):
         2) Obstacles avoidance - if an obstacle is on our path then it should be avoided (from right or left)
         3) if obstacle cannot be avoided - (e.g. the corner of the board) - stop and send message "Change direction"
         '''
-
-        pass
+        if not spot.is_follower(self):  #I am the leader
+            self.dir_x, self.dir_y = self.find_direction()
+            #just for dbg
+            check_me = self.AS  #np.random.randint(0, 65025)
+            red = check_me % 256
+            green = math.floor(check_me / 4) % 256
+            blue = math.floor(math.sqrt(check_me)) % 256
+            color = (red, green, blue)
+            pg.draw.circle(self.image, color, (self.radius, self.radius),
+                           self.radius)
+            print("My direction:", self.dir_x, self.dir_y, self.velocity)
+        else:
+            check_me = self.AS + 20000  #np.random.randint(0, 65025)
+            red = check_me % 256
+            green = math.floor(check_me / 4) % 256
+            blue = math.floor(math.sqrt(check_me)) % 256
+            color = (red, green, blue)
+            pg.draw.circle(self.image, color, (self.radius, self.radius),
+                           self.radius)
+            print("Who am I following?", self.dir_x, self.dir_y, self.velocity)
+        #otherwise you are the follower and your direction have already been changed
 
     def movement_detection(self):
         coords = []

@@ -72,17 +72,22 @@ class Simulation:
         having velocity = (x, y) -> new velocity = (-random * sign(x), -random * sign(y))
         as a result never two robots will go in the same direction after collision (no stucking)
         '''
-        sign_x = np.sign(robot.velocity[0])
-        sign_y = np.sign(robot.velocity[1])
-        velocity = np.random.rand(2)
-        velocity[0] = (velocity[0]) * self.velocity_lvl / 2  #must be positive!
-        velocity[1] = (velocity[1]) * self.velocity_lvl / 2
-        robot.velocity = [-sign_x * velocity[0], -sign_y * velocity[1]]
+        if robot.phase == 1:
+            sign_x = np.sign(robot.velocity[0])
+            sign_y = np.sign(robot.velocity[1])
+            velocity = np.random.rand(2)
+            velocity[0] = (
+                velocity[0]) * self.velocity_lvl / 2  #must be positive!
+            velocity[1] = (velocity[1]) * self.velocity_lvl / 2
+            robot.velocity = [-sign_x * velocity[0], -sign_y * velocity[1]]
+
+
+#        else:
+#            robot.velocity = [
         '''
         Previous solution:
 #        robot.velocity = [-robot.velocity[0], -robot.velocity[1]]
         '''
-
     def robot_vision(self):
         '''
         Emulates the very basic vision sensor of each robot in the swarm.
@@ -93,7 +98,7 @@ class Simulation:
                     continue
                 dx = abs(r.position[0] - i.position[0])
                 dy = abs(r.position[1] - i.position[1])
-                if (dx < self.sensor_range and dy < self.sensor_range):
+                if ((dx < self.sensor_range) and (dy < self.sensor_range)):
                     r.spotted(i)
                     if ((dx < (self.sensor_range * 0.9) and dy <
                          (self.sensor_range * 0.9))

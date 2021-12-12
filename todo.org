@@ -67,6 +67,16 @@ TODAY -*- mode: org -*-
      direction becomes a leader.
      -This decrease the confusion with other AS's, as well as the role of the leader 
 
+
+*** TODO CURRENT PROBLEMS
+    The follower aggregates each other. They don't follow the leader, or the robot in front of them
+    Possible reasons:
+    1) Wrong prependicular line
+       - The line which indicates the half of the spotted area is in wrong direction
+    2) The sight of the robot to follow should be rather narrow e.g. "\/"
+    3) Another approach should be taken
+       - Search in the literature!
+
 * Minors:
   Optional todos
   
