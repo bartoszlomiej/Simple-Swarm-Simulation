@@ -3,6 +3,7 @@ import numpy as np
 import pygame as pg
 import math
 import Simulation as sim
+import SpotNeighbor as spot
 
 
 class Robot(pg.sprite.Sprite):
@@ -51,6 +52,10 @@ class Robot(pg.sprite.Sprite):
         self.position = np.array([x, y], dtype=np.float64)
         self.velocity = np.asarray(velocity, dtype=np.float64)
         self.moved = False
+
+        #for the sake of changing direction
+        self.dir_x = 0
+        self.dir_y = 0
 
         self.state = "moving"  #initially robots move (just for aggregation algorithm)
         self.phase = 1  #the first phase is being currently run. This number can be only incremented!
@@ -229,9 +234,12 @@ class Robot(pg.sprite.Sprite):
 
                 if self.phase == 1.5:
                     self.broadcast['Timer phase 1'] = self.timer
+                    self.broadcast['Initial Direction'] = (self.dir_x,
+                                                           self.dir_y)
 
                 if self.timer[1] < 0:
-                    if self.phase == 1:
+                    if self.phase == 1:  #here enters only the edge robots
+                        self.dir_x, self.dir_y = self.find_direction()
                         self.set_timer(
                         )  #The second timer is to be set -> it will be used for synchronization
                         self.state = "Timer phase 1"
@@ -255,15 +263,30 @@ class Robot(pg.sprite.Sprite):
                             1] == -1:
                         self.timer = m["Timer phase 1"]
                         self.phase = 1.5  #as we get the other timer, thus the second timer is to be used
+                if "Initial Direction" in m.keys():
+                    self.dir_x = m["Initial Direction"][0]
+                    self.dir_y = m["Initial Direction"][1]
         else:
             self.set_timer()
 
-    def set_timer(self):
-        self.timer = (self.AS, np.random.randint(1000,
-                                                 2000), len(self.neighbors))
+    def set_timer(self, t_min=1000, random=True, t_max=2000):
+        '''
+        Set the timer. if random is set to True, then the random time (from t_min to t_max) will be chosen
+        Otherwise, the t_min value will be set
+        '''
+        if random:
+            self.timer = (self.AS, np.random.randint(t_min, t_max),
+                          len(self.neighbors))
+        else:
+            self.timer = (self.AS, t_min, len(self.neighbors))
 
     def collective_movement(self):
+        if self.state != "moving":
+            self.initial_direction()
+        self.movement()
+        '''
         direction, velocity = self.movement_detection()
+
         if not velocity:  # or not self.state == "moving":
             self.velocity[0] = 0.1
             self.velocity[1] = 0.1
@@ -272,10 +295,28 @@ class Robot(pg.sprite.Sprite):
                 math.sqrt(direction[0]**2 + direction[1]**2))
             self.velocity[1] = (velocity * direction[1]) / (
                 math.sqrt(direction[0]**2 + direction[1]**2))
+        '''
+
+        #        print("V_x: ", self.velocity[0], "V_y: ", self.velocity[1])
 
 
-#        print("V_x: ", self.velocity[0], "V_y: ", self.velocity[1])
+#        self.state = "moving"
+
+    def initial_direction(self):
+        self.set_timer(200, False)
         self.state = "moving"
+        self.velocity[0] = 0.5 * self.dir_x
+        self.velocity[1] = 0.5 * self.dir_y
+
+    def movement(self):
+        if self.timer[1] > 0:
+            self.timer = (self.timer[0], self.timer[1] - 1, 0
+                          )  #number of neighbors doesn't matter yet
+        else:
+            '''
+            Leader/follower
+            '''
+            pass
 
     def find_direction(self):
         '''
@@ -284,9 +325,9 @@ class Robot(pg.sprite.Sprite):
         Returned value is the direction - pair (x, y). It should be multiplied by the velocity to start moving.
         '''
         S = []
-        S.append(check_x0_line(self))
+        S.append(spot.check_x0_line(self))
         for i in range(1, 12, 1):  #data for k = 13
-            si = check_line(self, i)
+            si = spot.check_line(self, i)
             S.append(si)
         direction = S.index(min(S, key=abs))
         if direction == 0:
@@ -308,6 +349,19 @@ class Robot(pg.sprite.Sprite):
         then direction should be changed (e.g. parallel to that direction)
         -leader_follower - must be done.
         -certain changes should be done in the function "movement_detection"
+
+        leader - the robot that doesn't have any same AS robots in the movement direction
+        '''
+        '''
+        Everyone:
+            Start moving in the given direction
+        Leader - the robot which doesn't have any same AS members in front of him (+- 90 degrees let's say)
+        Follower - have any same AS members in front of him. Follows the closest one
+
+        Movement function - the set of general rules of movement
+        1) Distances between any robots or edge of the board should be at least equal to 1/3R
+        2) Obstacles avoidance - if an obstacle is on our path then it should be avoided (from right or left)
+        3) if obstacle cannot be avoided - (e.g. the corner of the board) - stop and send message "Change direction"
         '''
 
         pass
