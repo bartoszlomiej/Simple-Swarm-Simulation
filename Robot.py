@@ -114,11 +114,15 @@ class Robot(pg.sprite.Sprite):
         self.neighbors.append(r)
 
     def in_range(self):
+        '''
+        Returns the number of neighbors that are in given range
+        '''
         self.in_range_robots = self.in_range_robots + 1
 
     def minimal_distance(self):
         '''
-        Checks if the minimal distance between robots is being kept. In no, then it cannot stop.
+        Checks if the minimal distance between robots is being kept.
+        Returns true if minimal distance is being kept; otherwise returns false.
         '''
         for n in self.neighbors:
             if (abs(n.position[0] - self.position[0]) <= self.radius) and (
@@ -341,15 +345,37 @@ class Robot(pg.sprite.Sprite):
             55 *
             1.4141)  #in simulation the range is not a circuit - it is a square
 
-        for i in range(1, 15, 1):  #data for k = 15
-            si = spot.check_line(self, i, 15, radius)
-            if not si:
-                break  #not best approach but should significantly reduce the number of operations
-            S.append(si)
+        for i in range(1, 15):
+            S.append(100)  #initial data, for the purpouse of chain
+
         S.append(spot.check_x0_line(self, radius))
-        #  print("My weight:", S)
-        # print("My neighbors", len(self.neighbors))
-        direction = (S.index(min(S, key=abs)) + 1) % 15
+
+        chain = 0
+        for i in range(14):  #data for k = 15
+            si = spot.check_line(self, i + 1, 15, radius)
+            if si > 0:
+                S[i - 1] = si / 2
+                S[i + 1] = si / 2
+                chain = 0
+            else:
+                chain = chain + 1
+            if chain >= 3:
+                chain = i - 1
+                break
+            #            if not si:
+            #                break  #not best approach but should significantly reduce the number of operations
+            #            S.append(si)
+            S[i] += si
+        if S[-1]:
+            S[0] += S[-1] / 2
+            S[14] += S[-1] / 2
+        if chain > 0:
+            direction = chain
+        else:
+            direction = (S.index(min(S, key=abs)) + 1) % 15
+#  print("My weight:", S)
+# print("My neighbors", len(self.neighbors))
+
         if direction == 0:
             return (0, 1)
         return (spot.calc_x(direction, 100) / 100,
@@ -387,8 +413,8 @@ class Robot(pg.sprite.Sprite):
         if not spot.is_follower(self):  #I am the leader
             #            self.dir_x, self.dir_y = self.find_direction()
             #just for dbg
-            self.dir_x = 0
-            self.dir_y = 0
+            #            self.dir_x = 0
+            #            self.dir_y = 0
             check_me = self.AS  #np.random.randint(0, 65025)
             red = check_me % 256
             green = math.floor(check_me / 4) % 256
@@ -398,6 +424,10 @@ class Robot(pg.sprite.Sprite):
                            self.radius)
 #           print("My direction:", self.dir_x, self.dir_y, self.velocity)
         else:
+            BLACK = (0, 0, 0)
+            pg.draw.circle(self.image, BLACK, (self.radius, self.radius),
+                           self.radius)
+            '''
             check_me = self.AS + 20000  #np.random.randint(0, 65025)
             red = check_me % 256
             green = math.floor(check_me / 4) % 256
@@ -405,6 +435,7 @@ class Robot(pg.sprite.Sprite):
             color = (red, green, blue)
             pg.draw.circle(self.image, color, (self.radius, self.radius),
                            self.radius)
+            '''
 
 
 #            print("Who am I following?", self.dir_x, self.dir_y, self.velocity)

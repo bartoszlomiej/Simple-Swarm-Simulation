@@ -126,34 +126,22 @@ def is_follower(Robot):
     '''
     follower = False
     a, b, d = direction_line_equation(Robot)
-    rd = 0  #relative distance to closest neighbor
+    rd = 1000  #relative distance to closest neighbor
     best_neighbor = None
-    best_direction = 0
+    best_direction = 1000
 
     x, y = 0, 0
 
     for n in Robot.neighbors:
         if n.AS != Robot.AS:
             return False
-        if d:
+        if not d:
             if n.y > (n.x * a) + b:
                 follower = True
         else:
             if n.y < (n.x * a) + b:
                 follower = True
-
-        if follower and rd == 0:
-            rd = relative_distance(Robot.x, Robot.y, n.x, n.y)
-            if rd == 0:
-                Robot.dir_x, Robot.dir_y = 1, 1
-                return True
-            x = ((n.x - Robot.x) / rd)**2
-            y = ((n.y - Robot.y) / rd)**2
-            best_direction = math.sqrt((x - Robot.dir_x)**2 +
-                                       (y - Robot.dir_y)**2)
-            closest_neighbor = n
-
-        elif follower:
+        if follower:
             if rd == 0:
                 dir_x, dir_y = 1, 1
                 return True
@@ -169,21 +157,27 @@ def is_follower(Robot):
     if follower:
         Robot.dir_x = ((n.x - Robot.x) / rd)**2
         Robot.dir_y = ((n.y - Robot.y) / rd)**2
-        while Robot.dir_x > 1:
+        while Robot.dir_x > 0.5:
             Robot.dir_x /= 2
 
-        while Robot.dir_y > 1:
+        while Robot.dir_y > 0.5:
             Robot.dir_y /= 2
 
         if rd < 25:  #robots are relatively close one to another
-            Robot.dir_x *= 0.5
-            Robot.dir_y *= 0.5
+            Robot.dir_x *= 0
+            Robot.dir_y *= 0
         elif rd > 55:
-            Robot.dir_x *= 1.5
-            Robot.dir_y *= 1.5
+            Robot.dir_x *= 2
+            Robot.dir_y *= 2
         if rd < 15:  #robots are almost in collision
             Robot.dir_x *= -1
             Robot.dir_y *= -1
+    else:
+        while Robot.dir_x > 0.5:
+            Robot.dir_x /= 2
+
+        while Robot.dir_y > 0.5:
+            Robot.dir_y /= 2
 
 
 #follow the neighbor

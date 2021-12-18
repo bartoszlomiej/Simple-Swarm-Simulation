@@ -104,7 +104,7 @@ class Simulation:
                          (self.sensor_range * 0.9))
                             and (dx > (self.sensor_range * 0.1) and dy >
                                  (self.sensor_range * 0.1))):
-                        r.in_range()  #remove this
+                        r.in_range()
 
     def dbg_timer(self, t):
         for i in self.swarm:
