@@ -45,30 +45,33 @@ def calc_x(i, r, k=15):
 '''
 Below there is the original way to calculate the weight. It assumes that the range goes after the robot.
 '''
-'''
-def add_weight(Robot, x, y, W=30):
 
-#    For given x,y there is added the weight W (depending how far away this point P(x,y) is from the center of weight
-#    W(xi', yi') - the neighbor i coordinates
+
+def add_weight(Robot, x, y, distance, W=150):
+
+    #    For given x,y there is added the weight W (depending how far away this point P(x,y) is from the center of weight
+    #    W(xi', yi') - the neighbor i coordinates
 
     weight = 0
     for n in Robot.neighbors:
         if (abs(n.x - x) <= (W / 2)) and (abs(n.y - y) <= (W / 2)):
             weight = weight + W - (abs(n.x - x) + abs(n.y - y))
     return weight
-    '''
 
 
+'''
 def add_weight(Robot, x, y, distance, R=20):
-    '''
-    For given x,y there is added the weight W (depending how far away this point P(x,y) is from the center of weight
-    distance - is equal to the current radius of the line that is being checked
-    R - radius of a robot
-    '''
+
+#    For given x,y there is added the weight W (depending how far away this point P(x,y) is from the center of weight
+#    distance - is equal to the current radius of the line that is being checked
+#    R - radius of a robot
+
     for n in Robot.neighbors:
         if (abs(n.x - x) <= (R / 2)) and (abs(n.y - y) <= (R / 2)):
             return distance
     return 0
+
+'''
 
 
 def check_line(Robot, i, k=15, R=75):
@@ -119,6 +122,62 @@ def relative_distance(x0, y0, x1, y1):
     return math.sqrt(((x0 - x1)**2 + (y0 - y1)**2))
 
 
+def leader_function(Robot):
+    leader = False
+    a, b, d = direction_line_equation(Robot)
+    rd = 1000  #relative distance to closest neighbor
+    best_neighbor = None
+    best_direction = 1000
+
+    x, y = 0, 0
+
+    for n in Robot.neighbors:
+        #        if n.AS != Robot.AS:
+        #            continue
+        if not d:
+            if n.y > (n.x * a) + b:
+                leader = True
+        else:
+            if n.y < (n.x * a) + b:
+                leader = True
+        if leader:
+            if rd == 0:
+                dir_x, dir_y = 1, 1
+                return True
+            buffer_rd = relative_distance(Robot.x, Robot.y, n.x, n.y)
+            x = ((n.x - Robot.x) / rd)**2
+            y = ((n.y - Robot.y) / rd)**2
+            buffer_best_direction = math.sqrt((x - Robot.dir_x)**2 +
+                                              (y - Robot.dir_y)**2)
+            if buffer_best_direction < best_direction:
+                best_direction = buffer_best_direction
+                rd = buffer_rd
+                closest_neighbor = n
+    if leader:
+        if not rd:
+            Robot.dir_x *= 0
+            Robot.dir_y *= 0
+            return True
+        Robot.dir_x = ((closest_neighbor.x - Robot.x) /
+                       rd)**2  #it is crutial to make a square!!!
+        Robot.dir_y = ((closest_neighbor.y - Robot.y) / rd)**2
+        while Robot.dir_x > 0.5:
+            Robot.dir_x /= 2
+
+        while Robot.dir_y > 0.5:
+            Robot.dir_y /= 2
+
+        if rd < 25:  #robots are relatively close one to another
+            Robot.dir_x *= 0.5
+            Robot.dir_y *= 0.5
+        elif rd > 55:
+            Robot.dir_x *= 2
+            Robot.dir_y *= 2
+        if rd < 15:  #robots are almost in collision
+            Robot.dir_x *= -1
+            Robot.dir_y *= -1
+
+
 def is_follower(Robot):
     '''
     if there are any neighbors in our direction -> I am follower; Otherwise I am the leader.
@@ -134,6 +193,7 @@ def is_follower(Robot):
 
     for n in Robot.neighbors:
         if n.AS != Robot.AS:
+            #            continue
             return False
         if not d:
             if n.y > (n.x * a) + b:
@@ -155,8 +215,12 @@ def is_follower(Robot):
                 rd = buffer_rd
                 closest_neighbor = n
     if follower:
-        Robot.dir_x = ((n.x - Robot.x) / rd)**2
-        Robot.dir_y = ((n.y - Robot.y) / rd)**2
+        if not rd:
+            Robot.dir_x *= 0
+            Robot.dir_y *= 0
+            return True
+        Robot.dir_x = ((closest_neighbor.x - Robot.x) / rd)  #**2
+        Robot.dir_y = ((closest_neighbor.y - Robot.y) / rd)  #**2
         while Robot.dir_x > 0.5:
             Robot.dir_x /= 2
 

@@ -286,9 +286,9 @@ class Robot(pg.sprite.Sprite):
 
             for m in self.messages:
                 if "Timer phase 1" in m.keys():
-                    self.state = "Timer phase 1"
                     if self.timer[1] > m["Timer phase 1"][1] or self.timer[
-                            1] == -1:
+                            1] == -1 or self.state != "Timer phase 1":
+                        self.state = "Timer phase 1"
                         self.timer = m["Timer phase 1"]
                         self.phase = 1.5  #as we get the other timer, thus the second timer is to be used
                 if "Initial Direction" in m.keys():
@@ -328,8 +328,8 @@ class Robot(pg.sprite.Sprite):
                           )  #number of neighbors doesn't matter yet
         else:
             self.leader_follower()
-            self.velocity[0] = self.dir_x * 0.5
-            self.velocity[1] = self.dir_y * 0.5
+            self.velocity[0] = self.dir_x * 0.1
+            self.velocity[1] = self.dir_y * 0.1
             '''
             Leader/follower
             '''
@@ -373,6 +373,8 @@ class Robot(pg.sprite.Sprite):
             direction = chain
         else:
             direction = (S.index(min(S, key=abs)) + 1) % 15
+
+
 #  print("My weight:", S)
 # print("My neighbors", len(self.neighbors))
 
@@ -413,8 +415,9 @@ class Robot(pg.sprite.Sprite):
         if not spot.is_follower(self):  #I am the leader
             #            self.dir_x, self.dir_y = self.find_direction()
             #just for dbg
-            #            self.dir_x = 0
-            #            self.dir_y = 0
+            self.dir_x = 0
+            self.dir_y = 0
+            #            spot.leader_function(self)
             check_me = self.AS  #np.random.randint(0, 65025)
             red = check_me % 256
             green = math.floor(check_me / 4) % 256
@@ -422,24 +425,10 @@ class Robot(pg.sprite.Sprite):
             color = (red, green, blue)
             pg.draw.circle(self.image, color, (self.radius, self.radius),
                            self.radius)
-#           print("My direction:", self.dir_x, self.dir_y, self.velocity)
         else:
             BLACK = (0, 0, 0)
             pg.draw.circle(self.image, BLACK, (self.radius, self.radius),
                            self.radius)
-            '''
-            check_me = self.AS + 20000  #np.random.randint(0, 65025)
-            red = check_me % 256
-            green = math.floor(check_me / 4) % 256
-            blue = math.floor(math.sqrt(check_me)) % 256
-            color = (red, green, blue)
-            pg.draw.circle(self.image, color, (self.radius, self.radius),
-                           self.radius)
-            '''
-
-
-#            print("Who am I following?", self.dir_x, self.dir_y, self.velocity)
-#otherwise you are the follower and your direction have already been changed
 
     def movement_detection(self):
         coords = []
