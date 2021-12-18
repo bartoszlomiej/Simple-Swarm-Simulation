@@ -59,21 +59,6 @@ def add_weight(Robot, x, y, distance, W=150):
     return weight
 
 
-'''
-def add_weight(Robot, x, y, distance, R=20):
-
-#    For given x,y there is added the weight W (depending how far away this point P(x,y) is from the center of weight
-#    distance - is equal to the current radius of the line that is being checked
-#    R - radius of a robot
-
-    for n in Robot.neighbors:
-        if (abs(n.x - x) <= (R / 2)) and (abs(n.y - y) <= (R / 2)):
-            return distance
-    return 0
-
-'''
-
-
 def check_line(Robot, i, k=15, R=75):
     line_weight = 0
     radius = 10
@@ -96,7 +81,7 @@ def check_x0_line(Robot, R=75):
 
 def direction_line_equation(Robot):
     x_a, y_a = Robot.x, Robot.y
-    x_b, y_b = Robot.dir_x, Robot.dir_y
+    x_b, y_b = (Robot.dir_x * 100) + Robot.x, (Robot.dir_y * 100) + Robot.y
     if x_a == x_b:
         if y_a > y_b:
             d = False
@@ -108,8 +93,9 @@ def direction_line_equation(Robot):
             return 0, x_a, False
         return 0, x_a, True
     else:
-        a = (y_a - y_b) / (x_a - x_b)
-        a = -1 / a
+        #        a = (y_b - y_a) / (x_b - x_a)
+        #        a = -1 / a
+        a = -Robot.dir_x / Robot.dir_y
         b = Robot.y - (Robot.x * a)
         if (Robot.x * a) + b < Robot.dir_y:
             d = True  #indicates if the direction is over or under the prependicular to the direction line
@@ -122,139 +108,79 @@ def relative_distance(x0, y0, x1, y1):
     return math.sqrt(((x0 - x1)**2 + (y0 - y1)**2))
 
 
-def leader_function(Robot):
-    leader = False
-    a, b, d = direction_line_equation(Robot)
-    rd = 1000  #relative distance to closest neighbor
-    best_neighbor = None
-    best_direction = 1000
-
-    x, y = 0, 0
-
-    for n in Robot.neighbors:
-        #        if n.AS != Robot.AS:
-        #            continue
-        if not d:
-            if n.y > (n.x * a) + b:
-                leader = True
-        else:
-            if n.y < (n.x * a) + b:
-                leader = True
-        if leader:
-            if rd == 0:
-                dir_x, dir_y = 1, 1
-                return True
-            buffer_rd = relative_distance(Robot.x, Robot.y, n.x, n.y)
-            x = ((n.x - Robot.x) / rd)**2
-            y = ((n.y - Robot.y) / rd)**2
-            buffer_best_direction = math.sqrt((x - Robot.dir_x)**2 +
-                                              (y - Robot.dir_y)**2)
-            if buffer_best_direction < best_direction:
-                best_direction = buffer_best_direction
-                rd = buffer_rd
-                closest_neighbor = n
-    if leader:
-        if not rd:
-            Robot.dir_x *= 0
-            Robot.dir_y *= 0
-            return True
-        Robot.dir_x = ((closest_neighbor.x - Robot.x) /
-                       rd)**2  #it is crutial to make a square!!!
-        Robot.dir_y = ((closest_neighbor.y - Robot.y) / rd)**2
-        while Robot.dir_x > 0.5:
-            Robot.dir_x /= 2
-
-        while Robot.dir_y > 0.5:
-            Robot.dir_y /= 2
-
-        if rd < 25:  #robots are relatively close one to another
-            Robot.dir_x *= 0.5
-            Robot.dir_y *= 0.5
-        elif rd > 55:
-            Robot.dir_x *= 2
-            Robot.dir_y *= 2
-        if rd < 15:  #robots are almost in collision
-            Robot.dir_x *= -1
-            Robot.dir_y *= -1
-
-
 def is_follower(Robot):
     '''
     if there are any neighbors in our direction -> I am follower; Otherwise I am the leader.
     Returns direction and information if it is a follower
     '''
-    follower = False
     a, b, d = direction_line_equation(Robot)
-    rd = 1000  #relative distance to closest neighbor
-    best_neighbor = None
-    best_direction = 1000
 
     x, y = 0, 0
 
     for n in Robot.neighbors:
         if n.AS != Robot.AS:
-            #            continue
-            return False
-        if not d:
+            continue  #we don't care now
+        if d:
             if n.y > (n.x * a) + b:
-                follower = True
+                return True
         else:
             if n.y < (n.x * a) + b:
-                follower = True
-        if follower:
-            if rd == 0:
-                dir_x, dir_y = 1, 1
                 return True
-            buffer_rd = relative_distance(Robot.x, Robot.y, n.x, n.y)
-            x = ((n.x - Robot.x) / rd)**2
-            y = ((n.y - Robot.y) / rd)**2
-            buffer_best_direction = math.sqrt((x - Robot.dir_x)**2 +
-                                              (y - Robot.dir_y)**2)
-            if buffer_best_direction < best_direction:
-                best_direction = buffer_best_direction
-                rd = buffer_rd
-                closest_neighbor = n
-    if follower:
-        if not rd:
-            Robot.dir_x *= 0
-            Robot.dir_y *= 0
-            return True
-        Robot.dir_x = ((closest_neighbor.x - Robot.x) / rd)  #**2
-        Robot.dir_y = ((closest_neighbor.y - Robot.y) / rd)  #**2
-        while Robot.dir_x > 0.5:
-            Robot.dir_x /= 2
-
-        while Robot.dir_y > 0.5:
-            Robot.dir_y /= 2
-
-        if rd < 25:  #robots are relatively close one to another
-            Robot.dir_x *= 0
-            Robot.dir_y *= 0
-        elif rd > 55:
-            Robot.dir_x *= 2
-            Robot.dir_y *= 2
-        if rd < 15:  #robots are almost in collision
-            Robot.dir_x *= -1
-            Robot.dir_y *= -1
-    else:
-        while Robot.dir_x > 0.5:
-            Robot.dir_x /= 2
-
-        while Robot.dir_y > 0.5:
-            Robot.dir_y /= 2
+    return False
 
 
-#follow the neighbor
-    return follower
-'''
-Problems:
-is_follower or find_direction is extremely time & resources consuming. Moreover, it is hard to test both.
+def point_to_direction_rd(Robot, neighbor):
+    '''
+    Calculating the distance from neighbor to direction line
+    rd = (Ax0 + By0 + C) / sqrt(A^2 + B^2)
+    '''
+    A = Robot.dir_x
+    B = Robot.dir_y
+    C = Robot.y - (Robot.x * A)
+    return abs((neighbor.x * A) +
+               (neighbor.y * B) + C) / math.sqrt(A**2 + B**2)
 
--is_follower -> not really follows
--find_direction - doesn't avoid collisions (especially with other AS's ???) (probably extremely time consuming)
 
--when wall is encounter they don't know how to behave
--collision avoidance doesn't work
-(it used to work in previous commits; highly probable that it was the is_follow function XD) and it was efficient
--distances are not kept
-'''
+def direction_to_neighbor(Robot, neighbor, rd):
+    '''
+    Change the Robot direction to approach the given neighbor
+    '''
+    Robot.dir_x = (neighbor.x - Robot.x)
+    Robot.dir_y = (neighbor.y - Robot.x)
+    while Robot.dir_x > 1 or Robot.dir_y > 1:
+        Robot.dir_x /= 2
+        Robot.dir_y /= 2
+
+
+def follower(Robot):
+    best_rd = 100000  #rd - relative distance
+    best_neighbor = None
+    for n in Robot.neighbors:
+        if n.AS != Robot.AS:
+            continue
+        rd = point_to_direction_rd(Robot, n)
+        if rd < best_rd:
+            best_neighbor = n
+            best_rd = rd
+            '''            
+    print("best rd", best_rd, Robot.x, Robot.y, "n:", best_neighbor.x,
+          best_neighbor.y)
+    print("Direction:", Robot.dir_x, Robot.dir_y)
+    print("Prosta prostopadla:", direction_line_equation(Robot))
+            '''
+    direction_to_neighbor(Robot, best_neighbor, best_rd)
+
+
+def keep_distances(Robot):
+    for n in Robot.neighbors:
+        rd = relative_distance(Robot.x, Robot.y, n.x, n.y)
+        if rd < 25:
+            if rd == 0:
+                Robot.dir_x -= 0.75
+                Robot.dir_y -= 0.75
+                return
+            negative_impact = (Robot.x - n.x, Robot.y - n.y)
+            cx = (negative_impact[0] * 25 / (rd**2)) * 0.25
+            cy = (negative_impact[1] * 25 / (rd**2)) * 0.25
+            Robot.dir_x -= cx
+            Robot.dir_y -= cy
