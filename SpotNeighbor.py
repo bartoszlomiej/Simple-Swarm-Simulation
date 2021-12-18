@@ -1,6 +1,10 @@
 import math
 import numpy as np
 import mpmath as mp
+'''
+Changing the approach:
+-the weight is the distance to the closest robot in given direction
+'''
 
 
 def calc_y(i, r, k=15):
@@ -38,16 +42,33 @@ def calc_x(i, r, k=15):
     return int(round(r / math.sqrt(1 + cot)))
 
 
+'''
+Below there is the original way to calculate the weight. It assumes that the range goes after the robot.
+'''
+'''
 def add_weight(Robot, x, y, W=30):
-    '''
-    For given x,y there is added the weight W (depending how far away this point P(x,y) is from the center of weight
-    W(xi', yi') - the neighbor i coordinates
-    '''
+
+#    For given x,y there is added the weight W (depending how far away this point P(x,y) is from the center of weight
+#    W(xi', yi') - the neighbor i coordinates
+
     weight = 0
     for n in Robot.neighbors:
         if (abs(n.x - x) <= (W / 2)) and (abs(n.y - y) <= (W / 2)):
             weight = weight + W - (abs(n.x - x) + abs(n.y - y))
     return weight
+    '''
+
+
+def add_weight(Robot, x, y, distance, R=20):
+    '''
+    For given x,y there is added the weight W (depending how far away this point P(x,y) is from the center of weight
+    distance - is equal to the current radius of the line that is being checked
+    R - radius of a robot
+    '''
+    for n in Robot.neighbors:
+        if (abs(n.x - x) <= (R / 2)) and (abs(n.y - y) <= (R / 2)):
+            return distance
+    return 0
 
 
 def check_line(Robot, i, k=15, R=75):
@@ -55,16 +76,18 @@ def check_line(Robot, i, k=15, R=75):
     radius = 10
     for x in range(Robot.x + 10, Robot.x + R, 1):  #the robot radius is 10!
         y = calc_y(i, radius, k) + Robot.y
-        line_weight += add_weight(Robot, x, y)
+        line_weight = add_weight(Robot, x, y, radius)
+        if line_weight > 0:
+            return line_weight
         radius += 1
 
     return line_weight
 
 
-def check_x0_line(Robot, R=55):
+def check_x0_line(Robot, R=75):
     line_weight = 0
     for y in range(10, R, 1):  #the robot radius is 10!
-        line_weight += add_weight(Robot, Robot.x, Robot.y + y)
+        line_weight += add_weight(Robot, Robot.x, Robot.y + y, y)
     return line_weight
 
 
@@ -118,20 +141,22 @@ def is_follower(Robot):
         else:
             if n.y < (n.x * a) + b:
                 follower = True
+
         if follower and rd == 0:
             rd = relative_distance(Robot.x, Robot.y, n.x, n.y)
             if rd == 0:
-                dir_x, dir_y = 1, 1
-                return
+                Robot.dir_x, Robot.dir_y = 1, 1
+                return True
             x = ((n.x - Robot.x) / rd)**2
             y = ((n.y - Robot.y) / rd)**2
             best_direction = math.sqrt((x - Robot.dir_x)**2 +
                                        (y - Robot.dir_y)**2)
             closest_neighbor = n
+
         elif follower:
             if rd == 0:
                 dir_x, dir_y = 1, 1
-                return
+                return True
             buffer_rd = relative_distance(Robot.x, Robot.y, n.x, n.y)
             x = ((n.x - Robot.x) / rd)**2
             y = ((n.y - Robot.y) / rd)**2
@@ -153,6 +178,9 @@ def is_follower(Robot):
         if rd < 25:  #robots are relatively close one to another
             Robot.dir_x *= 0.5
             Robot.dir_y *= 0.5
+        elif rd > 55:
+            Robot.dir_x *= 1.5
+            Robot.dir_y *= 1.5
         if rd < 15:  #robots are almost in collision
             Robot.dir_x *= -1
             Robot.dir_y *= -1
@@ -160,3 +188,15 @@ def is_follower(Robot):
 
 #follow the neighbor
     return follower
+'''
+Problems:
+is_follower or find_direction is extremely time & resources consuming. Moreover, it is hard to test both.
+
+-is_follower -> not really follows
+-find_direction - doesn't avoid collisions (especially with other AS's ???) (probably extremely time consuming)
+
+-when wall is encounter they don't know how to behave
+-collision avoidance doesn't work
+(it used to work in previous commits; highly probable that it was the is_follow function XD) and it was efficient
+-distances are not kept
+'''

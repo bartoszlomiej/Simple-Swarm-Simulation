@@ -86,8 +86,16 @@ class Robot(pg.sprite.Sprite):
 
         #boundary parameters
         if x < 0 or x > self.width - 2 * self.radius:
+            if self.phase == 2:  #just for dbg
+                self.velocity[0] = 0
+                self.velocity[1] = 0
+                self.phase = 3
             self.velocity[0] = -self.velocity[0]
         if y < 0 or y > self.height - 2 * self.radius:
+            if self.phase == 2:  #just for dbg
+                self.velocity[0] = 0
+                self.velocity[1] = 0
+                self.phase = 3
             self.velocity[1] = -self.velocity[1]
 
         self.neighbors.clear(
@@ -107,6 +115,16 @@ class Robot(pg.sprite.Sprite):
 
     def in_range(self):
         self.in_range_robots = self.in_range_robots + 1
+
+    def minimal_distance(self):
+        '''
+        Checks if the minimal distance between robots is being kept. In no, then it cannot stop.
+        '''
+        for n in self.neighbors:
+            if (abs(n.position[0] - self.position[0]) <= self.radius) and (
+                    abs(n.position[1] - self.position[1]) <= self.radius):
+                return False
+        return True
 
     def aggregate(self):
         '''
@@ -140,6 +158,8 @@ class Robot(pg.sprite.Sprite):
             '''
             if there are some neighbors -> the robot might stop
             '''
+            if not self.minimal_distance():
+                return
             self.state = "stopped"
             self.velocity[0] = 0
             self.velocity[1] = 0
@@ -249,6 +269,7 @@ class Robot(pg.sprite.Sprite):
                         return
                     self.phase = 2  #finally, going to phase 2!!!
                     #just for dbg
+                    '''
                     check_me = self.AS + 2000  #np.random.randint(0, 65025)
                     red = check_me % 256
                     green = math.floor(check_me / 4) % 256
@@ -256,6 +277,7 @@ class Robot(pg.sprite.Sprite):
                     color = (red, green, blue)
                     pg.draw.circle(self.image, color,
                                    (self.radius, self.radius), self.radius)
+                    '''
                     return
 
             for m in self.messages:
@@ -293,8 +315,8 @@ class Robot(pg.sprite.Sprite):
         '''
         self.set_timer(100, False)
         self.state = "moving"
-        self.velocity[0] = 0.5 * self.dir_x
-        self.velocity[1] = 0.5 * self.dir_y
+        self.velocity[0] = 0.1 * self.dir_x
+        self.velocity[1] = 0.1 * self.dir_y
 
     def movement(self):
         if self.timer[1] > 0:
@@ -307,7 +329,6 @@ class Robot(pg.sprite.Sprite):
             '''
             Leader/follower
             '''
-            pass
 
     def find_direction(self):
         '''
@@ -319,15 +340,16 @@ class Robot(pg.sprite.Sprite):
         radius = int(
             55 *
             1.4141)  #in simulation the range is not a circuit - it is a square
-        S.append(spot.check_x0_line(self, radius))
+
         for i in range(1, 15, 1):  #data for k = 15
             si = spot.check_line(self, i, 15, radius)
+            if not si:
+                break  #not best approach but should significantly reduce the number of operations
             S.append(si)
-
-
-#        print("My weight:", S)
-#        print("My neighbors", len(self.neighbors))
-        direction = S.index(min(S, key=abs))
+        S.append(spot.check_x0_line(self, radius))
+        #  print("My weight:", S)
+        # print("My neighbors", len(self.neighbors))
+        direction = (S.index(min(S, key=abs)) + 1) % 15
         if direction == 0:
             return (0, 1)
         return (spot.calc_x(direction, 100) / 100,
@@ -363,8 +385,10 @@ class Robot(pg.sprite.Sprite):
         3) if obstacle cannot be avoided - (e.g. the corner of the board) - stop and send message "Change direction"
         '''
         if not spot.is_follower(self):  #I am the leader
-            self.dir_x, self.dir_y = self.find_direction()
+            #            self.dir_x, self.dir_y = self.find_direction()
             #just for dbg
+            self.dir_x = 0
+            self.dir_y = 0
             check_me = self.AS  #np.random.randint(0, 65025)
             red = check_me % 256
             green = math.floor(check_me / 4) % 256
@@ -372,7 +396,7 @@ class Robot(pg.sprite.Sprite):
             color = (red, green, blue)
             pg.draw.circle(self.image, color, (self.radius, self.radius),
                            self.radius)
-            print("My direction:", self.dir_x, self.dir_y, self.velocity)
+#           print("My direction:", self.dir_x, self.dir_y, self.velocity)
         else:
             check_me = self.AS + 20000  #np.random.randint(0, 65025)
             red = check_me % 256
@@ -381,8 +405,10 @@ class Robot(pg.sprite.Sprite):
             color = (red, green, blue)
             pg.draw.circle(self.image, color, (self.radius, self.radius),
                            self.radius)
-            print("Who am I following?", self.dir_x, self.dir_y, self.velocity)
-        #otherwise you are the follower and your direction have already been changed
+
+
+#            print("Who am I following?", self.dir_x, self.dir_y, self.velocity)
+#otherwise you are the follower and your direction have already been changed
 
     def movement_detection(self):
         coords = []
