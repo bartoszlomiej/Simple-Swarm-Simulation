@@ -42,12 +42,12 @@ def calc_x(i, r, k=15):
     return int(round(r / math.sqrt(1 + cot)))
 
 
-'''
-Below there is the original way to calculate the weight. It assumes that the range goes after the robot.
-'''
-
-
 def add_weight(Robot, x, y, distance, W=150):
+    '''
+    Calculates the weight of the path. If neighbor position is close to the line which 
+    is being checked, then some weight will be added. The closest is the robot to the 
+    streight line, the higher weight will be added.
+    '''
 
     #    For given x,y there is added the weight W (depending how far away this point P(x,y) is from the center of weight
     #    W(xi', yi') - the neighbor i coordinates
@@ -60,6 +60,9 @@ def add_weight(Robot, x, y, distance, W=150):
 
 
 def check_line(Robot, i, k=15, R=75):
+    '''
+    Checks the given line (k - the given fraction of the circle).
+    '''
     line_weight = 0
     radius = 10
     for x in range(Robot.x + 10, Robot.x + R, 1):  #the robot radius is 10!
@@ -73,6 +76,9 @@ def check_line(Robot, i, k=15, R=75):
 
 
 def check_x0_line(Robot, R=75):
+    '''
+    Special case of check line - checks the line for the x = 0.
+    '''
     line_weight = 0
     for y in range(10, R, 1):  #the robot radius is 10!
         line_weight += add_weight(Robot, Robot.x, Robot.y + y, y)
@@ -80,6 +86,11 @@ def check_x0_line(Robot, R=75):
 
 
 def direction_line_equation(Robot):
+    '''
+    Returns a - the coefficient of the line prependicular to the direction (y = ax + b),
+    b - similarly
+    d - the half of the space in which we are searching for other robots
+    '''
     x_a, y_a = Robot.x, Robot.y
     x_b, y_b = (Robot.dir_x * 100) + Robot.x, (Robot.dir_y * 100) + Robot.y
     if x_a == x_b:
@@ -105,6 +116,9 @@ def direction_line_equation(Robot):
 
 
 def relative_distance(x0, y0, x1, y1):
+    '''
+    Calculates the relative distance between two points
+    '''
     return math.sqrt(((x0 - x1)**2 + (y0 - y1)**2))
 
 
@@ -143,16 +157,20 @@ def point_to_direction_rd(Robot, neighbor):
 
 def direction_to_neighbor(Robot, neighbor, rd):
     '''
-    Change the Robot direction to approach the given neighbor
+    Change the Robot direction to approach the given neighbor.
     '''
     Robot.dir_x = (neighbor.x - Robot.x)
     Robot.dir_y = (neighbor.y - Robot.x)
-    while Robot.dir_x > 1 or Robot.dir_y > 1:
+    #proportionally dividing the dir value by 2
+    while abs(Robot.dir_x) > 1.2 or abs(Robot.dir_y) > 1.2:
         Robot.dir_x /= 2
         Robot.dir_y /= 2
 
 
 def follower(Robot):
+    '''
+    Finds the neighbor which is the most close to the broadcasted direction and follows it.
+    '''
     best_rd = 100000  #rd - relative distance
     best_neighbor = None
     for n in Robot.neighbors:
@@ -172,6 +190,11 @@ def follower(Robot):
 
 
 def keep_distances(Robot):
+    '''
+    Robots that are getting close one to another will have their speed changed by the
+    factors cx, cy, which both increase if the relative distance between two robots is 
+    relatively small.
+    '''
     for n in Robot.neighbors:
         rd = relative_distance(Robot.x, Robot.y, n.x, n.y)
         if rd < 25:
@@ -184,3 +207,7 @@ def keep_distances(Robot):
             cy = (negative_impact[1] * 25 / (rd**2)) * 0.25
             Robot.dir_x -= cx
             Robot.dir_y -= cy
+'''
+Observations:
+leaders are the robots completely oposite to the initial direction! That is a hughe mistake.
+'''

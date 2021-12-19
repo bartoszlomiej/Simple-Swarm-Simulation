@@ -270,9 +270,13 @@ class Robot(pg.sprite.Sprite):
                         )  #The second timer is to be set -> it will be used for synchronization
                         self.state = "Timer phase 1"
                         self.phase = 1.5
+                        HORRIBLE_YELLOW = (190, 175, 50)
+                        pg.draw.circle(self.image, HORRIBLE_YELLOW,
+                                   (self.radius, self.radius), self.radius)                        
                         return
                     self.phase = 2  #finally, going to phase 2!!!
                     #just for dbg
+                    
                     '''
                     check_me = self.AS + 2000  #np.random.randint(0, 65025)
                     red = check_me % 256
@@ -309,6 +313,10 @@ class Robot(pg.sprite.Sprite):
             self.timer = (self.AS, t_min, len(self.neighbors))
 
     def collective_movement(self):
+        '''
+        Transition from the state "stopped" to "moving" and runing the movement function
+        #to be removed in the future.
+        '''
         if self.state != "moving":
             self.initial_direction()
         self.movement()
@@ -323,6 +331,9 @@ class Robot(pg.sprite.Sprite):
         self.velocity[1] = 0.1 * self.dir_y
 
     def movement(self):
+        '''
+        The general movement function.
+        '''
         if self.timer[1] > 0:
             self.timer = (self.timer[0], self.timer[1] - 1, 0
                           )  #number of neighbors doesn't matter yet
@@ -381,12 +392,19 @@ class Robot(pg.sprite.Sprite):
         Gets the route given by the leader.
         '''
         for m in self.messages:
-            if "Direction" in m.keys():
+            if "Direction" in m.keys() and m["AS"] == self.AS:
                 self.broadcast["Direction"] = m["Direction"]
                 self.dir_x = m["Direction"][0]
                 self.dir_y = m["Direction"][1]
 
     def leader_follower(self):
+        '''
+        Determines if the robot is leader or follower.
+        If it is a leader - if there are no obstacles it simply goes in the known direction.
+            if there are obstacles, than another direction should be calculated.
+        If it is a follower - it should follow the neighbor of the same AS that is 
+        the closest to the direction given by the leader.
+        '''
 
         if not spot.is_follower(self):  #I am the leader
             '''
@@ -405,8 +423,9 @@ class Robot(pg.sprite.Sprite):
                            self.radius)
         else:
             self.follower_msg()
-            #            spot.follower(self)
-            #            print("Follower:", self.dir_x, self.dir_y)
+#            print("Obtained directions:", self.dir_x, self.dir_y)
+            spot.follower(self)
+#            print("Follower:", self.dir_x, self.dir_y)
             #            spot.keep_distances(self)
             #            print("F after distance:", self.dir_x, self.dir_y)
             BLACK = (0, 0, 0)
