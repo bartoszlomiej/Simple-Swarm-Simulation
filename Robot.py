@@ -152,6 +152,8 @@ class Robot(pg.sprite.Sprite):
             self.velocity[1] = (self.velocity[1] - 0.5) * 4  #start moving
             self.state = "moving"
 
+        if len(self.neighbors) != self.in_range_robots:
+            return
         a = (
             np.random.rand(1) / 2
         ) * self.in_range_robots  #bad idea -> the clusters are mismatching!
@@ -338,13 +340,16 @@ class Robot(pg.sprite.Sprite):
         '''
         The general movement function.
         '''
+        '''
         if self.timer[1] > 0:
             self.timer = (self.timer[0], self.timer[1] - 1, 0
                           )  #number of neighbors doesn't matter yet
         else:
+        '''
+        if True:
             self.leader_follower()
-            self.velocity[0] = self.dir_x * 0.1
-            self.velocity[1] = self.dir_y * 0.1
+            self.velocity[0] = self.dir_x * 0.5
+            self.velocity[1] = self.dir_y * 0.5
             '''
             Leader/follower
             '''
