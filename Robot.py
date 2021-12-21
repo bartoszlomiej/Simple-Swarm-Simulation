@@ -153,12 +153,11 @@ class Robot(pg.sprite.Sprite):
             self.state = "moving"
 
         if len(self.neighbors) != self.in_range_robots:
-            return
+            return #if robots overlap, then they cannot stop.
         a = (
             np.random.rand(1) / 2
-        ) * self.in_range_robots  #bad idea -> the clusters are mismatching!
-        #remove this in the Simulation.py as well!
-        #        a = (np.random.rand(1) / 2) * (len(self.neighbors))
+        ) * self.in_range_robots
+
         p_coefficient = np.random.rand(1) * a * a
         if p_coefficient >= 0.6 and self.state == "moving":
             '''
@@ -419,11 +418,10 @@ class Robot(pg.sprite.Sprite):
             '''
             Simply goes in the given direction
             '''
-            #            print("LEADER:", self.dir_x, self.dir_y)
             if not self.dir_x or self.dir_y:
                 self.dir_x, self.dir_y = self.find_direction()
             self.broadcast["Direction"] = (self.dir_x, self.dir_y)
-#            print("leader:", self.dir_x, self.dir_y, "AS:", self.AS)
+            #just for dbg
             check_me = self.AS  #np.random.randint(0, 65025)
             red = check_me % 256
             green = math.floor(check_me / 4) % 256
@@ -432,12 +430,7 @@ class Robot(pg.sprite.Sprite):
             pg.draw.circle(self.image, color, (self.radius, self.radius),
                            self.radius)
         else:
-#            self.follower_msg()
-            #            print("Obtained directions:", self.dir_x, self.dir_y)
             spot.follower(self)
-#            print("Follower:", self.dir_x, self.dir_y, "AS:", self.AS)
-#            spot.keep_distances(self)
-#            print("F after distance:", self.dir_x, self.dir_y)
             BLACK = (0, 0, 0)
             pg.draw.circle(self.image, BLACK, (self.radius, self.radius),
                            self.radius)

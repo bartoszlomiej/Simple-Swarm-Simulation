@@ -104,8 +104,6 @@ def direction_line_equation(Robot):
             return 0, x_a, False
         return 0, x_a, True
     else:
-        #        a = (y_b - y_a) / (x_b - x_a)
-        #        a = -1 / a
         a = -Robot.dir_x / Robot.dir_y
         b = Robot.y - (Robot.x * a)
         if (Robot.x * a) + b < Robot.dir_y:
@@ -166,8 +164,6 @@ def direction_to_neighbor(Robot, neighbor, rd):
     '''
     Change the Robot direction to approach the given neighbor.
     '''
-#    print("My coords:", Robot.x, Robot.y)
-#    print("Neighbors:", neighbor.x, neighbor.y)
     Robot.dir_x = (neighbor.x - Robot.x)
     Robot.dir_y = (neighbor.y - Robot.y)
     #proportionally dividing the dir value by 2
@@ -189,48 +185,38 @@ def follower(Robot):
     best_rd = 100000  #rd - relative distance
     best_neighbor = None
     a, b, d = direction_line_equation(Robot)
+    isCollision = False
     for n in Robot.neighbors:
         if n.AS != Robot.AS:
             continue
 
         if not neighbor_check(Robot, n, a, b, d):
             continue
-
+        
         rd = point_to_direction_rd(Robot, n)
+        
+        isCollision = is_collision_distance(Robot)
+        '''
+        Only robots that are on our collision distance are being considered now.
+        '''
+        
         if rd < best_rd:
             best_neighbor = n
             best_rd = rd
-            '''            
-    print("best rd", best_rd, Robot.x, Robot.y, "n:", best_neighbor.x,
-          best_neighbor.y)
-    print("Direction:", Robot.dir_x, Robot.dir_y)
-    print("Prosta prostopadla:", direction_line_equation(Robot))
-            '''
-    if not best_neighbor:
-#        print("I should be the leader", a, b, d)
-        return
-    direction_to_neighbor(Robot, best_neighbor, best_rd)
+    if not best_neighbor: #although it should never appear, it was decided to keep it
+        return #just in case
+    if not isCollision:
+        direction_to_neighbor(Robot, best_neighbor, best_rd)
+    else:
+        Robot.dir_x = 0
+        Robot.dir_y = 0
 
 
-def keep_distances(Robot):
+def is_collision_distance(Robot):
     '''
-    Robots that are getting close one to another will have their speed changed by the
-    factors cx, cy, which both increase if the relative distance between two robots is 
-    relatively small.
+    If there exists a robot that is in collision distance returns True, otherwise returns false.
     '''
-    for n in Robot.neighbors:
-        rd = relative_distance(Robot.x, Robot.y, n.x, n.y)
-        if rd < 20:
-            if rd == 0:
-                Robot.dir_x -= 0.75
-                Robot.dir_y -= 0.75
-                return
-            negative_impact = (Robot.x - n.x, Robot.y - n.y)
-            cx = (negative_impact[0] * 25 / (rd**2)) * 0.25
-            cy = (negative_impact[1] * 25 / (rd**2)) * 0.25
-            Robot.dir_x -= cx
-            Robot.dir_y -= cy
-'''
-Observations:
-leaders are the robots completely oposite to the initial direction! That is a hughe mistake.
-'''
+    if len(Robot.neighbors) == Robot.in_range_robots:
+        return False
+    return True
+            
