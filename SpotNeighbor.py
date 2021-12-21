@@ -122,6 +122,19 @@ def relative_distance(x0, y0, x1, y1):
     return math.sqrt(((x0 - x1)**2 + (y0 - y1)**2))
 
 
+def neighbor_check(Robot, neighbor, a, b, d):
+    '''
+    Checks if given robot can possibly be followed by this robot.
+    returns true if the robot can be followed. Otherwise returns false.
+    '''
+    if d:
+        if neighbor.y > (neighbor.x * a) + b:
+            return True
+    else:
+        if neighbor.y < (neighbor.x * a) + b:
+            return True
+    return False
+
 def is_follower(Robot):
     '''
     if there are any neighbors in our direction -> I am follower; Otherwise I am the leader.
@@ -129,17 +142,11 @@ def is_follower(Robot):
     '''
     a, b, d = direction_line_equation(Robot)
 
-    x, y = 0, 0
-
     for n in Robot.neighbors:
         if n.AS != Robot.AS:
             continue  #we don't care now
-        if d:
-            if n.y > (n.x * a) + b:
-                return True
-        else:
-            if n.y < (n.x * a) + b:
-                return True
+        if neighbor_check(Robot, n, a, b, d):
+            return True
     return False
 
 
@@ -159,13 +166,21 @@ def direction_to_neighbor(Robot, neighbor, rd):
     '''
     Change the Robot direction to approach the given neighbor.
     '''
+#    print("My coords:", Robot.x, Robot.y)
+#    print("Neighbors:", neighbor.x, neighbor.y)
     Robot.dir_x = (neighbor.x - Robot.x)
-    Robot.dir_y = (neighbor.y - Robot.x)
+    Robot.dir_y = (neighbor.y - Robot.y)
     #proportionally dividing the dir value by 2
-    while abs(Robot.dir_x) > 1.2 or abs(Robot.dir_y) > 1.2:
+    while abs(Robot.dir_x) > 1 or abs(Robot.dir_y) > 1:
         Robot.dir_x /= 2
         Robot.dir_y /= 2
+    '''        
+    rd = relative_distance(Robot.x, Robot.y, neighbor.x, neighbor.y)
 
+    if rd > 50:
+        Robot.dir_x *= 2
+        Robot.dir_y *= 2        
+    '''
 
 def follower(Robot):
     '''
@@ -173,9 +188,14 @@ def follower(Robot):
     '''
     best_rd = 100000  #rd - relative distance
     best_neighbor = None
+    a, b, d = direction_line_equation(Robot)
     for n in Robot.neighbors:
         if n.AS != Robot.AS:
             continue
+
+        if not neighbor_check(Robot, n, a, b, d):
+            continue
+
         rd = point_to_direction_rd(Robot, n)
         if rd < best_rd:
             best_neighbor = n
@@ -186,6 +206,9 @@ def follower(Robot):
     print("Direction:", Robot.dir_x, Robot.dir_y)
     print("Prosta prostopadla:", direction_line_equation(Robot))
             '''
+    if not best_neighbor:
+#        print("I should be the leader", a, b, d)
+        return
     direction_to_neighbor(Robot, best_neighbor, best_rd)
 
 
@@ -197,7 +220,7 @@ def keep_distances(Robot):
     '''
     for n in Robot.neighbors:
         rd = relative_distance(Robot.x, Robot.y, n.x, n.y)
-        if rd < 25:
+        if rd < 20:
             if rd == 0:
                 Robot.dir_x -= 0.75
                 Robot.dir_y -= 0.75

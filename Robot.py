@@ -268,8 +268,8 @@ class Robot(pg.sprite.Sprite):
                         self.dir_x, self.dir_y = self.find_direction()
                         self.set_timer(
                         )  #The second timer is to be set -> it will be used for synchronization
-                        self.state = "Timer phase 1"
                         self.phase = 1.5
+                        self.state = "Timer phase 1"
                         HORRIBLE_YELLOW = (190, 175, 50)
                         pg.draw.circle(self.image, HORRIBLE_YELLOW,
                                    (self.radius, self.radius), self.radius)                        
@@ -329,6 +329,10 @@ class Robot(pg.sprite.Sprite):
         self.state = "moving"
         self.velocity[0] = 0.1 * self.dir_x
         self.velocity[1] = 0.1 * self.dir_y
+#        print("Obtained:", self.dir_x, self.dir_y, "AS:", self.AS)
+        self.leader_follower()
+        leader = spot.is_follower(self)
+#        print("Leader_follower:", self.dir_x, self.dir_y, "follower?", leader)
 
     def movement(self):
         '''
@@ -405,7 +409,7 @@ class Robot(pg.sprite.Sprite):
         If it is a follower - it should follow the neighbor of the same AS that is 
         the closest to the direction given by the leader.
         '''
-
+        self.follower_msg()
         if not spot.is_follower(self):  #I am the leader
             '''
             Simply goes in the given direction
@@ -414,6 +418,7 @@ class Robot(pg.sprite.Sprite):
             if not self.dir_x or self.dir_y:
                 self.dir_x, self.dir_y = self.find_direction()
             self.broadcast["Direction"] = (self.dir_x, self.dir_y)
+#            print("leader:", self.dir_x, self.dir_y, "AS:", self.AS)
             check_me = self.AS  #np.random.randint(0, 65025)
             red = check_me % 256
             green = math.floor(check_me / 4) % 256
@@ -422,12 +427,12 @@ class Robot(pg.sprite.Sprite):
             pg.draw.circle(self.image, color, (self.radius, self.radius),
                            self.radius)
         else:
-            self.follower_msg()
-#            print("Obtained directions:", self.dir_x, self.dir_y)
+#            self.follower_msg()
+            #            print("Obtained directions:", self.dir_x, self.dir_y)
             spot.follower(self)
-#            print("Follower:", self.dir_x, self.dir_y)
-            #            spot.keep_distances(self)
-            #            print("F after distance:", self.dir_x, self.dir_y)
+#            print("Follower:", self.dir_x, self.dir_y, "AS:", self.AS)
+#            spot.keep_distances(self)
+#            print("F after distance:", self.dir_x, self.dir_y)
             BLACK = (0, 0, 0)
             pg.draw.circle(self.image, BLACK, (self.radius, self.radius),
                            self.radius)
