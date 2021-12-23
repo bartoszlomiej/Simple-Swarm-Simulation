@@ -98,13 +98,15 @@ class Simulation:
                     continue
                 dx = abs(r.position[0] - i.position[0])
                 dy = abs(r.position[1] - i.position[1])
-                if ((dx < self.sensor_range) and (dy < self.sensor_range)):
+
+                dx *= dx
+                dy *= dy
+                
+                if (self.sensor_range**2) >= (dx + dy): #using sqaure equation
                     r.spotted(i)
-                    if ((dx < (self.sensor_range * 0.9) and dy <
-                         (self.sensor_range * 0.9))
-                            and (dx > (self.sensor_range * 0.1) and dy >
-                                 (self.sensor_range * 0.1))):
+                    if (0.15 * self.sensor_range**2) < (dx + dy):
                         r.in_range()
+
 
     def dbg_timer(self, t):
         for i in self.swarm:

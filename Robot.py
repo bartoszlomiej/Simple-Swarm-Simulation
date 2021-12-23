@@ -152,11 +152,12 @@ class Robot(pg.sprite.Sprite):
             self.velocity[1] = (self.velocity[1] - 0.5) * 4  #start moving
             self.state = "moving"
 
+        if len(self.neighbors) != self.in_range_robots:
+            return #if robots overlap, then they cannot stop.
         a = (
             np.random.rand(1) / 2
-        ) * self.in_range_robots  #bad idea -> the clusters are mismatching!
-        #remove this in the Simulation.py as well!
-        #        a = (np.random.rand(1) / 2) * (len(self.neighbors))
+        ) * self.in_range_robots
+
         p_coefficient = np.random.rand(1) * a * a
         if p_coefficient >= 0.6 and self.state == "moving":
             '''
@@ -268,11 +269,15 @@ class Robot(pg.sprite.Sprite):
                         self.dir_x, self.dir_y = self.find_direction()
                         self.set_timer(
                         )  #The second timer is to be set -> it will be used for synchronization
-                        self.state = "Timer phase 1"
                         self.phase = 1.5
+                        self.state = "Timer phase 1"
+                        HORRIBLE_YELLOW = (190, 175, 50)
+                        pg.draw.circle(self.image, HORRIBLE_YELLOW,
+                                   (self.radius, self.radius), self.radius)                        
                         return
                     self.phase = 2  #finally, going to phase 2!!!
                     #just for dbg
+                    
                     '''
                     check_me = self.AS + 2000  #np.random.randint(0, 65025)
                     red = check_me % 256
@@ -309,6 +314,10 @@ class Robot(pg.sprite.Sprite):
             self.timer = (self.AS, t_min, len(self.neighbors))
 
     def collective_movement(self):
+        '''
+        Transition from the state "stopped" to "moving" and runing the movement function
+        #to be removed in the future.
+        '''
         if self.state != "moving":
             self.initial_direction()
         self.movement()
@@ -321,15 +330,25 @@ class Robot(pg.sprite.Sprite):
         self.state = "moving"
         self.velocity[0] = 0.1 * self.dir_x
         self.velocity[1] = 0.1 * self.dir_y
+#        print("Obtained:", self.dir_x, self.dir_y, "AS:", self.AS)
+        self.leader_follower()
+        leader = spot.is_follower(self)
+#        print("Leader_follower:", self.dir_x, self.dir_y, "follower?", leader)
 
     def movement(self):
+        '''
+        The general movement function.
+        '''
+        '''
         if self.timer[1] > 0:
             self.timer = (self.timer[0], self.timer[1] - 1, 0
                           )  #number of neighbors doesn't matter yet
         else:
+        '''
+        if True:
             self.leader_follower()
-            self.velocity[0] = self.dir_x * 0.1
-            self.velocity[1] = self.dir_y * 0.1
+            self.velocity[0] = self.dir_x * 0.5
+            self.velocity[1] = self.dir_y * 0.5
             '''
             Leader/follower
             '''
@@ -362,9 +381,6 @@ class Robot(pg.sprite.Sprite):
             if chain >= 3:
                 chain = i - 1
                 break
-            #            if not si:
-            #                break  #not best approach but should significantly reduce the number of operations
-            #            S.append(si)
             S[i] += si
         if S[-1]:
             S[0] += S[-1] / 2
@@ -374,50 +390,38 @@ class Robot(pg.sprite.Sprite):
         else:
             direction = (S.index(min(S, key=abs)) + 1) % 15
 
-
-#  print("My weight:", S)
-# print("My neighbors", len(self.neighbors))
-
         if direction == 0:
             return (0, 1)
         return (spot.calc_x(direction, 100) / 100,
                 spot.calc_y(direction, 100) / 100)
 
+    def follower_msg(self):
+        '''
+        Gets the route given by the leader.
+        '''
+        for m in self.messages:
+            if "Direction" in m.keys() and m["AS"] == self.AS:
+                self.broadcast["Direction"] = m["Direction"]
+                self.dir_x = m["Direction"][0]
+                self.dir_y = m["Direction"][1]
+
     def leader_follower(self):
         '''
-        If robot doesn't have any neighbors, of the same AS, in the given direction, then this robot becomes a leader
-
-        The leader can change the direction, however, after the change of the direction the leader might loose the leadership
-        
-        Otherwise, the robot becomes a follower. The follower is chasing the robot in front of it (in the given direction); it must keep the distance between over robots
-
-
-        What's need to be done?
-        [*] Function "find_direction" - is needed to find the direction to which the robots would like to go
-        [*] Change in timers -> the direction that was found must be given as well. If Robot is close to the border, 
-        [-] then direction should be changed (e.g. parallel to that direction)
-        [-] leader_follower - must be done.
-        [-] certain changes should be done in the function "movement_detection"
-
-        leader - the robot that doesn't have any same AS robots in the movement direction
+        Determines if the robot is leader or follower.
+        If it is a leader - if there are no obstacles it simply goes in the known direction.
+            if there are obstacles, than another direction should be calculated.
+        If it is a follower - it should follow the neighbor of the same AS that is 
+        the closest to the direction given by the leader.
         '''
-        '''
-        Everyone:
-            Start moving in the given direction
-        Leader - the robot which doesn't have any same AS members in front of him (+- 90 degrees let's say)
-        Follower - have any same AS members in front of him. Follows the closest one
-
-        Movement function - the set of general rules of movement
-        1) Distances between any robots or edge of the board should be at least equal to 1/3R
-        2) Obstacles avoidance - if an obstacle is on our path then it should be avoided (from right or left)
-        3) if obstacle cannot be avoided - (e.g. the corner of the board) - stop and send message "Change direction"
-        '''
+        self.follower_msg()
         if not spot.is_follower(self):  #I am the leader
-            #            self.dir_x, self.dir_y = self.find_direction()
+            '''
+            Simply goes in the given direction
+            '''
+            if not self.dir_x or self.dir_y:
+                self.dir_x, self.dir_y = self.find_direction()
+            self.broadcast["Direction"] = (self.dir_x, self.dir_y)
             #just for dbg
-            self.dir_x = 0
-            self.dir_y = 0
-            #            spot.leader_function(self)
             check_me = self.AS  #np.random.randint(0, 65025)
             red = check_me % 256
             green = math.floor(check_me / 4) % 256
@@ -426,40 +430,7 @@ class Robot(pg.sprite.Sprite):
             pg.draw.circle(self.image, color, (self.radius, self.radius),
                            self.radius)
         else:
+            spot.follower(self)
             BLACK = (0, 0, 0)
             pg.draw.circle(self.image, BLACK, (self.radius, self.radius),
                            self.radius)
-
-    def movement_detection(self):
-        coords = []
-        for n in self.neighbors:
-            coords.append((n.x, n.y))
-        if not self.prev_coords:
-            self.prev_coords = coords
-        else:
-            if len(self.prev_coords) != len(coords):
-                print("Prev: ", self.prev_coords, "Current: ", coords,
-                      "my coords: ", (self.x, self.y))
-                #                print("Houston, we've got a problem here:(", self.AS)
-                return (0, 0), 0  #robot is unsure about the direction
-            else:
-                '''
-                Good idea -> use some uncertainty - if the coordinates differ of more than given value/percent than this is not the same robot!
-                '''
-                for i in range(len(coords)):
-                    if coords[i] != self.prev_coords[i]:
-                        direction = (coords[i][0] - self.x,
-                                     coords[i][1] - self.y)
-                        velocity = math.sqrt(
-                            (coords[i][0] - self.prev_coords[i][0])**2 +
-                            (coords[i][1] - self.prev_coords[i][1])**2)
-                        #the velocity value (not direction) is in fact the distance travelled. there is used Pythagorean thm to calculate it
-                        return direction, velocity
-            self.prev_coords = coords
-        return (0, 0), 0
-'''
-Major issues so far:
--Robot should chase the leader! This means that the algorithm should look differently.
-// I was trying to do so:( still some work needs to be donep
-***THINK ABOUT THAT***
-'''
