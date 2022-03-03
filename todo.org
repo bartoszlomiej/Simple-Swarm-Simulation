@@ -3,94 +3,61 @@ TODAY -*- mode: org -*-
 * Majors:
   The problems concerning the most important tasks are shown below.
 
-** DONE Timers
-   Now it is a high time I create the timers that will allow to go to the phase 2
-
-*** DONE Does # of neighbors change?
-    Check periodically number of neighbors
-    
-   
-*** DONE Broadcast message
-    Broadcast message of the neighbor's timer value;
-    Always propagate only the smallest value obtained
-
-    
-*** DONE Problem - how to propagate broadcast from the neighbor that is in the same AS only?
-    1. Propagate AS as a member of a tuple Timer
-    2. Check if a neighbor that propagates message is in the same AS
-       + Actually, it might be much simpler to implement on the real hardware as here
-	 I don't care who is sending the message (on the real hardware it probably the lasers will be used;
-	 or sth else that could either send more extensive pieces of information)
-    
-*** DONE The second timer
-    Add the second timer in order to synchronize the AS
-
-*** DONE Aggregation changes
-    there must be some switch off (after the transition to phase 2 occurs)
-
-    -Solution - The number which can be incremented only -> will indicate the state
-    
-
-** TODO Phase 2 - collective movement
-   Main problems -> only one leader at time; leader switching; movement detection?
+** TODO Phase 2 - Moving to the corner
+   Main problems -> only one leader at time; leader switching; 
 
    Good assumption -> order the leader robot to have constant speed!
+
+*** TODO Improvements
+    Speed of the followers - it should be enough to catch the leader and to not lose him!
+
+    Minor improvements will be added later
    
-*** TODO Movement detection
+** TODO Phase 3 - creating superclasters
+   There will be performed two approaches of creating superclusters and they will be compared
+   1) Edge following approach
+   2) Spiral motion approach
+      
+*** TODO Edge following superclustering
+    when phase 3 is entered by all robots in the cluster => divide into two sub AS's
+    One AS will go to the right, second one will go to the left. They are following the edge of the board.
+    All robots encountered of lower phase or equal phase and lower AS number are to join the cluster. Otherwise, join the other cluster.
+    Phase is being finished iff same AS robots will be encountered again.
 
-*** TODO Collective movement
-    The value of the velocity is given in two directions (x, y). As the velocity of the moving neighbor is in fact
-    the distance that it travelled in one loop iteration, hence it is equal to the square root of the distance that it has travelled.
-    As the robot is chasing the leader (it doesn't copy the same velocity), it tries to approach the leader with about the same velocity.
-    Hence, the velocity must be scaled properly. It is known that the distance that the robot needs to travel is equal to the velocity.
-    However, there must be calculated the proportions of V_x and V_y. There was used Pitagorean theorem to calculate given proportions.
+    The AS of AS.id + 1 must know that it is a child - it will rejoing only with the cluster AS.id
 
+    *Notation*
+    - parent AS - AS of the id equal to AS.id
+    - child AS - AS of the id equal to AS.id + 1
+      
+**** TODO Cluster division
+     In order to make it easier to divide cluster into two parts, the newly created cluster will change its AS number to AS.id + 1
 
-    ***IDEA***
-    The AS should spread the idea about the initial direction of movement - in order to remove confusion with other AS.
-    -the initial direction & speed of movement should be given with the timer value.
-    More detailed description is available in my notes
+     *DIVISION*
+     1) There will be used bisection to divide into two groups - the last robot from the AS changes it's AS number to AS.id + 1
+     2) It tries to go to the border
+     3) The next last robot, and no robot of the AS.id + 1 is being spotted in close range => do the same
+     4) The process is being finished if other robot of the AS.id + 1 is being spotted in close range
 
-**** TODO Leader starts moving
-     0. Determine the leader!
-     1. Find direction without any obstacles
-     2. Go in that direction
+**** TODO Line formation
+     Line formation will be created as following:
 
-**** TODO Follower starts moving
+     1) The leader is the robot which touches the edge of the board
+     2) The leader gives the direction
+     3) Other robots tries to keep as close to the 90 degree angle between the direction and the robot on the right/left (depending on the direction)
+     4) Corners - When corner is being spotted, then there is a need for rearrangement -> The leader must change the direction, followers must play accordingly (to keep the 90 degree angle)
 
-**** TODO Leader switching
-     -Signal must be sent if leader cannot move further -> the leader will be chosen again.
-
-**** TODO Initial direction
-     -With the timer there should be given the information about the initial direction. All robots will start to move
-     in the given direction when timer go down. The robot that don't have any other robots of the same AS in given
-     direction becomes a leader.
-     -This decrease the confusion with other AS's, as well as the role of the leader 
-
-
-*** TODO CURRENT PROBLEMS
-    The follower aggregates each other. They don't follow the leader, or the robot in front of them
-    Possible reasons:
-    1) Wrong prependicular line
-       - The line which indicates the half of the spotted area is in wrong direction
-    2) The sight of the robot to follow should be rather narrow e.g. "\/"
-    3) Another approach should be taken
-       - Search in the literature!
-
+**** TODO Rejoining
+     After spotting the AS of the child AS by the parent AS, there will be rejoinment - supercluster id will be set to the parent cluster AS
+     
+*** TODO Spiral motion superclustering
+    Other approach for creation of the supercluster
+    - When phase 3 is on go, the whole cluster starts to performe spiral motion. Similarly as in the previous approach, line formation is being prefered by now, however, other types of formations might be used as well -
+      it is likely to happend, that the cluster will be to big to perform spiral motion in line -> then formations such as triangular formation or other flocking formation.
+    - this movement will end when the leader will encounter the other same AS memeber - similarly as losing in the snake game.
+    - then aggregation will be performed - robots will come closer to gather, to catch robots that might be inside them.
 * Minors:
   Optional todos
-  
-** DONE Improved collisions
-   Robots should move in the random direction after collision (but it should be restricted angle
-   -> at most 90 degrees between the point of collision)
-
-** DONE AS improval - if no other member of AS is visible -> create new AS
-   Important -> removes the robots that are outside of the given AS
-   
-
-** DONE Structure the program
-   - extract classes to separet files
-
 
 ** TODO **OPTIONAL**
    If no neighbors of the same AS are being spotted -> go to state 1
