@@ -11,8 +11,8 @@ TODAY -*- mode: org -*-
 *** TODO Improvements
     Speed of the followers - it should be enough to catch the leader and to not lose him!
 
-    Minor improvements will be added later
-   
+    Velocity - it should be constant for now. Thus the way that it is being calculated is to be changed.
+    
 ** TODO Phase 3 - creating superclasters
    There will be performed two approaches of creating superclusters and they will be compared
    1) Edge following approach

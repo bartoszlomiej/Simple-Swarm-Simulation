@@ -4,6 +4,8 @@ import pygame as pg
 import math
 import Simulation as sim
 import SpotNeighbor as spot
+import phase as ph
+from phaseone import PhaseOne, PhaseOneAndHalf
 
 
 class Robot(pg.sprite.Sprite):
@@ -62,6 +64,8 @@ class Robot(pg.sprite.Sprite):
 
         self.prev_coords = []  #previous coordinates of the neighbors
 
+        self.faza = PhaseOne(self)
+
     def update(self):
         '''
         Updates the robot position on board, as well as it's state. Necessary behaviors are to be applied here.
@@ -74,15 +78,12 @@ class Robot(pg.sprite.Sprite):
         #place for the swarm behaviors
         #First phase bahaviors:
         if self.phase == 1:
-            aggregation_states = ("moving", "stopped", "moving after stopped")
-            if self.state in aggregation_states:
-                self.aggregate()
-            self.autonomus_system()
-            self.use_timer()
+            self.faza.update()
         elif self.phase == 1.5:
-            self.use_timer()
+            self.faza.update()
         elif self.phase == 2:
-            self.collective_movement()
+            self.faza.update()
+            #            self.collective_movement()
 
         #boundary parameters
         if x < 0 or x > self.width - 2 * self.radius:
@@ -118,76 +119,6 @@ class Robot(pg.sprite.Sprite):
         Returns the number of neighbors that are in given range
         '''
         self.in_range_robots = self.in_range_robots + 1
-
-    def minimal_distance(self):
-        '''
-        Checks if the minimal distance between robots is being kept.
-        Returns true if minimal distance is being kept; otherwise returns false.
-        '''
-        for n in self.neighbors:
-            if (abs(n.position[0] - self.position[0]) <= self.radius) and (
-                    abs(n.position[1] - self.position[1]) <= self.radius):
-                return False
-        return True
-
-    def aggregate(self):
-        '''
-        Simple aggregation behavior
-
-        variable self.iterator indicates for how long should robot stay in a given state.
-        In the future it might be good idea to use a number -1/other to indicate infinity
-
-        The robots can stop iff they are in the distance of 20%-80% of the sensor range
-        -the in_range_robots variable indicates the number of robots that are in that range.
-        '''
-
-        if len(self.neighbors
-               ) == 0 and self.state != "moving" and not self.velocity[
-                   0] and not self.velocity[1]:
-            '''
-            If there are no neighbors -> start moving
-            '''
-            self.velocity = np.random.rand(2)
-            self.velocity[0] = (self.velocity[0] - 0.5) * 4
-            self.velocity[1] = (self.velocity[1] - 0.5) * 4  #start moving
-            self.state = "moving"
-
-        if len(self.neighbors) != self.in_range_robots:
-            return #if robots overlap, then they cannot stop.
-        a = (
-            np.random.rand(1) / 2
-        ) * self.in_range_robots
-
-        p_coefficient = np.random.rand(1) * a * a
-        if p_coefficient >= 0.6 and self.state == "moving":
-            '''
-            if there are some neighbors -> the robot might stop
-            '''
-            if not self.minimal_distance():
-                return
-            self.state = "stopped"
-            self.velocity[0] = 0
-            self.velocity[1] = 0
-        if self.state == "stopped" and p_coefficient < 0.8:
-            '''
-            if robot is stopped than there is possibility that robot will start moving
-            '''
-            self.iterator = self.iterator + 1
-            if self.iterator < -1:  #> 5000: #replace -1 with natural number to obtain move after stop behavior
-                self.state = "moving after stopped"
-                self.iterator = 0
-                self.velocity = np.random.rand(2)
-                self.velocity[0] = (self.velocity[0] - 0.5) * 4
-                self.velocity[1] = (self.velocity[1] - 0.5) * 4  #start moving
-
-        elif self.state == "moving after stopped":
-            '''
-            if robot is moving after being stopped, than for some time it cannot stop again
-            '''
-            self.iterator = self.iterator + 1
-            if self.iterator > 50:
-                self.state = "moving"
-                self.iterator = 0
 
     def update_msg(self):
         self.messages.clear()
@@ -228,80 +159,6 @@ class Robot(pg.sprite.Sprite):
         v = list(votes.values())
         return k[v.index(max(v))]  #getting the AS that is most common nearby
 
-    def autonomus_system(self):
-        self.broadcast.clear()  #clearing broadcast
-        '''
-        Shows the idea of the autonomus system task allocation
-        '''
-        new_AS = self.get_AS()
-        if (not new_AS and self.joined) or not self.AS:
-            self.create_AS()
-            self.joined = False
-        elif new_AS:
-            self.joined = True
-            self.AS = new_AS
-            self.broadcast['AS'] = new_AS
-            self.update_color()
-        else:  #preserving the old AS
-            self.broadcast['AS'] = self.AS
-
-    def use_timer(self):
-        '''
-        just the loop (with each iteration of the simulation loop decrease by 1)
-        '''
-        if self.state == "moving":  #only robots that are not moving can use timers
-            return
-
-        if self.AS == self.timer[0]:
-            if len(self.neighbors
-                   ) > self.timer[2] and self.state != "Timer phase 1":
-                self.state = "waiting"  #number of neighbors changed -> we are not border robot
-            if self.state != "waiting":
-                self.timer = (self.timer[0], self.timer[1] - 1, self.timer[2])
-
-                if self.phase == 1.5:
-                    self.broadcast['Timer phase 1'] = self.timer
-                    self.broadcast['Initial Direction'] = (self.dir_x,
-                                                           self.dir_y)
-
-                if self.timer[1] < 0:
-                    if self.phase == 1:  #here enters only the edge robots
-                        self.dir_x, self.dir_y = self.find_direction()
-                        self.set_timer(
-                        )  #The second timer is to be set -> it will be used for synchronization
-                        self.phase = 1.5
-                        self.state = "Timer phase 1"
-                        HORRIBLE_YELLOW = (190, 175, 50)
-                        pg.draw.circle(self.image, HORRIBLE_YELLOW,
-                                   (self.radius, self.radius), self.radius)                        
-                        return
-                    self.phase = 2  #finally, going to phase 2!!!
-                    #just for dbg
-                    
-                    '''
-                    check_me = self.AS + 2000  #np.random.randint(0, 65025)
-                    red = check_me % 256
-                    green = math.floor(check_me / 4) % 256
-                    blue = math.floor(math.sqrt(check_me)) % 256
-                    color = (red, green, blue)
-                    pg.draw.circle(self.image, color,
-                                   (self.radius, self.radius), self.radius)
-                    '''
-                    return
-
-            for m in self.messages:
-                if "Timer phase 1" in m.keys():
-                    if self.timer[1] > m["Timer phase 1"][1] or self.timer[
-                            1] == -1 or self.state != "Timer phase 1":
-                        self.state = "Timer phase 1"
-                        self.timer = m["Timer phase 1"]
-                        self.phase = 1.5  #as we get the other timer, thus the second timer is to be used
-                if "Initial Direction" in m.keys():
-                    self.dir_x = m["Initial Direction"][0]
-                    self.dir_y = m["Initial Direction"][1]
-        else:
-            self.set_timer()
-
     def set_timer(self, t_min=1000, random=True, t_max=2000):
         '''
         Set the timer. if random is set to True, then the random time (from t_min to t_max) will be chosen
@@ -312,28 +169,6 @@ class Robot(pg.sprite.Sprite):
                           len(self.neighbors))
         else:
             self.timer = (self.AS, t_min, len(self.neighbors))
-
-    def collective_movement(self):
-        '''
-        Transition from the state "stopped" to "moving" and runing the movement function
-        #to be removed in the future.
-        '''
-        if self.state != "moving":
-            self.initial_direction()
-        self.movement()
-
-    def initial_direction(self):
-        '''
-        Sets the initial direction for all robots in the AS
-        '''
-        self.set_timer(100, False)
-        self.state = "moving"
-        self.velocity[0] = 0.1 * self.dir_x
-        self.velocity[1] = 0.1 * self.dir_y
-#        print("Obtained:", self.dir_x, self.dir_y, "AS:", self.AS)
-        self.leader_follower()
-        leader = spot.is_follower(self)
-#        print("Leader_follower:", self.dir_x, self.dir_y, "follower?", leader)
 
     def movement(self):
         '''
@@ -406,6 +241,7 @@ class Robot(pg.sprite.Sprite):
                 self.dir_y = m["Direction"][1]
 
     def leader_follower(self):
+        pass
         '''
         Determines if the robot is leader or follower.
         If it is a leader - if there are no obstacles it simply goes in the known direction.
@@ -413,11 +249,10 @@ class Robot(pg.sprite.Sprite):
         If it is a follower - it should follow the neighbor of the same AS that is 
         the closest to the direction given by the leader.
         '''
+        '''
         self.follower_msg()
         if not spot.is_follower(self):  #I am the leader
-            '''
-            Simply goes in the given direction
-            '''
+
             if not self.dir_x or self.dir_y:
                 self.dir_x, self.dir_y = self.find_direction()
             self.broadcast["Direction"] = (self.dir_x, self.dir_y)
@@ -434,3 +269,4 @@ class Robot(pg.sprite.Sprite):
             BLACK = (0, 0, 0)
             pg.draw.circle(self.image, BLACK, (self.radius, self.radius),
                            self.radius)
+            '''

@@ -133,6 +133,7 @@ def neighbor_check(Robot, neighbor, a, b, d):
             return True
     return False
 
+
 def is_follower(Robot):
     '''
     if there are any neighbors in our direction -> I am follower; Otherwise I am the leader.
@@ -178,6 +179,7 @@ def direction_to_neighbor(Robot, neighbor, rd):
         Robot.dir_y *= 2        
     '''
 
+
 def follower(Robot):
     '''
     Finds the neighbor which is the most close to the broadcasted direction and follows it.
@@ -192,19 +194,19 @@ def follower(Robot):
 
         if not neighbor_check(Robot, n, a, b, d):
             continue
-        
+
         rd = point_to_direction_rd(Robot, n)
-        
+
         isCollision = is_collision_distance(Robot)
         '''
         Only robots that are on our collision distance are being considered now.
         '''
-        
+
         if rd < best_rd:
             best_neighbor = n
             best_rd = rd
-    if not best_neighbor: #although it should never appear, it was decided to keep it
-        return #just in case
+    if not best_neighbor:  #although it should never appear, it was decided to keep it
+        return  #just in case
     if not isCollision:
         direction_to_neighbor(Robot, best_neighbor, best_rd)
     else:
@@ -219,4 +221,10 @@ def is_collision_distance(Robot):
     if len(Robot.neighbors) == Robot.in_range_robots:
         return False
     return True
-            
+
+
+def evaluate_velocity(Robot, const_velocity):
+    '''
+    Calculates the velocity of the robot on the basis of the direction. Idea is that the velocity's magnitued is constant and equal to "const_velocity" parameter.
+    '''
+    direction_value = math.sqrt(Robot.dir_x**2 + Robot.dir_y**2)
