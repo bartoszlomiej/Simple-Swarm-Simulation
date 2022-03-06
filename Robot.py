@@ -170,24 +170,6 @@ class Robot(pg.sprite.Sprite):
         else:
             self.timer = (self.AS, t_min, len(self.neighbors))
 
-    def movement(self):
-        '''
-        The general movement function.
-        '''
-        '''
-        if self.timer[1] > 0:
-            self.timer = (self.timer[0], self.timer[1] - 1, 0
-                          )  #number of neighbors doesn't matter yet
-        else:
-        '''
-        if True:
-            self.leader_follower()
-            self.velocity[0] = self.dir_x * 0.5
-            self.velocity[1] = self.dir_y * 0.5
-            '''
-            Leader/follower
-            '''
-
     def find_direction(self):
         '''
         Finds the path without any obstacles (in radar range). If it is not possible, then some other direction is given
@@ -239,34 +221,3 @@ class Robot(pg.sprite.Sprite):
                 self.broadcast["Direction"] = m["Direction"]
                 self.dir_x = m["Direction"][0]
                 self.dir_y = m["Direction"][1]
-
-    def leader_follower(self):
-        pass
-        '''
-        Determines if the robot is leader or follower.
-        If it is a leader - if there are no obstacles it simply goes in the known direction.
-            if there are obstacles, than another direction should be calculated.
-        If it is a follower - it should follow the neighbor of the same AS that is 
-        the closest to the direction given by the leader.
-        '''
-        '''
-        self.follower_msg()
-        if not spot.is_follower(self):  #I am the leader
-
-            if not self.dir_x or self.dir_y:
-                self.dir_x, self.dir_y = self.find_direction()
-            self.broadcast["Direction"] = (self.dir_x, self.dir_y)
-            #just for dbg
-            check_me = self.AS  #np.random.randint(0, 65025)
-            red = check_me % 256
-            green = math.floor(check_me / 4) % 256
-            blue = math.floor(math.sqrt(check_me)) % 256
-            color = (red, green, blue)
-            pg.draw.circle(self.image, color, (self.radius, self.radius),
-                           self.radius)
-        else:
-            spot.follower(self)
-            BLACK = (0, 0, 0)
-            pg.draw.circle(self.image, BLACK, (self.radius, self.radius),
-                           self.radius)
-            '''
