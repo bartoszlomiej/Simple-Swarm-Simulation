@@ -31,7 +31,10 @@ def calc_x(i, r, k=15):
     x - is the x on the axis; x = [0; R] for i <= [k/2] or x=[-R;0] otherwise
 
     from the circle equation x^2 + y^2 = 1 and we know that y = tan(i(degree)) * x
-    thus |x| = x/sqrt(1 + tan(i(degree))); where 
+    thus |x| = r/sqrt(1 + tan(i(degree))); where 
+
+    from the circle equation x^2 + y^2 = R^2 and we know that y = tan(i(degree)) * x
+    thus |x| = r/sqrt(1 + tan(i(degree))); where 
     '''
     radians = mp.radians(i * (360) / k)
     cot = abs(mp.cot(radians))  #1 / math.tan(radians)
@@ -161,23 +164,22 @@ def point_to_direction_rd(Robot, neighbor):
                (neighbor.y * B) + C) / math.sqrt(A**2 + B**2)
 
 
-def direction_to_neighbor(Robot, neighbor, rd):
+def direction_to_neighbor(Robot, neighbor):
     '''
     Change the Robot direction to approach the given neighbor.
-    '''
-    Robot.dir_x = (neighbor.x - Robot.x)
-    Robot.dir_y = (neighbor.y - Robot.y)
-    #proportionally dividing the dir value by 2
-    while abs(Robot.dir_x) > 1 or abs(Robot.dir_y) > 1:
-        Robot.dir_x /= 2
-        Robot.dir_y /= 2
-    '''        
-    rd = relative_distance(Robot.x, Robot.y, neighbor.x, neighbor.y)
 
-    if rd > 50:
-        Robot.dir_x *= 2
-        Robot.dir_y *= 2        
+    The dir_x, dir_y values assumes that the direction is always given on the unit circle.
     '''
+    delta_x = (neighbor.x - Robot.x)
+    delta_y = (neighbor.y - Robot.y)
+    suma = math.sqrt(delta_x**2 + delta_y**2)
+    Robot.dir_x = delta_x / suma
+    Robot.dir_y = delta_y / suma
+
+    rd = relative_distance(Robot.x, Robot.y, neighbor.x, neighbor.y)
+    if rd > 30:
+        Robot.dir_x *= 1.5
+        Robot.dir_y *= 1.5
 
 
 def follower(Robot):
@@ -208,7 +210,7 @@ def follower(Robot):
     if not best_neighbor:  #although it should never appear, it was decided to keep it
         return  #just in case
     if not isCollision:
-        direction_to_neighbor(Robot, best_neighbor, best_rd)
+        direction_to_neighbor(Robot, best_neighbor)
     else:
         Robot.dir_x = 0
         Robot.dir_y = 0

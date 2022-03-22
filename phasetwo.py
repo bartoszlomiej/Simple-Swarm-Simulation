@@ -87,8 +87,35 @@ class PhaseTwo(ph.Phase):
             pg.draw.circle(robot.image, BLACK, (robot.radius, robot.radius),
                            robot.radius)
 
+    def last_robot(self):
+        '''
+        Determines whether the robot is the last in the given cluster.
+        '''
+        a, b, d = spot.direction_line_equation(self.robot)
+        for n in self.robot.neighbors:
+            if n.AS == self.robot.AS:
+                if not spot.neighbor_check(self.robot, n, a, b, d):
+                    return False
+        return True
+
     def update(self):
         self.collective_movement()
+        robot = self.robot
+        '''
+        if not self.last_robot:  #dbg
+            check_me = robot.AS  #np.random.randint(0, 65025)
+            red = check_me % 256
+            green = math.floor(check_me / 4) % 256
+            blue = math.floor(math.sqrt(check_me)) % 256
+            color = (red, green, blue)
+            pg.draw.circle(robot.image, color, (robot.radius, robot.radius),
+                           robot.radius)
+        else:
+            spot.follower(robot)
+            BLACK = (0, 0, 0)
+            pg.draw.circle(robot.image, BLACK, (robot.radius, robot.radius),
+                           robot.radius)
+        '''
 
     def upgrade(self, next_phase=3):
         '''

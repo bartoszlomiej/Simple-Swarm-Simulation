@@ -14,7 +14,7 @@ class Simulation:
                  width=640,
                  height=400,
                  N=10,
-                 s_range=40,
+                 s_range=55,
                  velocity_lvl=4):
         '''
         width - the width of the screen
@@ -101,8 +101,8 @@ class Simulation:
 
                 dx *= dx
                 dy *= dy
-                
-                if (self.sensor_range**2) >= (dx + dy): #using sqaure equation
+
+                if (self.sensor_range**2) >= (dx + dy):  #using sqaure equation
                     r.spotted(i)
                     if (0.15 * self.sensor_range**2) < (dx + dy):
                         r.in_range()
