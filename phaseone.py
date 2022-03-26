@@ -198,23 +198,11 @@ class PhaseOneAndHalf(ph.Phase):
                 robot.timer = (robot.timer[0], robot.timer[1] - 1,
                                robot.timer[2])
 
-                if robot.phase == 1.5:
-                    robot.broadcast['Timer phase 1'] = robot.timer
-                    robot.broadcast['Initial Direction'] = (robot.dir_x,
-                                                            robot.dir_y)
+                robot.broadcast['Timer phase 1'] = robot.timer
+                robot.broadcast['Initial Direction'] = (robot.dir_x,
+                                                        robot.dir_y)
 
                 if robot.timer[1] < 0:
-                    if robot.phase == 1:  #here enters only the edge robots
-                        robot.dir_x, robot.dir_y = robot.find_direction()
-                        robot.set_timer(
-                        )  #The second timer is to be set -> it will be used for synchronization
-                        robot.phase = 1.5
-                        robot.state = "Timer phase 1"
-                        HORRIBLE_YELLOW = (190, 175, 50)
-                        pg.draw.circle(robot.image, HORRIBLE_YELLOW,
-                                       (robot.radius, robot.radius),
-                                       robot.radius)
-                        return
                     robot.phase = 2  #finally, going to phase 2!!!
                     robot.faza.upgrade(2)
                     return

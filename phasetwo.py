@@ -13,6 +13,7 @@ class PhaseTwo(ph.Phase):
     def __init__(self, Robot):
         super().__init__(Robot)
         self.phase = 2
+        self.counter = 0  #just for dbg
 
     def collective_movement(self):
         '''
@@ -22,26 +23,20 @@ class PhaseTwo(ph.Phase):
         robot = self.robot
         if robot.state != "moving":
             self.initial_direction()
-        self.movement()
+        else:
+            self.movement()
 
     def movement(self):
         '''
         The general movement function.
         '''
-        '''
-        if self.timer[1] > 0:
-            self.timer = (self.timer[0], self.timer[1] - 1, 0
-                          )  #number of neighbors doesn't matter yet
-        else:
-        '''
         robot = self.robot
-        if True:
-            self.leader_follower()
-            robot.velocity[0] = robot.dir_x * 0.5
-            robot.velocity[1] = robot.dir_y * 0.5
-            '''
-            Leader/follower
-            '''
+        self.leader_follower()
+        robot.velocity[0] = robot.dir_x  # * 0.5
+        robot.velocity[1] = robot.dir_y  # * 0.5
+        '''
+        Leader/follower
+        '''
 
     def initial_direction(self):
         '''
@@ -50,10 +45,10 @@ class PhaseTwo(ph.Phase):
         robot = self.robot
         robot.set_timer(100, False)
         robot.state = "moving"
-        robot.velocity[0] = 0.1 * robot.dir_x
-        robot.velocity[1] = 0.1 * robot.dir_y
-        self.leader_follower()
+        robot.velocity[0] = robot.dir_x
+        robot.velocity[1] = robot.dir_y
 
+        self.leader_follower()
         #        leader = spot.is_follower(self)
 
     def leader_follower(self):
@@ -65,12 +60,15 @@ class PhaseTwo(ph.Phase):
         the closest to the direction given by the leader.
         '''
         robot = self.robot
+
         robot.follower_msg()
         if not spot.is_follower(robot):  #I am the leader
             '''
             Simply goes in the given direction
             '''
             if not robot.dir_x or robot.dir_y:
+                self.counter += 1  #just for dbg
+            if spot.is_collision(robot):
                 robot.dir_x, robot.dir_y = robot.find_direction()
             robot.broadcast["Direction"] = (robot.dir_x, robot.dir_y)
             #just for dbg

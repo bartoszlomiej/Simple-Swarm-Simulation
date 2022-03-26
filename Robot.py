@@ -14,7 +14,7 @@ class Robot(pg.sprite.Sprite):
     
     It inherit from the base class sprite as this class is a basic representation of a character in pygame.
     '''
-    def __init__(self, x, y, width, height, velocity=[0, 0]):
+    def __init__(self, x, y, width, height, velocity=[0, 0], s_range=55):
         super().__init__()
         '''
         Creates a robot on board with the initial coordinates (x, y) and the given velocity.
@@ -24,6 +24,9 @@ class Robot(pg.sprite.Sprite):
         self.radius = 10
         self.width = width
         self.height = height
+        self.s_range = s_range
+        self.k = math.ceil(
+            math.ceil(2 * np.pi * self.s_range) / (2 * self.radius))
         self.neighbors = []
         self.in_range_robots = 0
         self.iterator = 0
@@ -178,37 +181,45 @@ class Robot(pg.sprite.Sprite):
         '''
         S = []
         radius = int(
-            55 *
+            self.s_range *
             1.4141)  #in simulation the range is not a circuit - it is a square
 
-        for i in range(1, 15):
-            S.append(100)  #initial data, for the purpouse of chain
-
+        for i in range(1, self.k):
+            S.append(False)  #initial data, for the purpouse of chain
         S.append(spot.check_x0_line(self, radius))
-
-        chain = 0
-        for i in range(14):  #data for k = 15
-            si = spot.check_line(self, i + 1, 15, radius)
-            if si > 0:
-                S[i - 1] = si / 2
-                S[i + 1] = si / 2
-                chain = 0
-            else:
-                chain = chain + 1
-            if chain >= 3:
-                chain = i - 1
-                break
-            S[i] += si
-        if S[-1]:
-            S[0] += S[-1] / 2
-            S[14] += S[-1] / 2
-        if chain > 0:
-            direction = chain
+        for i in range(self.k - 1):
+            si = spot.check_line(self, i + 1, self.k, radius)
+            S[i] = si
+            if si:
+                continue
+        chain = (0, 0)  #pair -> [index, chain_lenght]
+        longest_chain = (0, 0)
+        iterator = 0
+        '''
+        Missing special case - when there is such scenario:
+        S = [0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0]
+        0 - is false, 1 - is true
+        Then in order to find best direction, one should treat table as a ring.
+        '''
+        for i in S:  #finding free chain
+            if not i:
+                if chain[0] == iterator - 1:
+                    chain = (iterator, chain[1] + 1)
+                    if chain[1] > longest_chain[1]:
+                        longest_chain = chain
+                else:
+                    chain = (iterator, 1)
+                    if chain[1] > longest_chain[1]:
+                        longest_chain = chain
+            iterator += 1
+        if longest_chain[1] > 0:
+            direction = longest_chain[0] - int(longest_chain[1] / 2)
         else:
-            direction = (S.index(min(S, key=abs)) + 1) % 15
-
+            #There is a need to change the leader
+            pass
         if direction == 0:
             return (0, 1)
+
         return (spot.calc_x(direction, 100) / 100,
                 spot.calc_y(direction, 100) / 100)
 

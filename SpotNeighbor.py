@@ -45,47 +45,43 @@ def calc_x(i, r, k=15):
     return int(round(r / math.sqrt(1 + cot)))
 
 
-def add_weight(Robot, x, y, distance, W=150):
+def is_neighbor_spotted(Robot, x, y, radius):
     '''
-    Calculates the weight of the path. If neighbor position is close to the line which 
-    is being checked, then some weight will be added. The closest is the robot to the 
-    streight line, the higher weight will be added.
+    Checks whether neighbor is being spotted on the given coordinates.
+    Returns True if neighbor is spotted, otherwise returns False
     '''
-
-    #    For given x,y there is added the weight W (depending how far away this point P(x,y) is from the center of weight
-    #    W(xi', yi') - the neighbor i coordinates
-
-    weight = 0
     for n in Robot.neighbors:
-        if (abs(n.x - x) <= (W / 2)) and (abs(n.y - y) <= (W / 2)):
-            weight = weight + W - (abs(n.x - x) + abs(n.y - y))
-    return weight
+        if ((n.x - x)**2 + (n.y - y)**2 <= radius**2):
+            return True
+    return False
 
 
 def check_line(Robot, i, k=15, R=75):
     '''
     Checks the given line (k - the given fraction of the circle).
-    '''
-    line_weight = 0
-    radius = 10
-    for x in range(Robot.x + 10, Robot.x + R, 1):  #the robot radius is 10!
-        y = calc_y(i, radius, k) + Robot.y
-        line_weight = add_weight(Robot, x, y, radius)
-        if line_weight > 0:
-            return line_weight
-        radius += 1
 
-    return line_weight
+    Returns True, if other robot is being spotted, otherwise returns False.
+    '''
+    radius = 10  #radius of the robot
+    step_size = 2  #the step of line that is being checked, it doesn't need to be 1, but too big can crash
+    for r in range(radius + 1, R + 1, step_size):
+        x = calc_x(i, r, k) + Robot.x
+        y = calc_y(i, r, k) + Robot.y
+        if is_neighbor_spotted(Robot, x, y, radius):
+            return True
+    return False
 
 
 def check_x0_line(Robot, R=75):
     '''
     Special case of check line - checks the line for the x = 0.
     '''
-    line_weight = 0
-    for y in range(10, R, 1):  #the robot radius is 10!
-        line_weight += add_weight(Robot, Robot.x, Robot.y + y, y)
-    return line_weight
+    radius = 10  #radius of the robot
+    step_size = 2
+    for y in range(radius + 1, R + 1, step_size):
+        if is_neighbor_spotted(Robot, Robot.x, Robot.y + y, radius):
+            return True
+    return False
 
 
 def direction_line_equation(Robot):
@@ -223,6 +219,22 @@ def is_collision_distance(Robot):
     if len(Robot.neighbors) == Robot.in_range_robots:
         return False
     return True
+
+
+def is_collision(Robot):
+    '''
+    If leader spots the obstacle (other robot) in front of it then the new path needs to be recalculated
+    '''
+    a, b, d = direction_line_equation(Robot)
+    isCollision = False
+    for n in Robot.neighbors:
+        if n.AS != Robot.AS:
+            return True
+
+
+#            if neighbor_check(Robot, n, a, d, b):
+#                return True
+    return False
 
 
 def evaluate_velocity(Robot, const_velocity):

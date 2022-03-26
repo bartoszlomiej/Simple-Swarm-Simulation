@@ -1,3 +1,5 @@
+import timeit  #just for dbg
+
 import sys
 import numpy as np
 import pygame as pg
@@ -48,7 +50,8 @@ class Simulation:
             TODO: Starting position could be checked here to avoid overlaping
             self.board[i] = [x, y]
             '''
-            robot = rbt.Robot(x, y, self.width, self.height, velocity)
+            robot = rbt.Robot(x, y, self.width, self.height, velocity,
+                              self.sensor_range)
             self.swarm.add(robot)
 
     def check_collisions(self):
@@ -106,7 +109,6 @@ class Simulation:
                     r.spotted(i)
                     if (0.15 * self.sensor_range**2) < (dx + dy):
                         r.in_range()
-
 
     def dbg_timer(self, t):
         for i in self.swarm:
