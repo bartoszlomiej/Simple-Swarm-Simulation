@@ -91,9 +91,23 @@ class PhaseTwo(ph.Phase):
                     return False
         return True
 
+    def minimal_distance(self):
+        '''
+        Checks if the minimal distance between robots is being kept.
+        Returns true if minimal distance is being kept; otherwise returns false.
+        '''
+        robot = self.robot
+        for n in robot.neighbors:
+            if (abs(n.position[0] - robot.position[0]) <= robot.radius) and (
+                    abs(n.position[1] - robot.position[1]) <= robot.radius):
+                return False
+        return True
+
     def update(self):
         self.collective_movement()
         robot = self.robot
+        if not self.minimal_distance():
+            robot.dir_x, robot.dir_y = 0, 0
         '''
         if not self.last_robot:  #dbg
             check_me = robot.AS  #np.random.randint(0, 65025)

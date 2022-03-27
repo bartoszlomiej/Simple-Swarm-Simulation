@@ -86,7 +86,7 @@ class Robot(pg.sprite.Sprite):
             self.faza.update()
         elif self.phase == 2:
             self.faza.update()
-            #            self.collective_movement()
+            self.is_allone()
 
         #boundary parameters
         if x < 0 or x > self.width - 2 * self.radius:
@@ -122,6 +122,15 @@ class Robot(pg.sprite.Sprite):
         Returns the number of neighbors that are in given range
         '''
         self.in_range_robots = self.in_range_robots + 1
+
+    def is_allone(self):
+        '''
+        If any robot for any reason stays allone, then it come back to phase one, and it's AS is being created again
+        '''
+        if not self.neighbors:
+            self.create_AS()
+            self.faza = PhaseOne(self)
+            self.phase = 1
 
     def update_msg(self):
         self.messages.clear()

@@ -128,7 +128,7 @@ def neighbor_check(Robot, neighbor, a, b, d):
         if neighbor.y > (neighbor.x * a) + b:
             return True
     else:
-        if neighbor.y < (neighbor.x * a) + b:  #this is breaking
+        if neighbor.y < (neighbor.x * a) + b:
             return True
     return False
 
@@ -197,21 +197,23 @@ def follower(Robot):
             continue
         rd = point_to_direction_rd(Robot, n)
 
-        isCollision = is_collision_distance(Robot)
-        '''
-        Only robots that are on our collision distance are being considered now.
-        '''
-
         if rd < best_rd:
             best_neighbor = n
             best_rd = rd
     if not best_neighbor:  #although it should never appear, it was decided to keep it
         return  #just in case
-    if not isCollision:
+    '''
+    Only robots that are on our collision distance are being considered now.
+    '''
+    if not is_collision_distance(Robot):
         direction_to_neighbor(Robot, best_neighbor)
     else:
-        Robot.dir_x = 0
-        Robot.dir_y = 0
+        direction_to_neighbor(Robot, best_neighbor)
+        if not is_any_collision(Robot):
+            return
+        else:
+            Robot.dir_x = 0
+            Robot.dir_y = 0
 
 
 def is_collision_distance(Robot):
@@ -223,12 +225,24 @@ def is_collision_distance(Robot):
     return True
 
 
+def is_any_collision(Robot):
+    '''
+    Checks whether there is going to be a collision in the direciton we are approaching
+    '''
+    a, b, d = direction_line_equation(Robot)
+    for n in Robot.neighbors:
+        if neighbor_check(Robot, n, a, b, d):
+            if (n.x - Robot.x)**2 + (n.y -
+                                     Robot.y)**2 < 0.15 * Robot.s_range**2:
+                return True
+    return False
+
+
 def is_collision(Robot):
     '''
     If leader spots the obstacle (other robot) in front of it then the new path needs to be recalculated
     '''
     a, b, d = direction_line_equation(Robot)
-    isCollision = False
     for n in Robot.neighbors:
         if n.AS != Robot.AS:
             if neighbor_check(Robot, n, a, b, not d):

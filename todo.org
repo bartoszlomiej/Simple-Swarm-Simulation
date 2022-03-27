@@ -10,7 +10,7 @@ TODAY -*- mode: org -*-
     In order to leave this phase certain improvements are to be introduced.
     
    
-**** TODO Trespassing
+**** DONE Trespassing
      When robots are in the different AS's they sometimes permeating the other robots (especially, if some robots
      are already in phase 3, and phase 2 robots are going to them)
 	  
@@ -21,6 +21,8 @@ TODAY -*- mode: org -*-
        2. Robots of the lower phase (applies to phase 1 robots only) must join robots of the higher phase
 
 **** TODO Movement improval - closeness
+     *It is not that necessary, but it would be still a nice improvement though*
+     
      Before starting the phase 2 it is recommend to test how the system will behave if we first order the robots to come
      closer to each other.
 
