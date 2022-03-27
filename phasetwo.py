@@ -13,7 +13,6 @@ class PhaseTwo(ph.Phase):
     def __init__(self, Robot):
         super().__init__(Robot)
         self.phase = 2
-        self.counter = 0  #just for dbg
 
     def collective_movement(self):
         '''
@@ -43,13 +42,11 @@ class PhaseTwo(ph.Phase):
         Sets the initial direction for all robots in the AS
         '''
         robot = self.robot
-        robot.set_timer(100, False)
         robot.state = "moving"
         robot.velocity[0] = robot.dir_x
         robot.velocity[1] = robot.dir_y
 
         self.leader_follower()
-        #        leader = spot.is_follower(self)
 
     def leader_follower(self):
         '''
@@ -66,8 +63,6 @@ class PhaseTwo(ph.Phase):
             '''
             Simply goes in the given direction
             '''
-            if not robot.dir_x or robot.dir_y:
-                self.counter += 1  #just for dbg
             if spot.is_collision(robot):
                 robot.dir_x, robot.dir_y = robot.find_direction()
             robot.broadcast["Direction"] = (robot.dir_x, robot.dir_y)

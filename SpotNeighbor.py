@@ -105,7 +105,7 @@ def direction_line_equation(Robot):
     else:
         a = -Robot.dir_x / Robot.dir_y
         b = Robot.y - (Robot.x * a)
-        if (Robot.x * a) + b < Robot.dir_y:
+        if x_b * a + b < y_b:
             d = True  #indicates if the direction is over or under the prependicular to the direction line
         else:
             d = False
@@ -128,7 +128,7 @@ def neighbor_check(Robot, neighbor, a, b, d):
         if neighbor.y > (neighbor.x * a) + b:
             return True
     else:
-        if neighbor.y < (neighbor.x * a) + b:
+        if neighbor.y < (neighbor.x * a) + b:  #this is breaking
             return True
     return False
 
@@ -156,6 +156,8 @@ def point_to_direction_rd(Robot, neighbor):
     A = Robot.dir_x
     B = Robot.dir_y
     C = Robot.y - (Robot.x * A)
+    if not A and not B:
+        return 1000
     return abs((neighbor.x * A) +
                (neighbor.y * B) + C) / math.sqrt(A**2 + B**2)
 
@@ -191,8 +193,8 @@ def follower(Robot):
             continue
 
         if not neighbor_check(Robot, n, a, b, d):
-            continue
 
+            continue
         rd = point_to_direction_rd(Robot, n)
 
         isCollision = is_collision_distance(Robot)
@@ -229,11 +231,8 @@ def is_collision(Robot):
     isCollision = False
     for n in Robot.neighbors:
         if n.AS != Robot.AS:
-            return True
-
-
-#            if neighbor_check(Robot, n, a, d, b):
-#                return True
+            if neighbor_check(Robot, n, a, b, not d):
+                return True
     return False
 
 

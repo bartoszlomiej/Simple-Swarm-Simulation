@@ -219,7 +219,6 @@ class Robot(pg.sprite.Sprite):
             pass
         if direction == 0:
             return (0, 1)
-
         return (spot.calc_x(direction, 100) / 100,
                 spot.calc_y(direction, 100) / 100)
 
