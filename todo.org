@@ -6,13 +6,27 @@ TODAY -*- mode: org -*-
 ** TODO Phase 2 - Moving to the corner
    Main problems -> only one leader at time; leader switching; 
 
-   Good assumption -> order the leader robot to have constant speed!
-
 *** TODO Improvements
-    Speed of the followers - it should be enough to catch the leader and to not lose him!
-
-    Velocity - it should be constant for now. Thus the way that it is being calculated is to be changed.
+    In order to leave this phase certain improvements are to be introduced.
     
+   
+**** TODO Trespassing
+     When robots are in the different AS's they sometimes permeating the other robots (especially, if some robots
+     are already in phase 3, and phase 2 robots are going to them)
+	  
+**** TODO Rules
+     - When robots are in the different phases than some rules are not obeyed:
+       1. Robots of the higher phase cannot change to smaller phase until certain conditions occur (if robot is alone
+	  it always go to phase 1)
+       2. Robots of the lower phase (applies to phase 1 robots only) must join robots of the higher phase
+
+**** TODO Movement improval - closeness
+     Before starting the phase 2 it is recommend to test how the system will behave if we first order the robots to come
+     closer to each other.
+
+     The behavior of coming closer to the center of mass of the cluster could be observed in the test file, when
+     in the SpotNeighbor function neighbor_check() the certain parameters where changed - basically oposite behavior to the one we wanted.
+
 ** TODO Phase 3 - creating superclasters
    There will be performed two approaches of creating superclusters and they will be compared
    1) Edge following approach
