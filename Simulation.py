@@ -75,7 +75,7 @@ class Simulation:
         having velocity = (x, y) -> new velocity = (-random * sign(x), -random * sign(y))
         as a result never two robots will go in the same direction after collision (no stucking)
         '''
-        if robot.phase == 1:
+        if robot.faza.phase == 1:
             sign_x = np.sign(robot.velocity[0])
             sign_y = np.sign(robot.velocity[1])
             velocity = np.random.rand(2)
@@ -112,9 +112,9 @@ class Simulation:
 
     def dbg_timer(self, t):
         for i in self.swarm:
-            if i.phase == 2:
+            if i.faza.phase == 2:
                 print("Cluster: ", i.AS, "  TIME: ", t)  #just for dbg
-                i.phase = -1  #just for dbg!
+                i.faza.phase = -1  #just for dbg!
 
     def run(self):
         '''

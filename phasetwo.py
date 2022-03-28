@@ -13,6 +13,7 @@ class PhaseTwo(ph.Phase):
     def __init__(self, Robot):
         super().__init__(Robot)
         self.phase = 2
+        Robot.clear_broadcast()
 
     def collective_movement(self):
         '''
@@ -108,6 +109,7 @@ class PhaseTwo(ph.Phase):
         robot = self.robot
         if not self.minimal_distance():
             robot.dir_x, robot.dir_y = 0, 0
+        robot.is_allone()
         '''
         if not self.last_robot:  #dbg
             check_me = robot.AS  #np.random.randint(0, 65025)

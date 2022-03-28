@@ -63,7 +63,7 @@ class Robot(pg.sprite.Sprite):
         self.dir_y = 0
 
         self.state = "moving"  #initially robots move (just for aggregation algorithm)
-        self.phase = 1  #the first phase is being currently run. This number can be only incremented!
+        #        self.phase = 1  #the first phase is being currently run. This number can be only incremented!
 
         self.prev_coords = []  #previous coordinates of the neighbors
 
@@ -80,27 +80,22 @@ class Robot(pg.sprite.Sprite):
         self.update_msg()
         #place for the swarm behaviors
         #First phase bahaviors:
-        if self.phase == 1:
-            self.faza.update()
-        elif self.phase == 1.5:
-            self.faza.update()
-        elif self.phase == 2:
-            self.faza.update()
-            self.is_allone()
+
+        self.faza.update()
 
         #boundary parameters
         if x < 0 or x > self.width - 2 * self.radius:
-            if self.phase == 2:  #just for dbg
+            if self.faza.phase == 2:  #just for dbg
                 self.velocity[0] = 0
                 self.velocity[1] = 0
-                self.phase = 3
             self.velocity[0] = -self.velocity[0]
         if y < 0 or y > self.height - 2 * self.radius:
-            if self.phase == 2:  #just for dbg
+            if self.faza.phase == 2:  #just for dbg
                 self.velocity[0] = 0
                 self.velocity[1] = 0
-                self.phase = 3
             self.velocity[1] = -self.velocity[1]
+
+        self.broadcast["Phase"] = self.faza.phase  #always broadcast the phase
 
         self.neighbors.clear(
         )  #list of neighbors must be refreshed in each update
@@ -128,14 +123,16 @@ class Robot(pg.sprite.Sprite):
         If any robot for any reason stays allone, then it come back to phase one, and it's AS is being created again
         '''
         if not self.neighbors:
-            self.create_AS()
             self.faza = PhaseOne(self)
-            self.phase = 1
 
     def update_msg(self):
         self.messages.clear()
         for n in self.neighbors:
             self.messages.append(n.broadcast)
+
+    def clear_broadcast(self):
+        self.broadcast.clear()
+        self.broadcast["AS"] = self.AS
 
     def update_color(self):
         '''
