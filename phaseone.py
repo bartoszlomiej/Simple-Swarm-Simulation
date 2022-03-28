@@ -117,25 +117,15 @@ class PhaseOne(ph.Phase):
             if robot.state != "waiting":
                 robot.timer = (robot.timer[0], robot.timer[1] - 1,
                                robot.timer[2])
-
-                if robot.faza.phase == 1.5:
-                    robot.broadcast['Timer phase 1'] = robot.timer
-                    robot.broadcast['Direction'] = (robot.dir_x, robot.dir_y)
-
                 if robot.timer[1] < 0:
-                    if robot.faza.phase == 1:  #here enters only the edge robots
-                        robot.dir_x, robot.dir_y = robot.find_direction()
-                        robot.set_timer(
-                        )  #The second timer is to be set -> it will be used for synchronization
-                        self.upgrade(1.5)
-                        robot.state = "Timer phase 1"
-                        HORRIBLE_YELLOW = (190, 175, 50)
-                        pg.draw.circle(robot.image, HORRIBLE_YELLOW,
-                                       (robot.radius, robot.radius),
-                                       robot.radius)
-                        return
-                    #                    robot.faza.phase = 2  #finally, going to phase 2!!!
-                    self.upgrade(2)
+                    robot.dir_x, robot.dir_y = robot.find_direction()
+                    robot.set_timer(
+                    )  #The second timer is to be set -> it will be used for synchronization
+                    self.upgrade(1.5)
+                    robot.state = "Timer phase 1"
+                    HORRIBLE_YELLOW = (190, 175, 50)
+                    pg.draw.circle(robot.image, HORRIBLE_YELLOW,
+                                   (robot.radius, robot.radius), robot.radius)
                     return
 
             for m in robot.messages:
@@ -211,15 +201,7 @@ class PhaseOneAndHalf(ph.Phase):
                 if robot.timer[1] < 0:
                     self.upgrade(2)
                     return
-
             for m in robot.messages:
-                if "Timer phase 1" in m.keys():
-                    if robot.timer[1] > m["Timer phase 1"][1] or robot.timer[
-                            1] == -1 or robot.state != "Timer phase 1":
-                        robot.state = "Timer phase 1"
-                        robot.timer = m["Timer phase 1"]
-                        self.upgrade(1.5)
-                        #                        robot.faza.phase = 1.5  #as we get the other timer, thus the second timer is to be used
                 if "Direction" in m.keys():
                     robot.dir_x = m["Direction"][0]
                     robot.dir_y = m["Direction"][1]
