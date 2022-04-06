@@ -1,11 +1,12 @@
-import timeit  #just for dbg
-
 import sys
 import numpy as np
 import pygame as pg
 import math
 import Robot as rbt
+import threading
 
+#just for dbg
+import os
 
 class Simulation:
     '''
@@ -17,7 +18,7 @@ class Simulation:
                  height=400,
                  N=10,
                  s_range=55,
-                 velocity_lvl=4):
+                 velocity_lvl=4, threads=1):
         '''
         width - the width of the screen
         height - the height of the screen
@@ -32,10 +33,15 @@ class Simulation:
         self.velocity_lvl = velocity_lvl
 
         self.swarm = pg.sprite.Group()
+        self.th_group = []
         self.swarm_quantity = N
 
         self.initialize_robots()
 
+        self.threads = threads
+        if self.threads > 1:
+            self.initialize_multithreading(threads)
+        
     def initialize_robots(self):
         '''
         Initializes robots on empty board.
@@ -53,6 +59,39 @@ class Simulation:
             robot = rbt.Robot(x, y, self.width, self.height, velocity,
                               self.sensor_range)
             self.swarm.add(robot)
+
+    def initialize_multithreading(self, threads):
+        '''
+        Initialize multithreading with thread number equal to 'threads'.
+        '''
+        group_size = math.ceil(self.swarm_quantity / threads)
+        k = 0
+        i = 0
+        self.th_group.append(pg.sprite.Group())
+        for robot in self.swarm:
+            if i >= (k+1) * group_size:
+                self.th_group.append(pg.sprite.Group())
+                k += 1
+            self.th_group[k].add(robot)
+            i += 1
+
+    def update_group(self, group_no):
+        '''
+        Updates the th_group of the given number
+        '''
+        self.th_group[group_no].update()
+
+    def update_all(self):
+        '''
+        Creates 'threads' number of threads that will run separately the update on given group of sprites
+        '''
+        t = []
+        for i in range(self.threads):
+            t.append(threading.Thread(target=self.update_group, args= (i,)))
+            t[i].start()
+
+        for i in t:
+            i.join() #synchronization of threads
 
     def check_collisions(self):
         '''
@@ -84,13 +123,6 @@ class Simulation:
             velocity[1] = (velocity[1]) * self.velocity_lvl / 2
             robot.velocity = [-sign_x * velocity[0], -sign_y * velocity[1]]
 
-
-#        else:
-#            robot.velocity = [
-        '''
-        Previous solution:
-#        robot.velocity = [-robot.velocity[0], -robot.velocity[1]]
-        '''
     def robot_vision(self):
         '''
         Emulates the very basic vision sensor of each robot in the swarm.
@@ -110,12 +142,6 @@ class Simulation:
                     if (0.15 * self.sensor_range**2) < (dx + dy):
                         r.in_range()
 
-    def dbg_timer(self, t):
-        for i in self.swarm:
-            if i.faza.phase == 2:
-                print("Cluster: ", i.AS, "  TIME: ", t)  #just for dbg
-                i.faza.phase = -1  #just for dbg!
-
     def run(self):
         '''
         Runs the simulation. After certain time the simulation is closed.
@@ -128,10 +154,12 @@ class Simulation:
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     sys.exit()
-            self.swarm.update()
+            if self.threads > 1:
+                self.update_all()
+            else:
+                self.swarm.update()
             self.check_collisions()
             self.robot_vision()
-            #            self.dbg_timer(i)
             screen.fill((255, 255, 255))  #background color (white)
             self.swarm.draw(screen)
             pg.display.flip()
