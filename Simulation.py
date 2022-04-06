@@ -102,10 +102,7 @@ class Simulation:
                 [s for s in self.swarm if s != robot])
             collide = pg.sprite.spritecollide(robot, collision_group, False)
             if collide:
-                #                robot.moved = True
                 for c in collide:  #there can be numerous collisions however it is unlikely
-                    #                    if c.moved == True:
-                    #                        continue
                     self.collision_movement(robot)
 
     def collision_movement(self, robot):

@@ -63,7 +63,6 @@ class Robot(pg.sprite.Sprite):
         self.dir_y = 0
 
         self.state = "moving"  #initially robots move (just for aggregation algorithm)
-        #        self.phase = 1  #the first phase is being currently run. This number can be only incremented!
 
         self.prev_coords = []  #previous coordinates of the neighbors
 
