@@ -180,14 +180,13 @@ def direction_to_neighbor(Robot, neighbor):
         Robot.dir_y *= 1.5
 
 
-def follower(Robot):
+def find_best_neighbor(Robot):
     '''
-    Finds the neighbor which is the most close to the broadcasted direction and follows it.
+    Returns the best neighbor as well as it's relative distance.
     '''
     best_rd = 100000  #rd - relative distance
     best_neighbor = None
     a, b, d = direction_line_equation(Robot)
-    isCollision = False
     for n in Robot.neighbors:
         if n.AS != Robot.AS:
             continue
@@ -200,6 +199,14 @@ def follower(Robot):
         if rd < best_rd:
             best_neighbor = n
             best_rd = rd
+    return best_neighbor, best_rd
+
+
+def follower(Robot):
+    '''
+    Finds the neighbor which is the most close to the broadcasted direction and follows it.
+    '''
+    best_neighbor, best_rd = find_best_neighbor(Robot)
     if not best_neighbor:  #although it should never appear, it was decided to keep it
         return  #just in case
     '''

@@ -13,6 +13,7 @@ class PhaseTwo(ph.Phase):
     def __init__(self, Robot):
         super().__init__(Robot)
         self.phase = 2
+        self.next_phase = False
         Robot.clear_broadcast()
 
     def collective_movement(self):
@@ -66,6 +67,7 @@ class PhaseTwo(ph.Phase):
             '''
             if spot.is_collision(robot):
                 robot.dir_x, robot.dir_y = robot.find_direction()
+            self.next_phase = self.__wall_spotted()
             robot.broadcast["Direction"] = (robot.dir_x, robot.dir_y)
             #just for dbg
             check_me = robot.AS  #np.random.randint(0, 65025)
@@ -104,12 +106,22 @@ class PhaseTwo(ph.Phase):
                 return False
         return True
 
+    def __wall_spotted(self):
+        '''
+        Returns true if leader touches the wall.
+        '''
+        if self.robot.velocity[0] == 0 and self.robot.velocity[1] == 0.0:
+            return True
+        return False
+
     def update(self):
         self.collective_movement()
         robot = self.robot
         if not self.minimal_distance():
             robot.dir_x, robot.dir_y = 0, 0
         robot.is_allone()
+        if self.next_phase:
+            self.upgrade()
         '''
         if not self.last_robot:  #dbg
             check_me = robot.AS  #np.random.randint(0, 65025)

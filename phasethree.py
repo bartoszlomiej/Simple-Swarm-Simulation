@@ -13,6 +13,48 @@ class PhaseThree(ph.Phase):
     def __init__(self, Robot):
         super().__init__(Robot)
         self.phase = 3
+        self.superAS = Robot.AS
+
+    def __closestNeighborAS(self):
+        '''
+        Returns the closest neighbor's AS that in the same superAS.
+        '''
+        best_neighbor, best_rd = spot.find_best_neighbor(self.robot)
+        if best_neighbor:
+            return best_neighbor.AS
+        else:
+            print(self.robot.dir_x,
+                  self.robot.dir_y)  #direction should not be zero
+            return None
+
+    def __countToTwo(self):
+        '''
+        Polish equivalent is "Do dwóch odlicz" - every second robot updates it's local AS to be equal AS + 1.
+        '''
+        previous_AS = self.__closestNeighborAS()
+        if not previous_AS:
+            return  #I have know idea yet what should be done here:(
+        if previous_AS == self.superAS:
+            self.robot.AS += 1
+            #just for dbg
+            HORRIBLE_YELLOW = (190, 175, 50)
+            robot = self.robot
+            pg.draw.circle(robot.image, HORRIBLE_YELLOW,
+                           (robot.radius, robot.radius), robot.radius)
+        elif previous_AS != self.superAS + 1:  #this robot is not in my super cluster
+            return
+
+    def doubleRow(self):
+        '''
+        Changes single line formation to double row.
+        '''
+
+        pass
+
+    def update(self):
+        self.__countToTwo()
+        self.robot.velocity[0] = 0
+        self.robot.velocity[1] = 0
 
     def upgrade(self, next_phase):
         '''
