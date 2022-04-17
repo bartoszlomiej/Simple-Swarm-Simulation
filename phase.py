@@ -14,7 +14,13 @@ class Phase(ABC):
     '''
     def __init__(self, Robot):
         self.robot = Robot
-
+        
+    @abstractmethod
+    def check_phase(self):
+        '''
+        If robot in the same AS have higher phase, then we update ours
+        '''
+        pass
     @abstractmethod
     def upgrade(self, next_phase):
         '''

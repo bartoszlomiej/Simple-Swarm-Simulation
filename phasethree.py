@@ -55,10 +55,23 @@ class PhaseThree(ph.Phase):
         pass
 
     def update(self):
+        HORRIBLE_YELLOW = (190, 175, 50)
+        robot = self.robot
+        pg.draw.circle(robot.image, HORRIBLE_YELLOW,
+                       (robot.radius, robot.radius), robot.radius)
         self.__countToTwo()
         self.robot.velocity[0] = 0
         self.robot.velocity[1] = 0
-
+        
+    def check_phase(self):
+        robot = self.robot
+        for m in robot.messages:
+            if "Phase" in m.keys():
+                if m["Phase"] >= 3:
+                    self.AS = m["AS"]
+                    self.upgrade(m["Phase"])
+                    return
+                
     def upgrade(self, next_phase):
         '''
         Upgrades the phase to further one.

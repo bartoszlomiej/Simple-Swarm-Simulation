@@ -123,9 +123,11 @@ class PhaseOne(ph.Phase):
                     )  #The second timer is to be set -> it will be used for synchronization
                     self.upgrade(1.5)
                     robot.state = "Timer phase 1"
+                    ''''
                     HORRIBLE_YELLOW = (190, 175, 50)
                     pg.draw.circle(robot.image, HORRIBLE_YELLOW,
                                    (robot.radius, robot.radius), robot.radius)
+                    '''
                     return
 
             for m in robot.messages:
@@ -210,7 +212,16 @@ class PhaseOneAndHalf(ph.Phase):
 
     def update(self):
         self.use_timer()
-
+        
+    def check_phase(self):
+        robot = self.robot
+        for m in robot.messages:
+            if "Phase" in m.keys():
+                if m["Phase"] >= 2:
+                    self.AS = m["AS"]
+                    self.upgrade(m["Phase"])
+                    return
+                
     def upgrade(self, next_phase):
         '''
         Upgrades the phase to further one.

@@ -87,11 +87,13 @@ class Robot(pg.sprite.Sprite):
             if self.faza.phase == 2:  #just for dbg
                 self.velocity[0] = 0
                 self.velocity[1] = 0
+                self.faza.upgrade()
             self.velocity[0] = -self.velocity[0]
         if y < 0 or y > self.height - 2 * self.radius:
             if self.faza.phase == 2:  #just for dbg
                 self.velocity[0] = 0
                 self.velocity[1] = 0
+                self.faza.upgrade()
             self.velocity[1] = -self.velocity[1]
 
         self.broadcast["Phase"] = self.faza.phase  #always broadcast the phase

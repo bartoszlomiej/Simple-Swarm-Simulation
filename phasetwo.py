@@ -67,9 +67,9 @@ class PhaseTwo(ph.Phase):
             '''
             if spot.is_collision(robot):
                 robot.dir_x, robot.dir_y =  robot.find_direction()
-            #            self.next_phase = self.__wall_spotted()
             robot.broadcast["Direction"] = (robot.dir_x, robot.dir_y)
             #just for dbg
+            '''
             check_me = robot.AS  #np.random.randint(0, 65025)
             red = check_me % 256
             green = math.floor(check_me / 4) % 256
@@ -77,11 +77,14 @@ class PhaseTwo(ph.Phase):
             color = (red, green, blue)
             pg.draw.circle(robot.image, color, (robot.radius, robot.radius),
                            robot.radius)
+            '''
         else:
             spot.follower(robot)
+            '''
             BLACK = (0, 0, 0)
             pg.draw.circle(robot.image, BLACK, (robot.radius, robot.radius),
                            robot.radius)
+            '''
 
     def last_robot(self):
         '''
@@ -106,22 +109,22 @@ class PhaseTwo(ph.Phase):
                 return False
         return True
 
-    def __wall_spotted(self):
-        '''
-        Returns true if leader touches the wall.
-        '''
-        if self.robot.velocity[0] == 0 and self.robot.velocity[1] == 0:
-            return True
-        return False
-
+    def check_phase(self):
+        robot = self.robot
+        for m in robot.messages:
+            if "Phase" in m.keys():
+                if m["Phase"] >= 3:
+                    self.AS = m["AS"]
+                    self.upgrade(m["Phase"])
+                    return
+                
     def update(self):
         self.collective_movement()
         robot = self.robot
         if not self.minimal_distance():
             robot.dir_x, robot.dir_y = 0, 0
         robot.is_allone()
-        if self.next_phase:
-            self.upgrade()
+        self.check_phase()
         '''
         if not self.last_robot:  #dbg
             check_me = robot.AS  #np.random.randint(0, 65025)
