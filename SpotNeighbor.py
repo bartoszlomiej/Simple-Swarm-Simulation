@@ -178,24 +178,31 @@ def direction_to_neighbor(Robot, neighbor):
     if rd > 30:
         Robot.dir_x *= 1.5
         Robot.dir_y *= 1.5
+        
 
-
-def find_best_neighbor(Robot, sameAS=True):
+def find_best_neighbor(Robot, closestNeighbor=False, allowedAS=None):
     '''
     Returns the best neighbor as well as it's relative distance.
+    If closestNeighbor flag is set to True, than instead of best neighbor in terms of phase 2 algorithm
+    the closest neighbor is being returned
     '''
     best_rd = 100000  #rd - relative distance
     best_neighbor = None
     a, b, d = direction_line_equation(Robot)
     for n in Robot.neighbors:
-        if sameAS:
+        if not allowedAS:
             if n.AS != Robot.AS:
+                continue
+        else:
+            if not n.AS in allowedAS:
                 continue
 
         if not neighbor_check(Robot, n, a, b, d):
-
             continue
-        rd = point_to_direction_rd(Robot, n)
+        if not closestNeighbor:
+            rd = point_to_direction_rd(Robot, n)
+        else:
+            rd = relative_distance(Robot.x, Robot.y, n.x, n.y)
 
         if rd < best_rd:
             best_neighbor = n

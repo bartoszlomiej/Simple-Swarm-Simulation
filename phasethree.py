@@ -19,16 +19,12 @@ class PhaseThree(ph.Phase):
         '''
         Returns the closest neighbor's AS that in the same superAS.
         '''
-        best_neighbor, best_rd = spot.find_best_neighbor(self.robot, False)
+        allowedAS = [self.superAS, self.superAS+1]
+        best_neighbor, best_rd = spot.find_best_neighbor(self.robot, True, allowedAS)
         if not best_neighbor:
             return None #The leader don't have the best neighbor
-        if best_neighbor.AS == self.superAS:
-            self.robot.AS += 1
         else:
-            self.robot.AS = self.superAS
-            print(self.robot.dir_x,
-                  self.robot.dir_y)  #direction should not be zero
-            return None
+            return best_neighbor.AS
 
     def __countToTwo(self):
         '''
@@ -44,7 +40,17 @@ class PhaseThree(ph.Phase):
             robot = self.robot
             pg.draw.circle(robot.image, HORRIBLE_YELLOW,
                            (robot.radius, robot.radius), robot.radius)
-        elif previous_AS != self.superAS + 1:  #this robot is not in my super cluster
+        elif previous_AS == self.superAS + 1:  #this robot is not in my super cluster
+            self.robot.AS = self.superAS
+            robot = self.robot
+            check_me = robot.AS
+            red = check_me % 256
+            green = math.floor(check_me / 4) % 256
+            blue = math.floor(math.sqrt(check_me)) % 256
+            color = (red, green, blue)
+            pg.draw.circle(robot.image, color, (robot.radius, robot.radius),
+                           robot.radius)
+        else:
             return
 
     def doubleRow(self):
@@ -55,10 +61,6 @@ class PhaseThree(ph.Phase):
         pass
 
     def update(self):
-        HORRIBLE_YELLOW = (190, 175, 50)
-        robot = self.robot
-        pg.draw.circle(robot.image, HORRIBLE_YELLOW,
-                       (robot.radius, robot.radius), robot.radius)
         self.__countToTwo()
         self.robot.velocity[0] = 0
         self.robot.velocity[1] = 0
