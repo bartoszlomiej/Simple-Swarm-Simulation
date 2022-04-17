@@ -19,10 +19,13 @@ class PhaseThree(ph.Phase):
         '''
         Returns the closest neighbor's AS that in the same superAS.
         '''
-        best_neighbor, best_rd = spot.find_best_neighbor(self.robot)
-        if best_neighbor:
-            return best_neighbor.AS
+        best_neighbor, best_rd = spot.find_best_neighbor(self.robot, False)
+        if not best_neighbor:
+            return None #The leader don't have the best neighbor
+        if best_neighbor.AS == self.superAS:
+            self.robot.AS += 1
         else:
+            self.robot.AS = self.superAS
             print(self.robot.dir_x,
                   self.robot.dir_y)  #direction should not be zero
             return None

@@ -217,21 +217,30 @@ class Robot(pg.sprite.Sprite):
                     if chain[1] > longest_chain[1]:
                         longest_chain = chain
             iterator += 1
-        if longest_chain[1] > 0:
+        if longest_chain[1] > (len(S)/4):
             direction = longest_chain[0] - int(longest_chain[1] / 2)
         else:
             #There is a need to change the leader
-            pass
+            self.broadcast["Return"] = -self.dir_x, -self.dir_y
+            return -self.dir_x, -self.dir_y
         if direction == 0:
-            return (0, 1)
-        return (spot.calc_x(direction, 100) / 100,
-                spot.calc_y(direction, 100) / 100)
+            return 0, 1
+        return(spot.calc_x(direction, 100) / 100,
+               spot.calc_y(direction, 100) / 100)
+
+        return
 
     def follower_msg(self):
         '''
         Gets the route given by the leader.
         '''
         for m in self.messages:
+            if "Return" in m.keys() and m["AS"] == self.AS:
+                self.broadcast["Return"] = m["Return"]
+                self.dir_x = m["Return"][0]
+                self.dir_y = m["Return"][1]
+                return
+
             if "Direction" in m.keys() and m["AS"] == self.AS:
                 self.broadcast["Direction"] = m["Direction"]
                 self.dir_x = m["Direction"][0]

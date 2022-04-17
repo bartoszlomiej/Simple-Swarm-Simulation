@@ -168,7 +168,7 @@ def direction_to_neighbor(Robot, neighbor):
 
     The dir_x, dir_y values assumes that the direction is always given on the unit circle.
     '''
-    delta_x = (neighbor.x - Robot.x)
+    delta_x = (neighbor.x - Robot.x) #it must be greater than 0 - robots cannot overlap
     delta_y = (neighbor.y - Robot.y)
     suma = math.sqrt(delta_x**2 + delta_y**2)
     Robot.dir_x = delta_x / suma
@@ -180,7 +180,7 @@ def direction_to_neighbor(Robot, neighbor):
         Robot.dir_y *= 1.5
 
 
-def find_best_neighbor(Robot):
+def find_best_neighbor(Robot, sameAS=True):
     '''
     Returns the best neighbor as well as it's relative distance.
     '''
@@ -188,8 +188,9 @@ def find_best_neighbor(Robot):
     best_neighbor = None
     a, b, d = direction_line_equation(Robot)
     for n in Robot.neighbors:
-        if n.AS != Robot.AS:
-            continue
+        if sameAS:
+            if n.AS != Robot.AS:
+                continue
 
         if not neighbor_check(Robot, n, a, b, d):
 

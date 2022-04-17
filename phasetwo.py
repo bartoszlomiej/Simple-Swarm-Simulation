@@ -66,8 +66,8 @@ class PhaseTwo(ph.Phase):
             Simply goes in the given direction
             '''
             if spot.is_collision(robot):
-                robot.dir_x, robot.dir_y = robot.find_direction()
-            self.next_phase = self.__wall_spotted()
+                robot.dir_x, robot.dir_y =  robot.find_direction()
+            #            self.next_phase = self.__wall_spotted()
             robot.broadcast["Direction"] = (robot.dir_x, robot.dir_y)
             #just for dbg
             check_me = robot.AS  #np.random.randint(0, 65025)
@@ -110,7 +110,7 @@ class PhaseTwo(ph.Phase):
         '''
         Returns true if leader touches the wall.
         '''
-        if self.robot.velocity[0] == 0 and self.robot.velocity[1] == 0.0:
+        if self.robot.velocity[0] == 0 and self.robot.velocity[1] == 0:
             return True
         return False
 
