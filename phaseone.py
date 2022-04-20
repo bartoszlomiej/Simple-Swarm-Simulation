@@ -147,7 +147,12 @@ class PhaseOne(ph.Phase):
         robot = self.robot
         for m in robot.messages:
             if "Phase" in m.keys():
-                if m["Phase"] >= 2:
+                if m["Phase"] > 2:
+                    self.AS = m["AS"]
+                    superAS = m["superAS"]
+                    self.upgrade(m["Phase"], superAS)
+                    return
+                elif m["Phase"] == 2:
                     self.AS = m["AS"]
                     self.upgrade(m["Phase"])
                     return
@@ -217,7 +222,12 @@ class PhaseOneAndHalf(ph.Phase):
         robot = self.robot
         for m in robot.messages:
             if "Phase" in m.keys():
-                if m["Phase"] >= 2:
+                if m["Phase"] > 2:
+                    self.AS = m["AS"]
+                    superAS = m["superAS"]
+                    self.upgrade(m["Phase"], superAS)
+                    return
+                elif m["Phase"] == 2:
                     self.AS = m["AS"]
                     self.upgrade(m["Phase"])
                     return

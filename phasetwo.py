@@ -114,10 +114,11 @@ class PhaseTwo(ph.Phase):
         for m in robot.messages:
             if "Phase" in m.keys():
                 if m["Phase"] >= 3:
-                    self.AS = m["AS"]
-                    self.upgrade(m["Phase"])
+                    superAS = m["superAS"]
+                    robot.broadcast["superAS"] = superAS
+                    self.upgrade(m["Phase"], superAS)
                     return
-                
+
     def update(self):
         self.collective_movement()
         robot = self.robot
@@ -141,11 +142,11 @@ class PhaseTwo(ph.Phase):
                            robot.radius)
         '''
 
-    def upgrade(self, next_phase=3):
+    def upgrade(self, next_phase=3, superAS=None):
         '''
         Upgrades the phase to further one.
         '''
         if next_phase == 1.5:
             self.robot.faza = ph1.PhaseOneAndHalf(self.robot)
         elif next_phase == 3:
-            self.robot.faza = ph3.PhaseThree(self.robot)
+            self.robot.faza = ph3.PhaseThree(self.robot, superAS)

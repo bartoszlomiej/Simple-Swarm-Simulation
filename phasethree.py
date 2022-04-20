@@ -10,10 +10,10 @@ import phasetwo as ph2
 
 
 class PhaseThree(ph.Phase):
-    def __init__(self, Robot):
+    def __init__(self, Robot, superAS):
         super().__init__(Robot)
         self.phase = 3
-        self.superAS = Robot.AS
+        self.superAS = superAS
 
     def __closestNeighborAS(self):
         '''
@@ -31,7 +31,7 @@ class PhaseThree(ph.Phase):
         Polish equivalent is "Do dwóch odlicz" - every second robot updates it's local AS to be equal AS + 1.
         '''
         previous_AS = self.__closestNeighborAS()
-        if not previous_AS:
+        if not previous_AS: #only leader should not have a previous AS
             return  #I have know idea yet what should be done here:(
         if previous_AS == self.superAS:
             self.robot.AS += 1
@@ -64,6 +64,7 @@ class PhaseThree(ph.Phase):
         self.__countToTwo()
         self.robot.velocity[0] = 0
         self.robot.velocity[1] = 0
+        self.robot.broadcast["superAS"] = self.superAS
         
     def check_phase(self):
         robot = self.robot
