@@ -13,13 +13,26 @@ class PhaseThree(ph.Phase):
     def __init__(self, Robot, superAS):
         super().__init__(Robot)
         self.phase = 3
-        self.superAS = superAS
+        self.robot.superAS = superAS
+        self.isIncreased = False
+
+    def __allowedAS(self):
+        '''
+        Returns the AS's that are in the same superAS that can be spot by the given robot.
+        '''
+        allowed = []
+        allowed.append(self.robot.AS)
+        for n in self.robot.neighbors:
+            if n.superAS == self.robot.superAS:
+                if not n.AS in allowed:
+                    allowed.append(n.AS)
+        return allowed
 
     def __closestNeighborAS(self):
         '''
         Returns the closest neighbor's AS that in the same superAS.
         '''
-        allowedAS = [self.superAS, self.superAS+1]
+        allowedAS = self.__allowedAS()
         best_neighbor, best_rd = spot.find_best_neighbor(self.robot, True, allowedAS)
         if not best_neighbor:
             return None #The leader don't have the best neighbor
@@ -33,15 +46,19 @@ class PhaseThree(ph.Phase):
         previous_AS = self.__closestNeighborAS()
         if not previous_AS: #only leader should not have a previous AS
             return  #I have know idea yet what should be done here:(
-        if previous_AS == self.superAS:
-            self.robot.AS += 1
+        if previous_AS == self.robot.AS:
+            if not self.isIncreased:
+                self.robot.AS += 1 #creation of the new AS
+                self.isIncreased = True
+            else:
+                self.robot.AS -= 1
             #just for dbg
             HORRIBLE_YELLOW = (190, 175, 50)
             robot = self.robot
             pg.draw.circle(robot.image, HORRIBLE_YELLOW,
                            (robot.radius, robot.radius), robot.radius)
-        elif previous_AS == self.superAS + 1:  #this robot is not in my super cluster
-            self.robot.AS = self.superAS
+        elif previous_AS == self.robot.AS - 1:  #this robot was in my cluster, but it is not anymore
+            #            self.robot.AS += 1
             robot = self.robot
             check_me = robot.AS
             red = check_me % 256
@@ -64,7 +81,7 @@ class PhaseThree(ph.Phase):
         self.__countToTwo()
         self.robot.velocity[0] = 0
         self.robot.velocity[1] = 0
-        self.robot.broadcast["superAS"] = self.superAS
+        self.robot.broadcast["superAS"] = self.robot.superAS
         
     def check_phase(self):
         robot = self.robot

@@ -38,6 +38,7 @@ class Robot(pg.sprite.Sprite):
         It is assumed that it doesn't matter which robot place the massage
         '''
         self.AS = None
+        self.superAS = None
         self.joined = True  #indicates if the AS was created by us or not
 
         self.timer = (-1, -1, 0)
