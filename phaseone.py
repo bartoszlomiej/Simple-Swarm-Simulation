@@ -169,7 +169,7 @@ class PhaseOne(ph.Phase):
         self.use_timer()
         self.check_phase()
 
-    def upgrade(self, next_phase):
+    def upgrade(self, next_phase, superAS=None):
         '''
         Upgrades the phase to further one.
         '''
@@ -178,7 +178,7 @@ class PhaseOne(ph.Phase):
         elif next_phase == 2:
             self.robot.faza = ph2.PhaseTwo(self.robot)
         elif next_phase == 3:
-            self.robot.faza = ph3.PhaseThree(self.robot)
+            self.robot.faza = ph3.PhaseThree(self.robot, superAS)
 
 
 class PhaseOneAndHalf(ph.Phase):
@@ -232,7 +232,7 @@ class PhaseOneAndHalf(ph.Phase):
                     self.upgrade(m["Phase"])
                     return
                 
-    def upgrade(self, next_phase):
+    def upgrade(self, next_phase, superAS=None):
         '''
         Upgrades the phase to further one.
         '''
@@ -241,4 +241,4 @@ class PhaseOneAndHalf(ph.Phase):
         elif next_phase == 2:
             self.robot.faza = ph2.PhaseTwo(self.robot)
         elif next_phase == 3:
-            self.robot.faza = ph3.PhaseThree(self.robot)
+            self.robot.faza = ph3.PhaseThree(self.robot, superAS)

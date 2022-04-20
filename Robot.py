@@ -77,9 +77,11 @@ class Robot(pg.sprite.Sprite):
         self.moved = False
 
         self.update_msg()
+
         #place for the swarm behaviors
         #First phase bahaviors:
-
+        
+        self.clear_broadcast()
         self.faza.update()
 
         #boundary parameters
@@ -99,7 +101,8 @@ class Robot(pg.sprite.Sprite):
             self.velocity[1] = -self.velocity[1]
 
         self.broadcast["Phase"] = self.faza.phase  #always broadcast the phase
-
+        self.broadcast["AS"] = self.AS
+        
         self.neighbors.clear(
         )  #list of neighbors must be refreshed in each update
         self.in_range_robots = 0
