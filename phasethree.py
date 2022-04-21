@@ -48,17 +48,12 @@ class PhaseThree(ph.Phase):
             return  #I have know idea yet what should be done here:(
         if previous_AS == self.robot.AS:
             if not self.isIncreased:
-                self.robot.AS += 1 #creation of the new AS
+                self.robot.AS += 100 #creation of the new AS
                 self.isIncreased = True
             else:
-                self.robot.AS -= 1
-            #just for dbg
-            HORRIBLE_YELLOW = (190, 175, 50)
-            robot = self.robot
-            pg.draw.circle(robot.image, HORRIBLE_YELLOW,
-                           (robot.radius, robot.radius), robot.radius)
-        elif previous_AS == self.robot.AS - 1:  #this robot was in my cluster, but it is not anymore
-            #            self.robot.AS += 1
+                self.robot.AS -= 100
+                self.isIncreased = False
+        else:
             robot = self.robot
             check_me = robot.AS
             red = check_me % 256
@@ -67,8 +62,6 @@ class PhaseThree(ph.Phase):
             color = (red, green, blue)
             pg.draw.circle(robot.image, color, (robot.radius, robot.radius),
                            robot.radius)
-        else:
-            return
 
     def doubleRow(self):
         '''
