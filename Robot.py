@@ -103,6 +103,8 @@ class Robot(pg.sprite.Sprite):
 
         self.broadcast["Phase"] = self.faza.phase  #always broadcast the phase
         self.broadcast["AS"] = self.AS
+        if self.faza.phase > 2:
+            self.broadcast["superAS"] = self.superAS
         
         self.neighbors.clear(
         )  #list of neighbors must be refreshed in each update
@@ -235,8 +237,6 @@ class Robot(pg.sprite.Sprite):
             return 0, 1
         return(spot.calc_x(direction, 100) / 100,
                spot.calc_y(direction, 100) / 100)
-
-        return
 
     def follower_msg(self):
         '''

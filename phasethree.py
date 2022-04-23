@@ -7,6 +7,7 @@ import SpotNeighbor as spot
 import phase as ph
 import phaseone as ph1
 import phasetwo as ph2
+import phasefour as ph4
 
 
 class PhaseThree(ph.Phase):
@@ -15,6 +16,7 @@ class PhaseThree(ph.Phase):
         self.phase = 3
         self.robot.superAS = superAS
         self.isIncreased = False
+        self.timerSet = False
 
     def __allowedAS(self):
         '''
@@ -45,7 +47,14 @@ class PhaseThree(ph.Phase):
         '''
         previous_AS = self.__closestNeighborAS()
         if not previous_AS: #only leader should not have a previous AS
-            return  #I have know idea yet what should be done here:(
+            if not self.timerSet:
+                self.robot.set_timer(20, False)
+                self.timerSet = True
+            else:
+                self.robot.timer = (self.robot.timer[0], self.robot.timer[1] - 1, self.robot.timer[2])
+                if self.robot.timer[1] < 0:
+                    self.upgrade(4, self.robot.superAS)
+            return
         if previous_AS == self.robot.AS:
             if not self.isIncreased:
                 self.robot.AS += 100 #creation of the new AS
@@ -63,14 +72,9 @@ class PhaseThree(ph.Phase):
             pg.draw.circle(robot.image, color, (robot.radius, robot.radius),
                            robot.radius)
 
-    def doubleRow(self):
-        '''
-        Changes single line formation to double row.
-        '''
-
-        pass
 
     def update(self):
+        self.check_phase()
         self.__countToTwo()
         self.robot.velocity[0] = 0
         self.robot.velocity[1] = 0
@@ -80,12 +84,12 @@ class PhaseThree(ph.Phase):
         robot = self.robot
         for m in robot.messages:
             if "Phase" in m.keys():
-                if m["Phase"] >= 3:
-                    self.AS = m["AS"]
-                    self.upgrade(m["Phase"])
+                if m["Phase"] >= 4:
+                    robot.broadcast["superAS"] = self.robot.superAS
+                    self.upgrade(m["Phase"], self.robot.superAS)
                     return
                 
-    def upgrade(self, next_phase):
+    def upgrade(self, next_phase=4, superAS=None):
         '''
         Upgrades the phase to further one.
         '''
@@ -93,3 +97,5 @@ class PhaseThree(ph.Phase):
             self.robot.faza = ph1.PhaseOneAndHalf(self.robot)
         elif next_phase == 2:
             self.robot.faza = ph2.PhaseTwo(self.robot)
+        elif next_phase == 4:
+            self.robot.faza = ph4.PhaseFour(self.robot, superAS)
