@@ -7,6 +7,7 @@ import SpotNeighbor as spot
 import phase as ph
 import phasetwo as ph2
 import phasethree as ph3
+import phasefour as ph4
 
 
 class PhaseOne(ph.Phase):
@@ -217,7 +218,7 @@ class PhaseOneAndHalf(ph.Phase):
 
     def update(self):
         self.use_timer()
-        
+
     def check_phase(self):
         robot = self.robot
         for m in robot.messages:
@@ -231,7 +232,7 @@ class PhaseOneAndHalf(ph.Phase):
                     self.AS = m["AS"]
                     self.upgrade(m["Phase"])
                     return
-                
+
     def upgrade(self, next_phase, superAS=None):
         '''
         Upgrades the phase to further one.
@@ -242,3 +243,5 @@ class PhaseOneAndHalf(ph.Phase):
             self.robot.faza = ph2.PhaseTwo(self.robot)
         elif next_phase == 3:
             self.robot.faza = ph3.PhaseThree(self.robot, superAS)
+        elif next_phase == 4:
+            self.robot.faza = ph4.PhaseFour(self.robot, superAS)

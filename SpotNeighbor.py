@@ -133,6 +133,19 @@ def neighbor_check(Robot, neighbor, a, b, d):
     return False
 
 
+def extended_neighbor_check(Robot, neighbor, a, b, d):
+    '''
+    Checks if there is a neighbor in about direction the robot would like to follow
+    '''
+    if d:
+        if neighbor.y > (neighbor.x * a) + b:
+            return True
+    else:
+        if neighbor.y < (neighbor.x * a) + b:
+            return True
+    return False
+
+
 def is_follower(Robot):
     '''
     if there are any neighbors in our direction -> I am follower; Otherwise I am the leader.
@@ -168,7 +181,8 @@ def direction_to_neighbor(Robot, neighbor):
 
     The dir_x, dir_y values assumes that the direction is always given on the unit circle.
     '''
-    delta_x = (neighbor.x - Robot.x) #it must be greater than 0 - robots cannot overlap
+    delta_x = (neighbor.x - Robot.x
+               )  #it must be greater than 0 - robots cannot overlap
     delta_y = (neighbor.y - Robot.y)
     suma = math.sqrt(delta_x**2 + delta_y**2)
     Robot.dir_x = delta_x / suma
@@ -178,7 +192,7 @@ def direction_to_neighbor(Robot, neighbor):
     if rd > 30:
         Robot.dir_x *= 1.5
         Robot.dir_y *= 1.5
-        
+
 
 def find_best_neighbor(Robot, closestNeighbor=False, allowedAS=None):
     '''

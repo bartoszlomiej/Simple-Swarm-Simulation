@@ -81,31 +81,33 @@ class Robot(pg.sprite.Sprite):
 
         #place for the swarm behaviors
         #First phase bahaviors:
-        
+
         self.clear_broadcast()
         self.faza.update()
 
         #boundary parameters
         if x < 0 or x > self.width - 2 * self.radius:
-            if self.faza.phase == 2:  #just for dbg
+            if self.faza.phase == 2 or self.faza.phase == 4:  #just for dbg
                 self.velocity[0] = 0
                 self.velocity[1] = 0
-                self.broadcast["superAS"] = self.AS
-                self.faza.upgrade(3, self.AS)
+                if self.faza.phase == 2:
+                    self.broadcast["superAS"] = self.AS
+                    self.faza.upgrade(3, self.AS)
             self.velocity[0] = -self.velocity[0]
         if y < 0 or y > self.height - 2 * self.radius:
-            if self.faza.phase == 2:  #just for dbg
+            if self.faza.phase == 2 or self.faza.phase == 4:  #just for dbg
                 self.velocity[0] = 0
                 self.velocity[1] = 0
-                self.broadcast["superAS"] = self.AS
-                self.faza.upgrade(3, self.AS)
+                if self.faza.phase == 2:
+                    self.broadcast["superAS"] = self.AS
+                    self.faza.upgrade(3, self.AS)
             self.velocity[1] = -self.velocity[1]
 
         self.broadcast["Phase"] = self.faza.phase  #always broadcast the phase
         self.broadcast["AS"] = self.AS
         if self.faza.phase > 2:
             self.broadcast["superAS"] = self.superAS
-        
+
         self.neighbors.clear(
         )  #list of neighbors must be refreshed in each update
         self.in_range_robots = 0
@@ -227,7 +229,7 @@ class Robot(pg.sprite.Sprite):
                     if chain[1] > longest_chain[1]:
                         longest_chain = chain
             iterator += 1
-        if longest_chain[1] > (len(S)/4):
+        if longest_chain[1] > (len(S) / 4):
             direction = longest_chain[0] - int(longest_chain[1] / 2)
         else:
             #There is a need to change the leader
@@ -235,8 +237,8 @@ class Robot(pg.sprite.Sprite):
             return -self.dir_x, -self.dir_y
         if direction == 0:
             return 0, 1
-        return(spot.calc_x(direction, 100) / 100,
-               spot.calc_y(direction, 100) / 100)
+        return (spot.calc_x(direction, 100) / 100,
+                spot.calc_y(direction, 100) / 100)
 
     def follower_msg(self):
         '''
