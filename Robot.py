@@ -59,6 +59,8 @@ class Robot(pg.sprite.Sprite):
         self.velocity = np.asarray(velocity, dtype=np.float64)
         self.moved = False
 
+        self.ap = None #JUST FOR DBG
+
         #for the sake of changing direction
         self.dir_x = 0
         self.dir_y = 0
@@ -68,6 +70,7 @@ class Robot(pg.sprite.Sprite):
         self.prev_coords = []  #previous coordinates of the neighbors
 
         self.faza = PhaseOne(self)
+
 
     def update(self):
         '''

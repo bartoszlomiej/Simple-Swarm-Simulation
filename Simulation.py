@@ -18,7 +18,8 @@ class Simulation:
                  height=400,
                  N=10,
                  s_range=55,
-                 velocity_lvl=4, threads=1):
+                 velocity_lvl=4, threads=1,
+                 attraction_point=(0,0,0)):
         '''
         width - the width of the screen
         height - the height of the screen
@@ -31,6 +32,8 @@ class Simulation:
         self.size = (width, height)
         self.sensor_range = s_range  #(as 20 is the delimiter of the robot)
         self.velocity_lvl = velocity_lvl
+
+        self.attraction_point = attraction_point
 
         self.swarm = pg.sprite.Group()
         self.th_group = []
@@ -58,6 +61,7 @@ class Simulation:
             '''
             robot = rbt.Robot(x, y, self.width, self.height, velocity,
                               self.sensor_range)
+            robot.ap = self.attraction_point #JUST FOR DBG
             self.swarm.add(robot)
 
     def initialize_multithreading(self, threads):
@@ -138,7 +142,6 @@ class Simulation:
                     r.spotted(i)
                     if (0.15 * self.sensor_range**2) < (dx + dy):
                         r.in_range()
-
     def run(self):
         '''
         Runs the simulation. After certain time the simulation is closed.

@@ -9,6 +9,8 @@ import phasetwo as ph2
 import phasethree as ph3
 import phasefour as ph4
 
+import attraction_point as dbg
+
 
 class PhaseOne(ph.Phase):
     def __init__(self, Robot):
@@ -240,7 +242,8 @@ class PhaseOneAndHalf(ph.Phase):
         if next_phase == 1.5:
             self.robot.faza = PhaseOneAndHalf(self.robot)
         elif next_phase == 2:
-            self.robot.faza = ph2.PhaseTwo(self.robot)
+            self.robot.faza = dbg.AttractionPoint(self.robot)
+            #            self.robot.faza = ph2.PhaseTwo(self.robot)
         elif next_phase == 3:
             self.robot.faza = ph3.PhaseThree(self.robot, superAS)
         elif next_phase == 4:

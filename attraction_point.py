@@ -70,36 +70,55 @@ class AttractionPoint(ph.Phase):
             '''
             if spot.is_collision(robot):
                 robot.dir_x, robot.dir_y =  robot.find_direction()
+            else:
+                robot.dir_x, robot.dir_y = self.__attract()
             robot.broadcast["Direction"] = (robot.dir_x, robot.dir_y)
-            #just for dbg
-            '''
-            check_me = robot.AS  #np.random.randint(0, 65025)
-            red = check_me % 256
-            green = math.floor(check_me / 4) % 256
-            blue = math.floor(math.sqrt(check_me)) % 256
-            color = (red, green, blue)
-            pg.draw.circle(robot.image, color, (robot.radius, robot.radius),
-                           robot.radius)
-            '''
         else:
             spot.follower(robot)
-            '''
-            BLACK = (0, 0, 0)
-            pg.draw.circle(robot.image, BLACK, (robot.radius, robot.radius),
-                           robot.radius)
-            '''
 
-    def last_robot(self):
+    def __attract(self):
         '''
-        Determines whether the robot is the last in the given cluster.
+        biases the direction we follow so as to get to the given point
+        
+        1) Calculate direction to the direction point
+        2) Bias the current direction that robot follows
         '''
-        a, b, d = spot.direction_line_equation(self.robot)
-        for n in self.robot.neighbors:
-            if n.AS == self.robot.AS:
-                if not spot.neighbor_check(self.robot, n, a, b, d):
-                    return False
-        return True
+        ap = self.__direction_to_attraction_point()
+        
+        v1 = self.robot.dir_x + ap[0] * ap[2]
+        v2 = self.robot.dir_y + ap[1] * ap[2]
 
+        rescale = math.sqrt(v1**2 + v2**2)
+        v1 /= rescale
+        v2 /= rescale
+
+        return v1, v2
+    
+    def __direction_to_attraction_point(self):
+        '''
+        Change the Robot direction to approach the given neighbor.
+
+        The dir_x, dir_y values assumes that the direction is always given on the unit circle.
+
+        The closer the robot is to the attraction point the higher is the attraction value.
+        '''
+        
+        delta_x = (self.robot.ap[0] - self.robot.x)
+        delta_y = (self.robot.ap[1] - self.robot.y)
+
+        if not delta_x and delta_y: #robot catched the attraction point
+            return 0, 0, 0
+        
+        suma = math.sqrt(delta_x**2 + delta_y**2)
+        dir_x = delta_x / suma
+        dir_y = delta_y / suma
+        
+        attraction_value = 1 - (spot.relative_distance(self.robot.x, self.robot.y, self.robot.ap[0], self.robot.ap[1])**2)/self.robot.ap[2]
+        ap_val = 0 if attraction_value < 0 else attraction_value
+        
+        return (dir_x, dir_y, ap_val)
+
+            
     def minimal_distance(self):
         '''
         Checks if the minimal distance between robots is being kept.
@@ -129,21 +148,7 @@ class AttractionPoint(ph.Phase):
             robot.dir_x, robot.dir_y = 0, 0
         robot.is_allone()
         #        self.check_phase()
-        '''
-        if not self.last_robot:  #dbg
-            check_me = robot.AS  #np.random.randint(0, 65025)
-            red = check_me % 256
-            green = math.floor(check_me / 4) % 256
-            blue = math.floor(math.sqrt(check_me)) % 256
-            color = (red, green, blue)
-            pg.draw.circle(robot.image, color, (robot.radius, robot.radius),
-                           robot.radius)
-        else:
-            spot.follower(robot)
-            BLACK = (0, 0, 0)
-            pg.draw.circle(robot.image, BLACK, (robot.radius, robot.radius),
-                           robot.radius)
-        '''
+
 
     def upgrade(self, next_phase=3, superAS=None):
         '''

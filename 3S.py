@@ -25,7 +25,8 @@ if __name__ == "__main__":
         s_range - sensor range in pixels (must be greater than 20)
         velocity_lvl 0 - multiplier of the velocity 
     '''
-    sim = Simulation.Simulation(1024, 720, 40, 55, 4, 8)
+    attraction_point = (0, 0, 1024**2 + 720**2)
+    sim = Simulation.Simulation(1024, 720, 40, 55, 4, 8, attraction_point)
 
     sim.run()
     '''
