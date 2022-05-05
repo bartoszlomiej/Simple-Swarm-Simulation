@@ -15,6 +15,7 @@ class PhaseTwo(ph.Phase):
         self.phase = 2
         self.next_phase = False
         Robot.clear_broadcast()
+        Robot.initialize_sensors()
 
     def collective_movement(self):
         '''

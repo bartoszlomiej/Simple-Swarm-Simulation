@@ -18,7 +18,8 @@ class AttractionPoint(ph.Phase):
         self.phase = 2
         self.next_phase = False
         Robot.clear_broadcast()
-
+        Robot.initialize_sensors()
+        
     def collective_movement(self):
         '''
         Transition from the state "stopped" to "moving" and runing the movement function
@@ -133,9 +134,9 @@ class AttractionPoint(ph.Phase):
 
     def isPhaseUpgrade(self):
         '''
-        Returns True if phase should be upgraded
+        If phase should be upgraded then upgrade it (leader only)
         '''
-        delta = 30
+        delta = 10
         x, y = self.robot.position
         if abs(x - self.robot.ap[0]) <= delta and abs(y - self.robot.ap[1]):
             self.robot.faza.upgrade(3, self.robot.AS)

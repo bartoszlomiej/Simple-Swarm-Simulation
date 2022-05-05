@@ -64,11 +64,17 @@ class Robot(pg.sprite.Sprite):
         #for the sake of changing direction
         self.dir_x = 0
         self.dir_y = 0
+        self.sensors = []
+        self.S = []
+
 
         self.state = "moving"  #initially robots move (just for aggregation algorithm)
 
-        self.prev_coords = []  #previous coordinates of the neighbors
+        #        self.prev_coords = []  #previous coordinates of the neighbors
 
+        if not self.k % 2:
+            self.k += 1
+        self.initialize_sensors()
         self.faza = PhaseOne(self)
 
 
@@ -133,6 +139,23 @@ class Robot(pg.sprite.Sprite):
         self.x = int(x)
         self.y = int(y)
 
+        #        self.initialize_sensors()
+
+    def initialize_sensors(self):
+        '''
+        Calculates a slope for each sensor. This is important due to optimization.
+        '''
+        for i in range(1, self.k):
+            a = spot.calculate_slope(0, 0, spot.calc_x(i, self.radius, self.k),
+                                 spot.calc_y(i, self.radius, self.k))
+            self.sensors.append(a)
+
+    def sensorFunction(self, i):
+        '''
+        Returns the b in y = ax + b function from the current position of the robot.
+        '''
+        return (self.y - self.sensors[i] * self.x)
+
     def spotted(self, r):
         '''
         Adds the newly spotted neighbor to the list.
@@ -144,6 +167,7 @@ class Robot(pg.sprite.Sprite):
         Returns the number of neighbors that are in given range
         '''
         self.in_range_robots = self.in_range_robots + 1
+
 
     def is_allone(self):
         '''
@@ -212,7 +236,8 @@ class Robot(pg.sprite.Sprite):
 
         Returned value is the direction - pair (x, y). It should be multiplied by the velocity to start moving.
         '''
-        S = []
+        S = self.S
+        S.clear()
         radius = int(
             self.s_range *
             1.4141)  #in simulation the range is not a circuit - it is a square
@@ -221,7 +246,8 @@ class Robot(pg.sprite.Sprite):
             S.append(False)  #initial data, for the purpouse of chain
         S.append(spot.check_x0_line(self, radius))
         for i in range(self.k - 1):
-            si = spot.check_line(self, i + 1, self.k, radius)
+            si = spot.check_line(self, i, self.k, radius)
+            #            si = spot.check_line(self, i + 1, self.k, radius)
             S[i] = si
             if si:
                 continue

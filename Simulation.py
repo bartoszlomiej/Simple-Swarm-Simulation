@@ -44,25 +44,30 @@ class Simulation:
         self.threads = threads
         if self.threads > 1:
             self.initialize_multithreading(threads)
-        
+            
     def initialize_robots(self):
         '''
         Initializes robots on empty board.
         '''
         for i in range(self.swarm_quantity):
-            x = np.random.randint(0, self.width + 1)
-            y = np.random.randint(0, self.height + 1)
-            velocity = np.random.rand(2)
-            velocity[0] = (velocity[0] - 0.5) * self.velocity_lvl
-            velocity[1] = (velocity[1] - 0.5) * self.velocity_lvl
-            '''
-            TODO: Starting position could be checked here to avoid overlaping
-            self.board[i] = [x, y]
-            '''
-            robot = rbt.Robot(x, y, self.width, self.height, velocity,
-                              self.sensor_range)
-            robot.ap = self.attraction_point #JUST FOR DBG
-            self.swarm.add(robot)
+            collide = True
+            while collide:
+                x = np.random.randint(10, self.width - 9)
+                y = np.random.randint(10, self.height - 9)
+                new_rect = pg.Rect(x, y, 15, 15)
+                if not any(n for n in self.swarm if new_rect.colliderect(n.x, n.y, 15, 15)):
+                    collide = False
+                    break
+            if True:
+                velocity = np.random.rand(2)
+                velocity[0] = (velocity[0] - 0.5) * self.velocity_lvl
+                velocity[1] = (velocity[1] - 0.5) * self.velocity_lvl
+                
+                robot = rbt.Robot(x, y, self.width, self.height, velocity,
+                                  self.sensor_range)
+                robot.ap = self.attraction_point #JUST FOR DBG
+                self.swarm.add(robot)                    
+
 
     def initialize_multithreading(self, threads):
         '''
