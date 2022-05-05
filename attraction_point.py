@@ -106,7 +106,7 @@ class AttractionPoint(ph.Phase):
         delta_x = (self.robot.ap[0] - self.robot.x)
         delta_y = (self.robot.ap[1] - self.robot.y)
 
-        if not delta_x and delta_y: #robot catched the attraction point
+        if not delta_x and not delta_y: #robot catched the attraction point
             return 0, 0, 0
         
         suma = math.sqrt(delta_x**2 + delta_y**2)
@@ -131,6 +131,16 @@ class AttractionPoint(ph.Phase):
                 return False
         return True
 
+    def isPhaseUpgrade(self):
+        '''
+        Returns True if phase should be upgraded
+        '''
+        delta = 30
+        x, y = self.robot.position
+        if abs(x - self.robot.ap[0]) <= delta and abs(y - self.robot.ap[1]):
+            self.robot.faza.upgrade(3, self.robot.AS)
+            self.robot.broadcast["superAS"] = self.robot.AS
+
     def check_phase(self):
         robot = self.robot
         for m in robot.messages:
@@ -147,7 +157,8 @@ class AttractionPoint(ph.Phase):
         if not self.minimal_distance():
             robot.dir_x, robot.dir_y = 0, 0
         robot.is_allone()
-        #        self.check_phase()
+        self.check_phase()
+        self.isPhaseUpgrade()
 
 
     def upgrade(self, next_phase=3, superAS=None):
@@ -156,5 +167,5 @@ class AttractionPoint(ph.Phase):
         '''
         if next_phase == 1.5:
             self.robot.faza = ph1.PhaseOneAndHalf(self.robot)
-        #        elif next_phase == 3:
-        #            self.robot.faza = ph3.PhaseThree(self.robot, superAS)
+        elif next_phase == 3:
+            self.robot.faza = ph3.PhaseThree(self.robot, superAS)

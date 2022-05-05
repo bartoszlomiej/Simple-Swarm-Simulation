@@ -90,6 +90,19 @@ class Robot(pg.sprite.Sprite):
 
         #boundary parameters
         if x < 0 or x > self.width - 2 * self.radius:
+            if self.faza.phase == 2:  #just for dbg
+                self.broadcast["Return"] = -self.dir_x, -self.dir_y
+                self.dir_x, self.dir_y = -self.dir_x, -self.dir_y
+                #                self.velocity = [0, 0]
+            self.velocity[0] = -self.velocity[0]
+        if y < 0 or y > self.height - 2 * self.radius:
+            if self.faza.phase == 2:  #just for dbg
+                self.broadcast["Return"] = -self.dir_x, -self.dir_y
+                self.dir_x, self.dir_y = -self.dir_x, -self.dir_y
+                #                self.velocity = [0, 0]
+            self.velocity[1] = -self.velocity[1]        
+        '''
+        if x < 0 or x > self.width - 2 * self.radius:
             if self.faza.phase == 2 or self.faza.phase == 4:  #just for dbg
                 self.velocity[0] = 0
                 self.velocity[1] = 0
@@ -105,7 +118,7 @@ class Robot(pg.sprite.Sprite):
                     self.broadcast["superAS"] = self.AS
                     self.faza.upgrade(3, self.AS)
             self.velocity[1] = -self.velocity[1]
-
+        '''
         self.broadcast["Phase"] = self.faza.phase  #always broadcast the phase
         self.broadcast["AS"] = self.AS
         if self.faza.phase > 2:
