@@ -67,11 +67,11 @@ def isNeighborOnSensor(Robot, a, b, d, radius):
     Returns True if neighbor is spotted, otherwise returns False
     '''
     for n in Robot.neighbors:
-        if ((a * n.x - n.y + b) / math.sqrt(a**2 + 1)) <= radius:
+        if abs((a * n.x - n.y + b) / math.sqrt(a**2 + 1)) <= radius:
             if (n.x > Robot.x) and d:
                 return True
             elif (n.x <= Robot.x) and not d:
-                return True                
+                return True
     return False
 
 def check_line(Robot, i, k=15, R=75):
@@ -103,7 +103,7 @@ def check_x0_line(Robot, R=75):
     '''
     Special case of check line - checks the line for the x = 0.
     '''
-    radius = 10  #radius of the robot
+    radius = Robot.radius  #radius of the robot
     step_size = 2
     for y in range(radius + 1, R + 1, step_size):
         if is_neighbor_spotted(Robot, Robot.x, Robot.y + y, radius):

@@ -67,9 +67,7 @@ class Robot(pg.sprite.Sprite):
         self.sensors = []
         self.S = []
 
-
         self.state = "moving"  #initially robots move (just for aggregation algorithm)
-
         #        self.prev_coords = []  #previous coordinates of the neighbors
 
         if not self.k % 2:
@@ -138,8 +136,6 @@ class Robot(pg.sprite.Sprite):
         self.rect.y = y
         self.x = int(x)
         self.y = int(y)
-
-        #        self.initialize_sensors()
 
     def initialize_sensors(self):
         '''
@@ -279,8 +275,8 @@ class Robot(pg.sprite.Sprite):
             return -self.dir_x, -self.dir_y
         if direction == 0:
             return 0, 1
-        return (spot.calc_x(direction, 100) / 100,
-                spot.calc_y(direction, 100) / 100)
+        return (spot.calc_x(direction, 100, self.k) / 100,
+                spot.calc_y(direction, 100, self.k) / 100)
 
     def follower_msg(self):
         '''

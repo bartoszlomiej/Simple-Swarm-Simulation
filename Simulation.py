@@ -4,6 +4,7 @@ import pygame as pg
 import math
 import Robot as rbt
 import threading
+import SpotNeighbor as spot
 
 #just for dbg
 import os
@@ -101,7 +102,7 @@ class Simulation:
 
         for i in t:
             i.join() #synchronization of threads
-
+            
     def check_collisions(self):
         '''
         For each robot in a swarm checks if the collision occurs. If so then the velocity is being changed accordingly.
@@ -109,11 +110,41 @@ class Simulation:
         for robot in self.swarm:
             collision_group = pg.sprite.Group(
                 [s for s in self.swarm if s != robot])
-            collide = pg.sprite.spritecollide(robot, collision_group, False)
+            collide = pg.sprite.spritecollide(robot, collision_group, False, pg.sprite.collide_circle)
             if collide:
                 for c in collide:  #there can be numerous collisions however it is unlikely
-                    self.collision_movement(robot)
+                    #                    self.collision_movement(robot)
+                    self.new_collision_movement(robot, c)
 
+    def move_robot_by_angle(self, robot, angle, sign=1):
+        if robot.state == "moving":
+            robot.x += math.sin(angle) * sign
+            robot.y -= math.cos(angle) * sign 
+                    
+    def new_collision_movement(self, robot, neighbor):
+        dx = robot.x - neighbor.x
+        dy = robot.y - neighbor.y
+
+        tangent = math.atan2(dy, dx)
+        angle = 0.5 * math.pi + tangent
+
+        if robot.state == "moving" and neighbor.state == "moving":
+            self.opposite_movement(robot)
+            BLACK = (0, 0, 0)
+            pg.draw.circle(robot.image, BLACK, (robot.radius, robot.radius),
+                       robot.radius)
+            #            self.move_robot_by_angle(neighbor, angle, -1)
+        elif robot.state == "moving":
+            robot.velocity = [-1* robot.velocity[0], -1* robot.velocity[1]]
+            
+        self.move_robot_by_angle(robot, angle)
+
+
+    def opposite_movement(self, robot):
+
+        noise = np.random.uniform(-0.2, 0.2, 2)
+        robot.velocity = [-1 * robot.velocity[0] + noise[0], -1 *  robot.velocity[1] + noise[1]]
+        
     def collision_movement(self, robot):
         '''
         Robots should move in the semi-random direction after collision:
@@ -123,12 +154,13 @@ class Simulation:
         if robot.faza.phase == 1:
             sign_x = np.sign(robot.velocity[0])
             sign_y = np.sign(robot.velocity[1])
-            velocity = np.random.rand(2)
-            velocity[0] = (
-                velocity[0]) * self.velocity_lvl / 2  #must be positive!
-            velocity[1] = (velocity[1]) * self.velocity_lvl / 2
-            robot.velocity = [-sign_x * velocity[0], -sign_y * velocity[1]]
 
+            velocity = np.random.rand(2)
+            velocity[0] = (velocity[0]) * self.velocity_lvl / 2  #must be positive!
+            velocity[1] = (velocity[1]) * self.velocity_lvl / 2
+
+            robot.velocity = [-1 * sign_x * velocity[0], -1 * sign_y * velocity[1]]
+            
     def robot_vision(self):
         '''
         Emulates the very basic vision sensor of each robot in the swarm.

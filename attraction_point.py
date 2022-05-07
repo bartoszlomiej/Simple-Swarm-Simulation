@@ -88,7 +88,7 @@ class AttractionPoint(ph.Phase):
         
         v1 = self.robot.dir_x + ap[0] * ap[2]
         v2 = self.robot.dir_y + ap[1] * ap[2]
-
+        
         rescale = math.sqrt(v1**2 + v2**2)
         v1 /= rescale
         v2 /= rescale
@@ -115,7 +115,7 @@ class AttractionPoint(ph.Phase):
         dir_y = delta_y / suma
         
         attraction_value = 1 - (spot.relative_distance(self.robot.x, self.robot.y, self.robot.ap[0], self.robot.ap[1])**2)/self.robot.ap[2]
-        ap_val = 0 if attraction_value < 0 else attraction_value
+        ap_val = 0.00001 if attraction_value < 0 else attraction_value
         
         return (dir_x, dir_y, ap_val)
 
@@ -136,9 +136,9 @@ class AttractionPoint(ph.Phase):
         '''
         If phase should be upgraded then upgrade it (leader only)
         '''
-        delta = 10
+        delta = 40
         x, y = self.robot.position
-        if abs(x - self.robot.ap[0]) <= delta and abs(y - self.robot.ap[1]):
+        if (x - self.robot.ap[0])**2 + (y - self.robot.ap[1])**2 <= delta**2:
             self.robot.faza.upgrade(3, self.robot.AS)
             self.robot.broadcast["superAS"] = self.robot.AS
 

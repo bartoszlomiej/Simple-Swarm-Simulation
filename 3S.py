@@ -26,7 +26,7 @@ if __name__ == "__main__":
         velocity_lvl 0 - multiplier of the velocity 
     '''
     attraction_point = (0, 0, (1024**2 + 720**2)*2)
-    sim = Simulation.Simulation(1024, 720, 40, 55, 4, 8, attraction_point)
+    sim = Simulation.Simulation(1024, 720, 40, 55, 4, 40, attraction_point)
 
     sim.run()
     '''
