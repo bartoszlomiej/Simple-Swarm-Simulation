@@ -18,6 +18,7 @@ class PhaseThree(ph.Phase):
         self.isIncreased = False
         self.timerSet = False
         self.robot.velocity = [0, 0]
+        self.robot.state = "stopped"
 
     def __allowedAS(self):
         '''

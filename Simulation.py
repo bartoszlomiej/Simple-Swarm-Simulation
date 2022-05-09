@@ -53,8 +53,8 @@ class Simulation:
         for i in range(self.swarm_quantity):
             collide = True
             while collide:
-                x = np.random.randint(10, self.width - 9)
-                y = np.random.randint(10, self.height - 9)
+                x = np.random.randint(10, self.width - 15)
+                y = np.random.randint(10, self.height - 15)
                 new_rect = pg.Rect(x, y, 15, 15)
                 if not any(n for n in self.swarm if new_rect.colliderect(n.x, n.y, 15, 15)):
                     collide = False
@@ -113,15 +113,21 @@ class Simulation:
             collide = pg.sprite.spritecollide(robot, collision_group, False, pg.sprite.collide_circle)
             if collide:
                 for c in collide:  #there can be numerous collisions however it is unlikely
-                    #                    self.collision_movement(robot)
                     self.new_collision_movement(robot, c)
+                    self.higher_phase_collision(robot, c)
 
     def move_robot_by_angle(self, robot, angle, sign=1):
         if robot.state == "moving":
             robot.x += math.sin(angle) * sign
             robot.y -= math.cos(angle) * sign 
-                    
+
+    def higher_phase_collision(self, robot, neighbor):
+        if robot.faza.phase > 1:
+            robot.find_direction()
+            
     def new_collision_movement(self, robot, neighbor):
+        if robot.faza.phase > 1:
+            return
         dx = robot.x - neighbor.x
         dy = robot.y - neighbor.y
 
@@ -130,10 +136,6 @@ class Simulation:
 
         if robot.state == "moving" and neighbor.state == "moving":
             self.opposite_movement(robot)
-            BLACK = (0, 0, 0)
-            pg.draw.circle(robot.image, BLACK, (robot.radius, robot.radius),
-                       robot.radius)
-            #            self.move_robot_by_angle(neighbor, angle, -1)
         elif robot.state == "moving":
             robot.velocity = [-1* robot.velocity[0], -1* robot.velocity[1]]
             
