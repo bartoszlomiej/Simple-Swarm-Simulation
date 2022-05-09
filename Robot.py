@@ -97,12 +97,18 @@ class Robot(pg.sprite.Sprite):
             if self.faza.phase == 2:  #just for dbg
                 self.broadcast["Return"] = -self.dir_x, -self.dir_y
                 self.dir_x, self.dir_y = -self.dir_x, -self.dir_y
+                BLACK = (0, 0, 0)
+                pg.draw.circle(self.image, BLACK, (self.radius, self.radius),
+                               self.radius)
                 #                self.velocity = [0, 0]
             self.velocity[0] = -self.velocity[0]
         if y < 0 or y > self.height - 2 * self.radius:
             if self.faza.phase == 2:  #just for dbg
                 self.broadcast["Return"] = -self.dir_x, -self.dir_y
                 self.dir_x, self.dir_y = -self.dir_x, -self.dir_y
+                BLACK = (0, 0, 0)
+                pg.draw.circle(self.image, BLACK, (self.radius, self.radius),
+                               self.radius)
                 #                self.velocity = [0, 0]
             self.velocity[1] = -self.velocity[1]        
         '''
@@ -269,12 +275,19 @@ class Robot(pg.sprite.Sprite):
             iterator += 1
         if longest_chain[1] > (len(S) / 4):
             direction = longest_chain[0] - int(longest_chain[1] / 2)
+            if direction == 0:
+                return 0, 1
         else:
             #There is a need to change the leader
             self.broadcast["Return"] = -self.dir_x, -self.dir_y
+            if "Returned" in self.broadcast:
+                del self.broadcast["Returned"]
+            if (self.dir_x == 0) and (self.dir_y / 100 == 0):
+                print("")
+                print("S:", S)
+                print("")
             return -self.dir_x, -self.dir_y
-        if direction == 0:
-            return 0, 1
+
         return (spot.calc_x(direction, 100, self.k) / 100,
                 spot.calc_y(direction, 100, self.k) / 100)
 
@@ -283,13 +296,18 @@ class Robot(pg.sprite.Sprite):
         Gets the route given by the leader.
         '''
         for m in self.messages:
-            if "Return" in m.keys() and m["AS"] == self.AS:
-                self.broadcast["Return"] = m["Return"]
-                self.dir_x = m["Return"][0]
-                self.dir_y = m["Return"][1]
-                return
+            if not "Returned" in m.keys() and m["AS"] == self.AS:
+                if "Return" in m.keys() and m["AS"] == self.AS:
+                    if m["Return"][0] == 0 and m["Direction"][1] == 0:
+                        continue
+                    self.broadcast["Return"] = m["Return"]
+                    self.dir_x = m["Return"][0]
+                    self.dir_y = m["Return"][1]
+                    return
 
             if "Direction" in m.keys() and m["AS"] == self.AS:
+                if m["Direction"][0] == 0 and m["Direction"][1] == 0:
+                    continue
                 self.broadcast["Direction"] = m["Direction"]
                 self.dir_x = m["Direction"][0]
                 self.dir_y = m["Direction"][1]

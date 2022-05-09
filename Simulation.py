@@ -181,6 +181,11 @@ class Simulation:
                     r.spotted(i)
                     if (0.15 * self.sensor_range**2) < (dx + dy):
                         r.in_range()
+
+    def dbg(self, time):
+        for i in self.swarm:
+            if "Return" in i.broadcast.keys():
+                print("time:", time, "direction", i.dir_x, i.dir_y)
     def run(self):
         '''
         Runs the simulation. After certain time the simulation is closed.
@@ -197,6 +202,7 @@ class Simulation:
                 self.update_all()
             else:
                 self.swarm.update()
+            #            self.dbg(i) #just for dbg
             self.check_collisions()
             self.robot_vision()
             screen.fill((255, 255, 255))  #background color (white)
