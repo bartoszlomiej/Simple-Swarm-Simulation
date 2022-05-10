@@ -45,6 +45,12 @@ def calc_x(i, r, k=15):
     return int(round(r / math.sqrt(1 + cot)))
 
 
+def calculate_slope(x0, y0, x1, y1):
+    '''
+    Returns the slope of the given line (a coefficient in y = ax + b)
+    '''
+    return (y0-y1)/(x0-x1)
+
 def is_neighbor_spotted(Robot, x, y, radius):
     '''
     Checks whether neighbor is being spotted on the given coordinates.
@@ -53,8 +59,20 @@ def is_neighbor_spotted(Robot, x, y, radius):
     for n in Robot.neighbors:
         if ((n.x - x)**2 + (n.y - y)**2 <= radius**2):
             return True
-    return False
+    return False    
 
+def isNeighborOnSensor(Robot, a, b, d, radius):
+    '''
+    Checks whether neighbor is being spotted on the given coordinates.
+    Returns True if neighbor is spotted, otherwise returns False
+    '''
+    for n in Robot.neighbors:
+        if abs((a * n.x - n.y + b) / math.sqrt(a**2 + 1)) <= radius:
+            if (n.x > Robot.x) and d:
+                return True
+            elif (n.x <= Robot.x) and not d:
+                return True
+    return False
 
 def check_line(Robot, i, k=15, R=75):
     '''
@@ -62,21 +80,16 @@ def check_line(Robot, i, k=15, R=75):
 
     Returns True, if other robot is being spotted, otherwise returns False.
     '''
-    radius = 10  #radius of the robot
-    step_size = 2  #the step of line that is being checked, it doesn't need to be 1, but too big can crash
-    for r in range(radius + 1, R + 1, step_size):
-        x = calc_x(i, r, k) + Robot.x
-        y = calc_y(i, r, k) + Robot.y
-        if is_neighbor_spotted(Robot, x, y, radius):
-            return True
-    return False
-
+    radius = Robot.radius  #radius of the robot
+    a = Robot.sensors[i]
+    b = Robot.sensorFunction(i)
+    return isNeighborOnSensor(Robot, a, b, True if i < k/2 else False, radius)
 
 def check_x0_line(Robot, R=75):
     '''
     Special case of check line - checks the line for the x = 0.
     '''
-    radius = 10  #radius of the robot
+    radius = Robot.radius  #radius of the robot
     step_size = 2
     for y in range(radius + 1, R + 1, step_size):
         if is_neighbor_spotted(Robot, Robot.x, Robot.y + y, radius):

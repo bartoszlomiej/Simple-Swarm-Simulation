@@ -17,6 +17,8 @@ class PhaseThree(ph.Phase):
         self.robot.superAS = superAS
         self.isIncreased = False
         self.timerSet = False
+        self.robot.velocity = [0, 0]
+        self.robot.state = "stopped"
 
     def __allowedAS(self):
         '''
@@ -97,5 +99,5 @@ class PhaseThree(ph.Phase):
             self.robot.faza = ph1.PhaseOneAndHalf(self.robot)
         elif next_phase == 2:
             self.robot.faza = ph2.PhaseTwo(self.robot)
-        elif next_phase == 4:
-            self.robot.faza = ph4.PhaseFour(self.robot, superAS)
+        #        elif next_phase == 4:
+        #            self.robot.faza = ph4.PhaseFour(self.robot, superAS)

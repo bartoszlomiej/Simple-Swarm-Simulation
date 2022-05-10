@@ -4,6 +4,7 @@ import pygame as pg
 import math
 import Robot as rbt
 import threading
+import SpotNeighbor as spot
 
 #just for dbg
 import os
@@ -18,7 +19,8 @@ class Simulation:
                  height=400,
                  N=10,
                  s_range=55,
-                 velocity_lvl=4, threads=1):
+                 velocity_lvl=4, threads=1,
+                 attraction_point=(0,0,0)):
         '''
         width - the width of the screen
         height - the height of the screen
@@ -32,6 +34,8 @@ class Simulation:
         self.sensor_range = s_range  #(as 20 is the delimiter of the robot)
         self.velocity_lvl = velocity_lvl
 
+        self.attraction_point = attraction_point
+
         self.swarm = pg.sprite.Group()
         self.th_group = []
         self.swarm_quantity = N
@@ -41,24 +45,30 @@ class Simulation:
         self.threads = threads
         if self.threads > 1:
             self.initialize_multithreading(threads)
-        
+            
     def initialize_robots(self):
         '''
         Initializes robots on empty board.
         '''
         for i in range(self.swarm_quantity):
-            x = np.random.randint(0, self.width + 1)
-            y = np.random.randint(0, self.height + 1)
-            velocity = np.random.rand(2)
-            velocity[0] = (velocity[0] - 0.5) * self.velocity_lvl
-            velocity[1] = (velocity[1] - 0.5) * self.velocity_lvl
-            '''
-            TODO: Starting position could be checked here to avoid overlaping
-            self.board[i] = [x, y]
-            '''
-            robot = rbt.Robot(x, y, self.width, self.height, velocity,
-                              self.sensor_range)
-            self.swarm.add(robot)
+            collide = True
+            while collide:
+                x = np.random.randint(10, self.width - 15)
+                y = np.random.randint(10, self.height - 15)
+                new_rect = pg.Rect(x, y, 15, 15)
+                if not any(n for n in self.swarm if new_rect.colliderect(n.x, n.y, 15, 15)):
+                    collide = False
+                    break
+            if True:
+                velocity = np.random.rand(2)
+                velocity[0] = (velocity[0] - 0.5) * self.velocity_lvl
+                velocity[1] = (velocity[1] - 0.5) * self.velocity_lvl
+                
+                robot = rbt.Robot(x, y, self.width, self.height, velocity,
+                                  self.sensor_range)
+                robot.ap = self.attraction_point #JUST FOR DBG
+                self.swarm.add(robot)                    
+
 
     def initialize_multithreading(self, threads):
         '''
@@ -92,7 +102,7 @@ class Simulation:
 
         for i in t:
             i.join() #synchronization of threads
-
+            
     def check_collisions(self):
         '''
         For each robot in a swarm checks if the collision occurs. If so then the velocity is being changed accordingly.
@@ -100,26 +110,48 @@ class Simulation:
         for robot in self.swarm:
             collision_group = pg.sprite.Group(
                 [s for s in self.swarm if s != robot])
-            collide = pg.sprite.spritecollide(robot, collision_group, False)
+            collide = pg.sprite.spritecollide(robot, collision_group, False, pg.sprite.collide_circle)
             if collide:
                 for c in collide:  #there can be numerous collisions however it is unlikely
-                    self.collision_movement(robot)
+                    self.collision_movement(robot, c)
+                    self.higher_phase_collision(robot)
 
-    def collision_movement(self, robot):
+    def move_robot_by_angle(self, robot, angle, sign=1):
+        if robot.state == "moving":
+            robot.x += math.sin(angle) * sign
+            robot.y -= math.cos(angle) * sign 
+
+    def higher_phase_collision(self, robot):
+        if robot.faza.phase > 1:
+            robot.find_direction()
+            
+    def collision_movement(self, robot, neighbor):
         '''
         Robots should move in the semi-random direction after collision:
         having velocity = (x, y) -> new velocity = (-random * sign(x), -random * sign(y))
         as a result never two robots will go in the same direction after collision (no stucking)
         '''
-        if robot.faza.phase == 1:
-            sign_x = np.sign(robot.velocity[0])
-            sign_y = np.sign(robot.velocity[1])
-            velocity = np.random.rand(2)
-            velocity[0] = (
-                velocity[0]) * self.velocity_lvl / 2  #must be positive!
-            velocity[1] = (velocity[1]) * self.velocity_lvl / 2
-            robot.velocity = [-sign_x * velocity[0], -sign_y * velocity[1]]
+        if robot.faza.phase > 1:
+            return
+        dx = robot.x - neighbor.x
+        dy = robot.y - neighbor.y
 
+        tangent = math.atan2(dy, dx)
+        angle = 0.5 * math.pi + tangent
+
+        if robot.state == "moving" and neighbor.state == "moving":
+            self.opposite_movement(robot)
+        elif robot.state == "moving":
+            robot.velocity = [-1* robot.velocity[0], -1* robot.velocity[1]]
+            
+        self.move_robot_by_angle(robot, angle)
+
+
+    def opposite_movement(self, robot):
+
+        noise = np.random.uniform(-0.2, 0.2, 2)
+        robot.velocity = [-1 * robot.velocity[0] + noise[0], -1 *  robot.velocity[1] + noise[1]]
+        
     def robot_vision(self):
         '''
         Emulates the very basic vision sensor of each robot in the swarm.
@@ -139,6 +171,10 @@ class Simulation:
                     if (0.15 * self.sensor_range**2) < (dx + dy):
                         r.in_range()
 
+    def dbg(self, time):
+        for i in self.swarm:
+            if "Return" in i.broadcast.keys():
+                print("time:", time, "direction", i.dir_x, i.dir_y)
     def run(self):
         '''
         Runs the simulation. After certain time the simulation is closed.
@@ -155,6 +191,7 @@ class Simulation:
                 self.update_all()
             else:
                 self.swarm.update()
+            #            self.dbg(i) #just for dbg
             self.check_collisions()
             self.robot_vision()
             screen.fill((255, 255, 255))  #background color (white)
