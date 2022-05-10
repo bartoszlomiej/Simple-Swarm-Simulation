@@ -84,20 +84,6 @@ def check_line(Robot, i, k=15, R=75):
     a = Robot.sensors[i]
     b = Robot.sensorFunction(i)
     return isNeighborOnSensor(Robot, a, b, True if i < k/2 else False, radius)
-    #        return True
-    '''    
-    step_size = 2  #the step of line that is being checked, it doesn't need to be 1, but too big can crash
-    if is_neighbor_spotted(Robot, x, y, radius):
-        return True
-
-    for r in range(radius + 1, R + 1, step_size):
-        x = calc_x(i, r, k) + Robot.x
-        y = calc_y(i, r, k) + Robot.y
-        if is_neighbor_spotted(Robot, x, y, radius):
-            return True
-    '''
-    #    return False
-
 
 def check_x0_line(Robot, R=75):
     '''

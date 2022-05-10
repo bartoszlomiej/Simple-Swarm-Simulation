@@ -97,38 +97,15 @@ class Robot(pg.sprite.Sprite):
             if self.faza.phase == 2:  #just for dbg
                 self.broadcast["Return"] = -self.dir_x, -self.dir_y
                 self.dir_x, self.dir_y = -self.dir_x, -self.dir_y
-                BLACK = (0, 0, 0)
-                pg.draw.circle(self.image, BLACK, (self.radius, self.radius),
-                               self.radius)
                 #                self.velocity = [0, 0]
             self.velocity[0] = -self.velocity[0]
         if y < 0 or y > self.height - 2 * self.radius:
             if self.faza.phase == 2:  #just for dbg
                 self.broadcast["Return"] = -self.dir_x, -self.dir_y
                 self.dir_x, self.dir_y = -self.dir_x, -self.dir_y
-                BLACK = (0, 0, 0)
-                pg.draw.circle(self.image, BLACK, (self.radius, self.radius),
-                               self.radius)
                 #                self.velocity = [0, 0]
-            self.velocity[1] = -self.velocity[1]        
-        '''
-        if x < 0 or x > self.width - 2 * self.radius:
-            if self.faza.phase == 2 or self.faza.phase == 4:  #just for dbg
-                self.velocity[0] = 0
-                self.velocity[1] = 0
-                if self.faza.phase == 2:
-                    self.broadcast["superAS"] = self.AS
-                    self.faza.upgrade(3, self.AS)
-            self.velocity[0] = -self.velocity[0]
-        if y < 0 or y > self.height - 2 * self.radius:
-            if self.faza.phase == 2 or self.faza.phase == 4:  #just for dbg
-                self.velocity[0] = 0
-                self.velocity[1] = 0
-                if self.faza.phase == 2:
-                    self.broadcast["superAS"] = self.AS
-                    self.faza.upgrade(3, self.AS)
             self.velocity[1] = -self.velocity[1]
-        '''
+            
         self.broadcast["Phase"] = self.faza.phase  #always broadcast the phase
         self.broadcast["AS"] = self.AS
         if self.faza.phase > 2:
@@ -281,10 +258,6 @@ class Robot(pg.sprite.Sprite):
             #There is a need to change the leader
             if self.dir_x != 0 and self.dir_y != 0:
                 self.broadcast["Return"] = -self.dir_x, -self.dir_y
-            if (self.dir_x == 0) and (self.dir_y  == 0):
-                print("")
-                print("S:", S)
-                print("")
             return -self.dir_x, -self.dir_y
 
         return (spot.calc_x(direction, 100, self.k) / 100,

@@ -113,19 +113,24 @@ class Simulation:
             collide = pg.sprite.spritecollide(robot, collision_group, False, pg.sprite.collide_circle)
             if collide:
                 for c in collide:  #there can be numerous collisions however it is unlikely
-                    self.new_collision_movement(robot, c)
-                    self.higher_phase_collision(robot, c)
+                    self.collision_movement(robot, c)
+                    self.higher_phase_collision(robot)
 
     def move_robot_by_angle(self, robot, angle, sign=1):
         if robot.state == "moving":
             robot.x += math.sin(angle) * sign
             robot.y -= math.cos(angle) * sign 
 
-    def higher_phase_collision(self, robot, neighbor):
+    def higher_phase_collision(self, robot):
         if robot.faza.phase > 1:
             robot.find_direction()
             
-    def new_collision_movement(self, robot, neighbor):
+    def collision_movement(self, robot, neighbor):
+        '''
+        Robots should move in the semi-random direction after collision:
+        having velocity = (x, y) -> new velocity = (-random * sign(x), -random * sign(y))
+        as a result never two robots will go in the same direction after collision (no stucking)
+        '''
         if robot.faza.phase > 1:
             return
         dx = robot.x - neighbor.x
@@ -147,22 +152,6 @@ class Simulation:
         noise = np.random.uniform(-0.2, 0.2, 2)
         robot.velocity = [-1 * robot.velocity[0] + noise[0], -1 *  robot.velocity[1] + noise[1]]
         
-    def collision_movement(self, robot):
-        '''
-        Robots should move in the semi-random direction after collision:
-        having velocity = (x, y) -> new velocity = (-random * sign(x), -random * sign(y))
-        as a result never two robots will go in the same direction after collision (no stucking)
-        '''
-        if robot.faza.phase == 1:
-            sign_x = np.sign(robot.velocity[0])
-            sign_y = np.sign(robot.velocity[1])
-
-            velocity = np.random.rand(2)
-            velocity[0] = (velocity[0]) * self.velocity_lvl / 2  #must be positive!
-            velocity[1] = (velocity[1]) * self.velocity_lvl / 2
-
-            robot.velocity = [-1 * sign_x * velocity[0], -1 * sign_y * velocity[1]]
-            
     def robot_vision(self):
         '''
         Emulates the very basic vision sensor of each robot in the swarm.
