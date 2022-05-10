@@ -69,11 +69,6 @@ class AttractionPoint(ph.Phase):
             '''
             Simply goes in the given direction
             '''
-
-            if "Return" in robot.broadcast.keys():
-                del robot.broadcast["Return"]
-                robot.broadcast["Returned"] = True
-
             if spot.is_collision(robot):
                 robot.dir_x, robot.dir_y =  robot.find_direction()
             else:
@@ -96,7 +91,7 @@ class AttractionPoint(ph.Phase):
         
         rescale = math.sqrt(v1**2 + v2**2)
         v1 /= rescale
-        v2 /= rescale
+        v2 /= rescale            
 
         return v1, v2
     
@@ -163,12 +158,11 @@ class AttractionPoint(ph.Phase):
     def update(self):
         self.collective_movement()
         robot = self.robot
+        '''
         if not self.minimal_distance():
             #robot.dir_x, robot.dir_y = 0, 0
             robot.dir_x, robot.dir_y = robot.find_direction()
-            if robot.dir_x == 0 and robot.dir_y == 0:
-                print("XDXDXD")
-                print(robot.dir_x, robot.dir_y, robot.find_direction())
+        '''
         robot.is_allone()
         self.check_phase()
         self.isPhaseUpgrade()

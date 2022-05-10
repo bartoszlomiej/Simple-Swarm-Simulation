@@ -68,7 +68,7 @@ class Robot(pg.sprite.Sprite):
         self.S = []
 
         self.state = "moving"  #initially robots move (just for aggregation algorithm)
-        #        self.prev_coords = []  #previous coordinates of the neighbors
+        self.waiting = False
 
         if not self.k % 2:
             self.k += 1
@@ -279,10 +279,9 @@ class Robot(pg.sprite.Sprite):
                 return 0, 1
         else:
             #There is a need to change the leader
-            self.broadcast["Return"] = -self.dir_x, -self.dir_y
-            if "Returned" in self.broadcast:
-                del self.broadcast["Returned"]
-            if (self.dir_x == 0) and (self.dir_y / 100 == 0):
+            if self.dir_x != 0 and self.dir_y != 0:
+                self.broadcast["Return"] = -self.dir_x, -self.dir_y
+            if (self.dir_x == 0) and (self.dir_y  == 0):
                 print("")
                 print("S:", S)
                 print("")
@@ -291,23 +290,46 @@ class Robot(pg.sprite.Sprite):
         return (spot.calc_x(direction, 100, self.k) / 100,
                 spot.calc_y(direction, 100, self.k) / 100)
 
+    def __threeStateReturn(self, m):
+        '''
+        Confirmed return of all neighbors.
+        It consists of 3 states:
+        "Return" -> "Return/Waiting" -> "Waiting"
+        Parameters:
+        m - message
+        '''
+        if "Return" in m.keys() and m["AS"] == self.AS and not self.waiting:
+            if m["Return"][0] == 0 and m["Return"][1] == 0:
+                return False
+            self.broadcast["Return"] = m["Return"]
+            self.dir_x = m["Return"][0]
+            self.dir_y = m["Return"][1]
+            return True
+        elif "Return" in m.keys() and m["AS"] == self.AS and self.waiting:
+            self.broadcast["Waiting"] = self.waiting
+            self.dir_x = m["Return"][0]
+            self.dir_y = m["Return"][1]
+            if "Waiting" in m.keys():
+                return True
+            self.broadcast["Return"] = m["Return"]
+            return True
+        elif not "Return" in m.keys() and m["AS"] == self.AS and "Waiting" in m.keys():
+             return False
+         
     def follower_msg(self):
         '''
         Gets the route given by the leader.
         '''
+        buffer_wait = False
         for m in self.messages:
-            if not "Returned" in m.keys() and m["AS"] == self.AS:
-                if "Return" in m.keys() and m["AS"] == self.AS:
-                    if m["Return"][0] == 0 and m["Direction"][1] == 0:
-                        continue
-                    self.broadcast["Return"] = m["Return"]
-                    self.dir_x = m["Return"][0]
-                    self.dir_y = m["Return"][1]
-                    return
-
+            if self.__threeStateReturn(m):
+                buffer_wait = True
+            if "Return" in m.keys():
+                continue
             if "Direction" in m.keys() and m["AS"] == self.AS:
                 if m["Direction"][0] == 0 and m["Direction"][1] == 0:
                     continue
                 self.broadcast["Direction"] = m["Direction"]
                 self.dir_x = m["Direction"][0]
                 self.dir_y = m["Direction"][1]
+        self.waiting = buffer_wait
