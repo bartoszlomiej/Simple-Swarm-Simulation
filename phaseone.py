@@ -16,6 +16,7 @@ class PhaseOne(ph.Phase):
     def __init__(self, Robot):
         super().__init__(Robot)
         self.phase = 1
+        self.robot.create_AS()
 
     def minimal_distance(self):
         '''

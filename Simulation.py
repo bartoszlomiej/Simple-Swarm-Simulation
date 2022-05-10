@@ -166,7 +166,7 @@ class Simulation:
                 dx *= dx
                 dy *= dy
 
-                if (self.sensor_range**2) >= (dx + dy):  #using sqaure equation
+                if (self.sensor_range**2) >= (dx + dy):  #using circle equation
                     r.spotted(i)
                     if (0.15 * self.sensor_range**2) < (dx + dy):
                         r.in_range()

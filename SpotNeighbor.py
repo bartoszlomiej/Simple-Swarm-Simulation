@@ -145,20 +145,6 @@ def neighbor_check(Robot, neighbor, a, b, d):
             return True
     return False
 
-
-def extended_neighbor_check(Robot, neighbor, a, b, d):
-    '''
-    Checks if there is a neighbor in about direction the robot would like to follow
-    '''
-    if d:
-        if neighbor.y > (neighbor.x * a) + b:
-            return True
-    else:
-        if neighbor.y < (neighbor.x * a) + b:
-            return True
-    return False
-
-
 def is_follower(Robot):
     '''
     if there are any neighbors in our direction -> I am follower; Otherwise I am the leader.
@@ -252,10 +238,10 @@ def follower(Robot):
     else:
         direction_to_neighbor(Robot, best_neighbor)
         if not is_any_collision(Robot):
-            return
+            return 1
         else:
-            Robot.dir_x = 0
-            Robot.dir_y = 0
+            return 0 #velocity = 0 (there is a collision!)
+    return 1
 
 
 def is_collision_distance(Robot):

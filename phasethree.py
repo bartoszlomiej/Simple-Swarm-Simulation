@@ -8,7 +8,7 @@ import phase as ph
 import phaseone as ph1
 import phasetwo as ph2
 import phasefour as ph4
-
+import lattice as lt
 
 class PhaseThree(ph.Phase):
     def __init__(self, Robot, superAS):
@@ -50,7 +50,7 @@ class PhaseThree(ph.Phase):
         previous_AS = self.__closestNeighborAS()
         if not previous_AS: #only leader should not have a previous AS
             if not self.timerSet:
-                self.robot.set_timer(20, False)
+                self.robot.set_timer(100, False)
                 self.timerSet = True
             else:
                 self.robot.timer = (self.robot.timer[0], self.robot.timer[1] - 1, self.robot.timer[2])
@@ -99,5 +99,6 @@ class PhaseThree(ph.Phase):
             self.robot.faza = ph1.PhaseOneAndHalf(self.robot)
         elif next_phase == 2:
             self.robot.faza = ph2.PhaseTwo(self.robot)
-        #        elif next_phase == 4:
-        #            self.robot.faza = ph4.PhaseFour(self.robot, superAS)
+        elif next_phase == 4:
+            #            self.robot.faza = ph4.PhaseFour(self.robot, superAS)
+            self.robot.faza = lt.Lattice(self.robot, superAS)

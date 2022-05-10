@@ -19,6 +19,20 @@ class Lattice(ph.Phase):
         self.dir_x = self.robot.dir_x  #just for dbg
         self.dir_y = self.robot.dir_y  #just for dbg
 
+    def __touchNeighbor(self):
+        '''
+        If new AS is comming to the existing one it stops relatively far from it.
+
+        ***INITIALLY IT WILL BE TESTED ONLY ON THE AS.id != superAS.id***
+        '''
+        if self.robot.AS == self.robot.superAS:
+            return
+        self.robot.follower_msg()
+        neighbor = self.__closestNeighbor()
+        if not neighbor:  #leader doesn't have neighbors
+            return
+        self.__higherPriority(neighbor)
+
     def __checkPriority(self):
         '''
         returns True if this AS is higher than the neighbour in front of the given robot with regard to the direction of movement
@@ -90,9 +104,19 @@ class Lattice(ph.Phase):
         best_neighbor, best_rd = spot.find_best_neighbor(
             self.robot, True, allowedAS)
         if not best_neighbor:
+            BLACK = (0, 0, 0)
+            robot = self.robot
+            pg.draw.circle(robot.image, BLACK, (robot.radius, robot.radius),
+                           robot.radius)
             return None  #The leader don't have the best neighbor
         else:
             return best_neighbor
+
+    def __cuddling(self):
+        '''
+        The group which joins superAS should go as close to AP and other group as possible
+        '''
+        pass
 
     def __minimal_distance(self):
         '''
@@ -114,8 +138,13 @@ class Lattice(ph.Phase):
                        robot.radius)
 
     def update(self):
-        self.__checkPriority()
+        #        self.__touchNeighbor()
+        self.check_phase()
+        self.__closestNeighbor()
         self.__minimal_distance()
+        self.robot.velocity[0] = 0
+        self.robot.velocity[1] = 0
+        
         self.robot.broadcast["Direction"] = (self.dir_x, self.dir_y)
         self.robot.broadcast["superAS"] = self.robot.superAS
 
@@ -123,12 +152,12 @@ class Lattice(ph.Phase):
         robot = self.robot
         for m in robot.messages:
             if "Phase" in m.keys():
-                if m["Phase"] >= 4:
+                if m["Phase"] > 4:
                     self.AS = m["AS"]
                     self.upgrade(m["Phase"])
                     return
 
-    def upgrade(self, next_phase=5):
+    def upgrade(self, next_phase=5, superAS=None):
         '''
         Upgrades the phase to further one.
         '''

@@ -7,7 +7,7 @@ import SpotNeighbor as spot
 import phase as ph
 import phaseone as ph1
 import phasethree as ph3
-
+import lattice as lt
 
 class AttractionPoint(ph.Phase):
     '''
@@ -17,6 +17,7 @@ class AttractionPoint(ph.Phase):
         super().__init__(Robot)
         self.phase = 2
         self.next_phase = False
+        self.move = 1
         Robot.clear_broadcast()
         Robot.initialize_sensors()
         
@@ -26,6 +27,7 @@ class AttractionPoint(ph.Phase):
         #to be removed in the future.
         '''
         robot = self.robot
+        self.move = 1
         if robot.state != "moving":
             self.initial_direction()
         else:
@@ -37,8 +39,8 @@ class AttractionPoint(ph.Phase):
         '''
         robot = self.robot
         self.leader_follower()
-        robot.velocity[0] = robot.dir_x  # * 0.5
-        robot.velocity[1] = robot.dir_y  # * 0.5
+        robot.velocity[0] = robot.dir_x * self.move  # * 0.5
+        robot.velocity[1] = robot.dir_y  * self.move# * 0.5
         '''
         Leader/follower
         '''
@@ -75,7 +77,7 @@ class AttractionPoint(ph.Phase):
                 robot.dir_x, robot.dir_y = self.__attract()
             robot.broadcast["Direction"] = (robot.dir_x, robot.dir_y)
         else:
-            spot.follower(robot)
+            self.move = spot.follower(robot)
 
     def __attract(self):
         '''
@@ -142,14 +144,27 @@ class AttractionPoint(ph.Phase):
         delta = 40
         x, y = self.robot.position
         if (x - self.robot.ap[0])**2 + (y - self.robot.ap[1])**2 <= delta**2:
-            self.robot.faza.upgrade(3, self.robot.AS)
+            self.upgrade(3, self.robot.AS)
             self.robot.broadcast["superAS"] = self.robot.AS
 
+    def __followerStoppingCondition(self):
+        '''
+        Followers should not enter the higher phase if they move
+        (in order to get rid of annoying empty spaces between single AS)
+        '''
+        if spot.is_follower(self.robot):
+            if self.robot.velocity[0] == 0 and self.robot.velocity[1] == 0:
+                return True
+            return False
+        return True
+
+            
     def check_phase(self):
         robot = self.robot
         for m in robot.messages:
             if "Phase" in m.keys():
-                if m["Phase"] >= 3:
+                if m["Phase"] >= 3 and self.__followerStoppingCondition():
+                #if m["Phase"] >= 3: #unlock to make phase 3 work
                     superAS = m["superAS"]
                     robot.broadcast["superAS"] = superAS
                     self.upgrade(m["Phase"], superAS)
@@ -176,3 +191,5 @@ class AttractionPoint(ph.Phase):
             self.robot.faza = ph1.PhaseOneAndHalf(self.robot)
         elif next_phase == 3:
             self.robot.faza = ph3.PhaseThree(self.robot, superAS)
+        elif next_phase == 4: #just for dbg
+            self.robot.faza = lt.Lattice(self.robot, superAS)
