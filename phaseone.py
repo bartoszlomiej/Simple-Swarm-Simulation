@@ -65,8 +65,8 @@ class PhaseOne(ph.Phase):
             If there are no neighbors -> start moving
             '''
             robot.velocity = np.random.rand(2)
-            robot.velocity[0] = (robot.velocity[0] - 0.5) * 4
-            robot.velocity[1] = (robot.velocity[1] - 0.5) * 4  #start moving
+            robot.velocity[0] = (robot.velocity[0] - 0.5) * 2 * robot.val
+            robot.velocity[1] = (robot.velocity[1] - 0.5) * 2 * robot.val  #start moving
             robot.state = "moving"
 
         if len(robot.neighbors) != robot.in_range_robots:

@@ -19,6 +19,7 @@ class AttractionPoint(ph.Phase):
         self.next_phase = False
         Robot.clear_broadcast()
         Robot.initialize_sensors()
+        self.robot.val /= 2 #just for dbg
         
     def collective_movement(self):
         '''
@@ -37,8 +38,8 @@ class AttractionPoint(ph.Phase):
         '''
         robot = self.robot
         self.leader_follower()
-        robot.velocity[0] = robot.dir_x  # * 0.5
-        robot.velocity[1] = robot.dir_y  # * 0.5
+        robot.velocity[0] = robot.dir_x * robot.val
+        robot.velocity[1] = robot.dir_y * robot.val
         '''
         Leader/follower
         '''
@@ -49,8 +50,8 @@ class AttractionPoint(ph.Phase):
         '''
         robot = self.robot
         robot.state = "moving"
-        robot.velocity[0] = robot.dir_x
-        robot.velocity[1] = robot.dir_y
+        robot.velocity[0] = robot.dir_x * robot.val
+        robot.velocity[1] = robot.dir_y * robot.val
 
         self.leader_follower()
 
@@ -116,9 +117,6 @@ class AttractionPoint(ph.Phase):
         
         attraction_value = 1 - (spot.relative_distance(self.robot.x, self.robot.y, self.robot.ap[0], self.robot.ap[1])**2)/self.robot.ap[2]
         ap_val = 0.00001 if attraction_value < 0 else attraction_value
-
-        if dir_x == 0 and dir_y == 0:
-            print("here we have an error!!")
         
         return (dir_x, dir_y, ap_val)
 
@@ -145,11 +143,24 @@ class AttractionPoint(ph.Phase):
             self.robot.faza.upgrade(3, self.robot.AS)
             self.robot.broadcast["superAS"] = self.robot.AS
 
+    def __followerStoppingCondition(self):
+        '''
+        Followers should not enter the higher phase if they move
+        (in order to get rid of annoying empty spaces between single AS)
+        '''
+        if spot.is_follower(self.robot):
+            if spot.is_any_collision(self.robot, 0.2):
+                return True
+            return False
+        return True
+
+            
     def check_phase(self):
         robot = self.robot
         for m in robot.messages:
             if "Phase" in m.keys():
-                if m["Phase"] >= 3:
+                if m["Phase"] >= 3 and self.__followerStoppingCondition():
+                #if m["Phase"] >= 3: #unlock to make phase 3 work                    
                     superAS = m["superAS"]
                     robot.broadcast["superAS"] = superAS
                     self.upgrade(m["Phase"], superAS)

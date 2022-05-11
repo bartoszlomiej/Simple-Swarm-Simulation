@@ -65,11 +65,11 @@ class Simulation:
                     break
             if True:
                 velocity = np.random.rand(2)
-                velocity[0] = (velocity[0] - 0.5) * self.velocity_lvl
-                velocity[1] = (velocity[1] - 0.5) * self.velocity_lvl
+                velocity[0] = (velocity[0] - 0.5)* 2 * self.velocity_lvl
+                velocity[1] = (velocity[1] - 0.5)* 2 * self.velocity_lvl
                 
                 robot = rbt.Robot(x, y, self.width, self.height, velocity,
-                                  self.sensor_range)
+                                  self.sensor_range, self.velocity_lvl)
                 robot.ap = self.attraction_point #JUST FOR DBG
                 self.swarm.add(robot)                    
 

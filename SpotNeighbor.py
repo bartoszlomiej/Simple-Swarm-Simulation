@@ -267,7 +267,7 @@ def is_collision_distance(Robot):
     return True
 
 
-def is_any_collision(Robot):
+def is_any_collision(Robot, min_d = 0.15):
     '''
     Checks whether there is going to be a collision in the direciton we are approaching
     '''
@@ -275,7 +275,7 @@ def is_any_collision(Robot):
     for n in Robot.neighbors:
         if neighbor_check(Robot, n, a, b, d):
             if (n.x - Robot.x)**2 + (n.y -
-                                     Robot.y)**2 < 0.15 * Robot.s_range**2:
+                                     Robot.y)**2 < min_d * Robot.s_range**2:
                 return True
     return False
 

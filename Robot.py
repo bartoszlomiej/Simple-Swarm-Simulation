@@ -14,7 +14,7 @@ class Robot(pg.sprite.Sprite):
     
     It inherit from the base class sprite as this class is a basic representation of a character in pygame.
     '''
-    def __init__(self, x, y, width, height, velocity=[0, 0], s_range=55):
+    def __init__(self, x, y, width, height, velocity=[0, 0], s_range=55, val=4):
         super().__init__()
         '''
         Creates a robot on board with the initial coordinates (x, y) and the given velocity.
@@ -73,6 +73,7 @@ class Robot(pg.sprite.Sprite):
         if not self.k % 2:
             self.k += 1
         self.initialize_sensors()
+        self.val = val
         self.faza = PhaseOne(self)
 
 
@@ -153,6 +154,12 @@ class Robot(pg.sprite.Sprite):
         If any robot for any reason stays allone, then it come back to phase one, and it's AS is being created again
         '''
         if not self.neighbors:
+            self.faza = PhaseOne(self)
+            return
+        for n in self.neighbors:
+            if self.AS == n.AS:
+                return
+        if not spot.is_collision_distance(self):
             self.faza = PhaseOne(self)
 
     def update_msg(self):
