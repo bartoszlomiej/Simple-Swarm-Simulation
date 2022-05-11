@@ -20,19 +20,23 @@ class Simulation:
                  N=10,
                  s_range=55,
                  velocity_lvl=4, threads=1,
-                 attraction_point=(0,0,0)):
+                 attraction_point=(0,0,0), r_radius=10):
         '''
         width - the width of the screen
         height - the height of the screen
         N - a swarm quantity
         s_range - sensor range in pixels (must be greater than 20)
-        velocity_lvl 0 - multiplier of the velocity 
+        velocity_lvl 0 - multiplier of the velocity
+        threads - a number of threads to run simulation on (it must be smaller or equal to the number of robot)
+        r_radius - radius of the robot
         '''
         self.width = width
         self.height = height
         self.size = (width, height)
         self.sensor_range = s_range  #(as 20 is the delimiter of the robot)
         self.velocity_lvl = velocity_lvl
+
+        self.r_radius = r_radius #radius of the robot
 
         self.attraction_point = attraction_point
 
@@ -53,10 +57,10 @@ class Simulation:
         for i in range(self.swarm_quantity):
             collide = True
             while collide:
-                x = np.random.randint(10, self.width - 15)
-                y = np.random.randint(10, self.height - 15)
-                new_rect = pg.Rect(x, y, 15, 15)
-                if not any(n for n in self.swarm if new_rect.colliderect(n.x, n.y, 15, 15)):
+                x = np.random.randint(self.r_radius * 2, self.width - self.r_radius*2 - 10)
+                y = np.random.randint(self.r_radius * 2, self.height - self.r_radius*2 - 10)
+                new_rect = pg.Rect(x, y, self.r_radius*2 + 5, self.r_radius*2 + 5)
+                if not any(n for n in self.swarm if new_rect.colliderect(n.x, n.y, self.r_radius*2 + 5, self.r_radius*2 + 5)):
                     collide = False
                     break
             if True:
