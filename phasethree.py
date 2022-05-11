@@ -8,6 +8,7 @@ import phase as ph
 import phaseone as ph1
 import phasetwo as ph2
 import phasefour as ph4
+import lattice as lt
 
 
 class PhaseThree(ph.Phase):
@@ -37,9 +38,10 @@ class PhaseThree(ph.Phase):
         Returns the closest neighbor's AS that in the same superAS.
         '''
         allowedAS = self.__allowedAS()
-        best_neighbor, best_rd = spot.find_best_neighbor(self.robot, True, allowedAS)
+        best_neighbor, best_rd = spot.find_best_neighbor(
+            self.robot, True, allowedAS)
         if not best_neighbor:
-            return None #The leader don't have the best neighbor
+            return None  #The leader don't have the best neighbor
         else:
             return best_neighbor.AS
 
@@ -48,7 +50,7 @@ class PhaseThree(ph.Phase):
         Polish equivalent is "Do dwóch odlicz" - every second robot updates it's local AS to be equal AS + 1.
         '''
         previous_AS = self.__closestNeighborAS()
-        if not previous_AS: #only leader should not have a previous AS
+        if not previous_AS:  #only leader should not have a previous AS
             if not self.timerSet:
                 self.robot.set_timer(20, False)
                 self.timerSet = True
@@ -99,5 +101,6 @@ class PhaseThree(ph.Phase):
             self.robot.faza = ph1.PhaseOneAndHalf(self.robot)
         elif next_phase == 2:
             self.robot.faza = ph2.PhaseTwo(self.robot)
-        #        elif next_phase == 4:
+        elif next_phase == 4:
+            self.robot.faza = lt.Lattice(self.robot, superAS)
         #            self.robot.faza = ph4.PhaseFour(self.robot, superAS)

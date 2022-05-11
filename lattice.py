@@ -18,6 +18,8 @@ class Lattice(ph.Phase):
         self.robot.superAS = superAS
         self.dir_x = self.robot.dir_x  #just for dbg
         self.dir_y = self.robot.dir_y  #just for dbg
+        self.robot.velocity = [0, 0]
+        self.robot.state = "stopped"
 
     def __checkPriority(self):
         '''
@@ -34,13 +36,27 @@ class Lattice(ph.Phase):
         self.robot.velocity[0] = self.robot.dir_x  # * 0.5
         self.robot.velocity[1] = self.robot.dir_y  # * 0.5
 
+    def __rownajWPrawo(self):
+        neighbor = self.__closestNeighbor()
+        if not neighbor:
+            return  #it should never happen - invastigate it if necessary
+        rd = spot.relative_distance(self.robot.x, self.robot.y, neighbor.x,
+                                    neighbor.y)
+        epsilon = 15
+        if rd > self.robot.radius * 2 + epsilon:
+            spot.follower(self.robot, neighbor)
+        else:
+            self.__perpendicularDirection(neighbor)
+        self.robot.velocity[0] = self.robot.dir_x
+        self.robot.velocity[1] = self.robot.dir_y
+
     def __perpendicularDirection(self, neighbor):
         '''
         Returns the direction the robot would like to follow
 
         Ax + By = 0 - initial direction from the direction_to_neighbor
         Bx - Ay = 0 - perpendicular to the above line
-        '''
+
         vector = math.ceil(self.robot.k / 4)
         delta_x = (neighbor.x - self.robot.x
                    )  #it must be greater than 0 - robots cannot overlap
@@ -51,6 +67,9 @@ class Lattice(ph.Phase):
         self.robot.dir_x = delta_y / suma
         self.robot.dir_y = -delta_x / suma
         #        return dir_x, dir_y  #collision avoidance must be implemented!!!
+        '''
+        dir_x, dir_y = 0, 0
+        pass
 
     def __higherPriority(self, neighbor):
         '''
@@ -84,7 +103,7 @@ class Lattice(ph.Phase):
 
     def __closestNeighbor(self):
         '''
-        Returns the closest neighbor's AS that is in the same superAS.
+        Returns the closest neighbor that is in the same superAS.
         '''
         allowedAS = self.__allowedAS()
         best_neighbor, best_rd = spot.find_best_neighbor(
@@ -114,8 +133,15 @@ class Lattice(ph.Phase):
                        robot.radius)
 
     def update(self):
-        self.__checkPriority()
+        #        self.__checkPriority()
+        if self.robot.AS != self.robot.superAS:
+            self.__rownajWPrawo()
+        else:
+            self.robot.velocity[0], self.robot.velocity[1] = 0, 0
+        '''
         self.__minimal_distance()
+
+        '''
         self.robot.broadcast["Direction"] = (self.dir_x, self.dir_y)
         self.robot.broadcast["superAS"] = self.robot.superAS
 

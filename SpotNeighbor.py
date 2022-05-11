@@ -49,7 +49,8 @@ def calculate_slope(x0, y0, x1, y1):
     '''
     Returns the slope of the given line (a coefficient in y = ax + b)
     '''
-    return (y0-y1)/(x0-x1)
+    return (y0 - y1) / (x0 - x1)
+
 
 def is_neighbor_spotted(Robot, x, y, radius):
     '''
@@ -59,7 +60,8 @@ def is_neighbor_spotted(Robot, x, y, radius):
     for n in Robot.neighbors:
         if ((n.x - x)**2 + (n.y - y)**2 <= radius**2):
             return True
-    return False    
+    return False
+
 
 def isNeighborOnSensor(Robot, a, b, d, radius):
     '''
@@ -67,12 +69,13 @@ def isNeighborOnSensor(Robot, a, b, d, radius):
     Returns True if neighbor is spotted, otherwise returns False
     '''
     for n in Robot.neighbors:
-        if abs((a * n.x - n.y + b) / math.sqrt(a**2 + 1)) <= radius:
+        if abs((a * n.x - n.y + b) / math.sqrt(a**2 + 1)) <= radius * 2:
             if (n.x > Robot.x) and d:
                 return True
             elif (n.x <= Robot.x) and not d:
                 return True
     return False
+
 
 def check_line(Robot, i, k=15, R=75):
     '''
@@ -83,7 +86,9 @@ def check_line(Robot, i, k=15, R=75):
     radius = Robot.radius  #radius of the robot
     a = Robot.sensors[i]
     b = Robot.sensorFunction(i)
-    return isNeighborOnSensor(Robot, a, b, True if i < k/2 else False, radius)
+    return isNeighborOnSensor(Robot, a, b, True if i < k / 2 else False,
+                              radius)
+
 
 def check_x0_line(Robot, R=75):
     '''
@@ -237,20 +242,21 @@ def find_best_neighbor(Robot, closestNeighbor=False, allowedAS=None):
     return best_neighbor, best_rd
 
 
-def follower(Robot):
+def follower(Robot, neighbor=None):
     '''
     Finds the neighbor which is the most close to the broadcasted direction and follows it.
     '''
-    best_neighbor, best_rd = find_best_neighbor(Robot)
-    if not best_neighbor:  #although it should never appear, it was decided to keep it
-        return  #just in case
+    if not neighbor:
+        best_neighbor, best_rd = find_best_neighbor(Robot)
+        if not best_neighbor:  #although it should never appear, it was decided to keep it
+            return  #just in case
+    else:
+        best_neighbor = neighbor
     '''
     Only robots that are on our collision distance are being considered now.
     '''
-    if not is_collision_distance(Robot):
-        direction_to_neighbor(Robot, best_neighbor)
-    else:
-        direction_to_neighbor(Robot, best_neighbor)
+    direction_to_neighbor(Robot, best_neighbor)
+    if is_collision_distance(Robot):
         if not is_any_collision(Robot):
             return
         else:
@@ -267,15 +273,19 @@ def is_collision_distance(Robot):
     return True
 
 
-def is_any_collision(Robot, min_d = 0.15):
+def is_any_collision(Robot, min_d=0.15, radiusOn=False):
     '''
     Checks whether there is going to be a collision in the direciton we are approaching
     '''
     a, b, d = direction_line_equation(Robot)
+    referenceValue = Robot.s_range
+    if radiusOn:
+        referenceValue = 2 * Robot.radius + min_d
+        min_d = 1
     for n in Robot.neighbors:
         if neighbor_check(Robot, n, a, b, d):
             if (n.x - Robot.x)**2 + (n.y -
-                                     Robot.y)**2 < min_d * Robot.s_range**2:
+                                     Robot.y)**2 < min_d * referenceValue**2:
                 return True
     return False
 
