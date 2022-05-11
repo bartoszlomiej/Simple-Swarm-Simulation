@@ -39,14 +39,20 @@ class Lattice(ph.Phase):
     def __rownajWPrawo(self):
         neighbor = self.__closestNeighbor()
         if not neighbor:
+            robot = self.robot
+            BLACK = (0, 0, 0)
+            pg.draw.circle(robot.image, BLACK, (robot.radius, robot.radius),
+                           robot.radius)
             return  #it should never happen - invastigate it if necessary
         rd = spot.relative_distance(self.robot.x, self.robot.y, neighbor.x,
                                     neighbor.y)
-        epsilon = 15
+        epsilon = 5
         if rd > self.robot.radius * 2 + epsilon:
             spot.follower(self.robot, neighbor)
         else:
             self.__perpendicularDirection(neighbor)
+            self.robot.velocity = [0, 0]
+            return
         self.robot.velocity[0] = self.robot.dir_x
         self.robot.velocity[1] = self.robot.dir_y
 
@@ -69,7 +75,7 @@ class Lattice(ph.Phase):
         #        return dir_x, dir_y  #collision avoidance must be implemented!!!
         '''
         dir_x, dir_y = 0, 0
-        pass
+        return
 
     def __higherPriority(self, neighbor):
         '''
@@ -118,13 +124,8 @@ class Lattice(ph.Phase):
         Checks if the minimal distance between robots is being kept.
         Returns true if minimal distance is being kept; otherwise returns false.
         '''
-        robot = self.robot
-        for n in robot.neighbors:
-            if (abs(n.position[0] - robot.position[0]) <= robot.radius) and (
-                    abs(n.position[1] - robot.position[1]) <= robot.radius):
-                robot.dir_x, robot.dir_y = 0, 0
-                return
-        return
+        if spot.is_any_collision(self.robot, 5, True):
+            self.robot.velocity = [0, 0]
 
     def just_dbg(self):
         robot = self.robot
@@ -138,10 +139,9 @@ class Lattice(ph.Phase):
             self.__rownajWPrawo()
         else:
             self.robot.velocity[0], self.robot.velocity[1] = 0, 0
-        '''
+
         self.__minimal_distance()
 
-        '''
         self.robot.broadcast["Direction"] = (self.dir_x, self.dir_y)
         self.robot.broadcast["superAS"] = self.robot.superAS
 

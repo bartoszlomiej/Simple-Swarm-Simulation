@@ -14,7 +14,14 @@ class Robot(pg.sprite.Sprite):
     
     It inherit from the base class sprite as this class is a basic representation of a character in pygame.
     '''
-    def __init__(self, x, y, width, height, velocity=[0, 0], s_range=55, val=4):
+    def __init__(self,
+                 x,
+                 y,
+                 width,
+                 height,
+                 velocity=[0, 0],
+                 s_range=55,
+                 val=4):
         super().__init__()
         '''
         Creates a robot on board with the initial coordinates (x, y) and the given velocity.
@@ -59,7 +66,7 @@ class Robot(pg.sprite.Sprite):
         self.velocity = np.asarray(velocity, dtype=np.float64)
         self.moved = False
 
-        self.ap = None #JUST FOR DBG
+        self.ap = None  #JUST FOR DBG
 
         #for the sake of changing direction
         self.dir_x = 0
@@ -75,7 +82,6 @@ class Robot(pg.sprite.Sprite):
         self.initialize_sensors()
         self.val = val
         self.faza = PhaseOne(self)
-
 
     def update(self):
         '''

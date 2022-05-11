@@ -77,8 +77,10 @@ class AttractionPoint(ph.Phase):
                 robot.dir_x, robot.dir_y = self.__attract()
 
             if spot.is_any_collision(self.robot, 5, True):
-                robot.broadcast["Return"] = -robot.dir_x, -robot.dir_y
+                if not "Return" in robot.broadcast.keys():
+                    robot.broadcast["Return"] = -robot.dir_x, -robot.dir_y
                 robot.velocity = [0, 0]
+
             robot.broadcast["Direction"] = (robot.dir_x, robot.dir_y)
         else:
             spot.follower(robot)
