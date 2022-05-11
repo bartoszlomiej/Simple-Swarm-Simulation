@@ -146,7 +146,7 @@ class AttractionPoint(ph.Phase):
         '''
         If phase should be upgraded then upgrade it (leader only)
         '''
-        delta = 10
+        delta = 30
         x, y = self.robot.position
         if (x - self.robot.ap[0])**2 + (y - self.robot.ap[1])**2 <= delta**2:
             self.robot.faza.upgrade(3, self.robot.AS)

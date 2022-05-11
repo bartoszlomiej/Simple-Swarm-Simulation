@@ -36,22 +36,36 @@ class Lattice(ph.Phase):
         self.robot.velocity[0] = self.robot.dir_x  # * 0.5
         self.robot.velocity[1] = self.robot.dir_y  # * 0.5
 
-    def __rownajWPrawo(self):
-        neighbor = self.__closestNeighbor()
-        if not neighbor:
-            robot = self.robot
-            BLACK = (0, 0, 0)
-            pg.draw.circle(robot.image, BLACK, (robot.radius, robot.radius),
-                           robot.radius)
-            return  #it should never happen - invastigate it if necessary
+    def __keepDistance(self, neighbor):
+        '''
+        Keeps distance to the given neighbor
+        '''
         rd = spot.relative_distance(self.robot.x, self.robot.y, neighbor.x,
                                     neighbor.y)
         epsilon = 5
         if rd > self.robot.radius * 2 + epsilon:
             spot.follower(self.robot, neighbor)
-        else:
+            return True
+        return False
+
+    def __rownajWPrawo(self):
+        neighbor = self.__closestNeighbor(False)
+        if not neighbor:
+            neighbor = self.__closestNeighbor()
+            if neighbor:
+                self.__keepDistance(neighbor)
+                return
+            robot = self.robot
+            BLACK = (0, 0, 0)
+            pg.draw.circle(robot.image, BLACK, (robot.radius, robot.radius),
+                           robot.radius)
+            self.robot.find_direction()
+            self.robot.velocity[0] = 0
+            self.robot.velocity[1] = 0
+            return  #it should never happen - invastigate it if necessary
+
+        if not self.__keepDistance(neighbor):
             self.__perpendicularDirection(neighbor)
-            self.robot.velocity = [0, 0]
             return
         self.robot.velocity[0] = self.robot.dir_x
         self.robot.velocity[1] = self.robot.dir_y
@@ -74,7 +88,17 @@ class Lattice(ph.Phase):
         self.robot.dir_y = -delta_x / suma
         #        return dir_x, dir_y  #collision avoidance must be implemented!!!
         '''
-        dir_x, dir_y = 0, 0
+        spot.follower(self.robot, neighbor)
+
+        delta_x = (self.robot.ap[0] - self.robot.x)
+        delta_y = (self.robot.ap[1] - self.robot.y)
+
+        if delta_x < 0:
+            self.robot.dir_x *= -1
+        if delta_y > 0:
+            self.robot.dir_y *= -1
+
+        #        dir_x, dir_y = 0, 0
         return
 
     def __higherPriority(self, neighbor):
@@ -95,23 +119,24 @@ class Lattice(ph.Phase):
         spot.follower(self.robot)
         pass
 
-    def __allowedAS(self):
+    def __allowedAS(self, myAS=True):
         '''
         Returns the AS's that are in the same superAS that can be spot by the given robot.
         '''
         allowed = []
-        allowed.append(self.robot.AS)
+        if myAS:
+            allowed.append(self.robot.AS)
         for n in self.robot.neighbors:
             if n.superAS == self.robot.superAS:
                 if not n.AS in allowed:
                     allowed.append(n.AS)
         return allowed
 
-    def __closestNeighbor(self):
+    def __closestNeighbor(self, myAS=True):
         '''
         Returns the closest neighbor that is in the same superAS.
         '''
-        allowedAS = self.__allowedAS()
+        allowedAS = self.__allowedAS(myAS)
         best_neighbor, best_rd = spot.find_best_neighbor(
             self.robot, True, allowedAS)
         if not best_neighbor:
