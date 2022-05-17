@@ -6,7 +6,6 @@ import simulation.phases.phaseone as ph1
 import simulation.phases.phasetwo as ph2
 from simulation.robot import RobotState
 from simulation.robot.Velocity import Velocity
-import simulation.phases.merge_clusters_to_static_line as mg
 
 
 class StaticLineFormation(Phase):
@@ -58,26 +57,17 @@ class StaticLineFormation(Phase):
 
     def findRobotOnOppositeSide(self, closest_neighbor):
         self.same_cluster_neighbors.remove(closest_neighbor)
-
         while self.same_cluster_neighbors:
             opposite_neighbor, distance = self.findClosestNeighbor()
             if self.checkAngle(closest_neighbor, self.robot,
                                opposite_neighbor) > 90.0:
-                if not opposite_neighbor:
-                    print("XDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD")
                 return opposite_neighbor, distance
-
             self.same_cluster_neighbors.remove(opposite_neighbor)
-
-        self.upgrade(3, self.robot.super_cluster_id)
         print("BLAD!!!!!!!!!!!!!!!!!!!!!!!!")
-        print("NUMBER OF MEMBERS:", len(self.same_cluster_neighbors))
+        print(self.isEdgeRobot())
+        print("There is a robot", opposite_neighbor)
         print(self.checkAngle(closest_neighbor, self.robot, opposite_neighbor))
         print("==============================================================")
-
-    def changeClosestRobot(self, closest_neighbor):
-        self.same_cluster_neighbors.remove(closest_neighbor)
-        self.insideRobotFunctionallity()
 
     def edgeRobotFunctionallity(self):
         closest_neighbor, distance_to_neighbor = self.findClosestNeighbor()
@@ -147,7 +137,6 @@ class StaticLineFormation(Phase):
         pg.draw.circle(self.robot.image, BLACK,
                        (self.robot.radius, self.robot.radius),
                        self.robot.radius)
-        self.same_cluster_neighbors.clear()
         self.same_cluster_neighbors = self.getSameClusterMembers()
         if self.isEdgeRobot():
             self.edgeRobotFunctionallity()
@@ -172,9 +161,5 @@ class StaticLineFormation(Phase):
             self.robot.faza = ph1.PhaseOneAndHalf(self.robot)
         elif next_phase == 2:
             self.robot.faza = ph2.PhaseTwo(self.robot)
-        elif next_phase == 3:
-            print("powinienm byc tutaj!!!!!!!")
-            self.robot.faza = mg.MergeClustersToStaticLine(self.robot, superAS)
-            print("czy ja jestem tutaj?")
         #        elif next_phase == 4:
         #            self.robot.faza = ph4.PhaseFour(self.robot, superAS)

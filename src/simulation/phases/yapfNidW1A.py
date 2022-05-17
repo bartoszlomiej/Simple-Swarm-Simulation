@@ -17,7 +17,6 @@ class MergeClustersToStaticLine(Phase):
         self.isIncreased = False
         self.timerSet = False
         self.robot.velocity = Velocity(0, 0)
-        self.robot.update_color()
         self.robot.state = RobotState.STOPPED
 
     def followerFunctionallity(self):
@@ -45,38 +44,34 @@ class MergeClustersToStaticLine(Phase):
         if real_distance < minimal_distance:
             self.upgrade(3, self.robot.super_cluster_id)
 
-            
     def getMainClusterNeighbors(self):
         main_cluster_neighbors = []
         for n in self.robot.neighbors:
             if n.cluster_id == self.robot.super_cluster_id:
                 main_cluster_neighbors.append(n)
-        return main_cluster_neighbors        
+        return main_cluster_neighbors
 
-    
     def mergeIfPossible(self, main_cluster_neighbors):
-        first_neighbor, second_neighbor = self.chooseBestTwoNeighbors(main_cluster_neighbors)
+        first_neighbor, second_neighbor = self.chooseBestTwoNeighbors(
+            main_cluster_neighbors)
         epsilon = 20
-        if self.checkAngle(first_neighbor, self.robot, second_neighbor) > (90.0 + epsilon):
+        if self.checkAngle(first_neighbor, self.robot,
+                           second_neighbor) > (90.0 + epsilon):
             self.upgrade(3, self.robot.super_cluster_id)
         else:
             self.goBetweenTwoRobots(first_neighbor, second_neighbor)
 
-            
     def checkAngle(self, n1, robot, n2):
         angle = math.atan2(n1.position.y - robot.position.y,
                            n1.position.x - robot.position.x) - math.atan2(
                                n2.position.y - robot.position.y,
                                n2.position.x - robot.position.x)
 
-        return math.degrees(abs(angle))        
+        return math.degrees(abs(angle))
 
-    
     def goBetweenTwoRobots(self, first_neighbor, second_neighbor):
-        point_x = (first_neighbor.position.x +
-                   second_neighbor.position.x) / 2
-        point_y = (first_neighbor.position.y +
-                   second_neighbor.position.y) / 2
+        point_x = (first_neighbor.position.x + second_neighbor.position.x) / 2
+        point_y = (first_neighbor.position.y + second_neighbor.position.y) / 2
         delta_x = (point_x - self.robot.position.x)
         delta_y = (point_y - self.robot.position.y)
         if not delta_x or not delta_y:
@@ -88,13 +83,11 @@ class MergeClustersToStaticLine(Phase):
         self.robot.dir_y = delta_y / suma
         self.moveIfPathIsFree()
 
-        
     def chooseBestTwoNeighbors(self, main_cluster_neighbors):
         first_neighbor = self.findClosestNeighbor(main_cluster_neighbors)
         main_cluster_neighbors.remove(first_neighbor)
         second_neighbor = self.findClosestNeighbor(main_cluster_neighbors)
         return first_neighbor, second_neighbor
-
 
     def findClosestNeighbor(self, main_cluster_neighbors):
         if not main_cluster_neighbors:
@@ -110,7 +103,6 @@ class MergeClustersToStaticLine(Phase):
                 closest_distance = distance
                 closest_neighbor = n
         return closest_neighbor
-    
 
     def moveIfPathIsFree(self):
         a, b, d = spot.direction_line_equation(self.robot)
@@ -119,37 +111,34 @@ class MergeClustersToStaticLine(Phase):
         else:
             self.tryPerpendicularMotion()
 
-
     def tryPerpendicularMotion(self):
         main_cluster_neighbors = self.getMainClusterNeighbors()
         if not main_cluster_neighbors:
             BLACK = (100, 200, 50)
-            pg.draw.circle(self.robot.image, BLACK, (self.robot.radius, self.robot.radius),
-                           self.robot.radius)        
+            pg.draw.circle(self.robot.image, BLACK,
+                           (self.robot.radius, self.robot.radius),
+                           self.robot.radius)
             return
-        
+
         best_neighbor = self.findClosestNeighbor(main_cluster_neighbors)
         spot.direction_to_neighbor(self.robot, best_neighbor)
         self.perpendicularDirection()
-        
+
         a, b, d = spot.direction_line_equation(self.robot)
         if not spot.is_any_collision(self.robot, 0.15):
             self.makeMove()
-
 
     def perpendicularDirection(self):
         self.robot.dir_x = self.robot.dir_y
         self.robot.dir_y = -self.robot.dir_x
 
-            
     def makeMove(self):
         while (self.robot.dir_x**2 + self.robot.dir_y**2) > 1:
             self.robot.dir_x /= 2
             self.robot.dir_y /= 2
         self.robot.velocity.x = self.robot.dir_x * self.robot.velocity_level
-        self.robot.velocity.y = self.robot.dir_y * self.robot.velocity_level        
+        self.robot.velocity.y = self.robot.dir_y * self.robot.velocity_level
 
-        
     def update(self):
         self.check_phase()
         self.robot.velocity.x = 0
@@ -162,9 +151,9 @@ class MergeClustersToStaticLine(Phase):
             self.leaderFunctionallity(main_cluster_neighbors)
         else:
             self.followerFunctionallity()
-            
+
         self.robot.broadcast["superAS"] = self.robot.super_cluster_id
-        
+
     def check_phase(self):
         robot = self.robot
         for m in robot.received_messages:
@@ -173,7 +162,7 @@ class MergeClustersToStaticLine(Phase):
                     robot.broadcast["superAS"] = self.robot.super_cluster_id
                     self.upgrade(m["Phase"], self.robot.super_cluster_id)
                     return
-                
+
     def upgrade(self, next_phase=4, superAS=None):
         '''
         Upgrades the phase to further one.
