@@ -1,21 +1,16 @@
-import sys
-import numpy as np
 import pygame as pg
-import math
-import Simulation as sim
-import SpotNeighbor as spot
-import phase as ph
-import phaseone as ph1
-import phasetwo as ph2
-import phasethree as ph3
-import phasefour as ph4
+from utils import SpotNeighbor as spot
+
+from simulation.phases.phase import Phase
+import simulation.phases.phaseone as ph1
+import simulation.phases.phasetwo as ph2
 
 
-class PhaseFive(ph.Phase):
+class PhaseFive(Phase):
     def __init__(self, Robot, superAS):
         super().__init__(Robot)
         self.phase = 5
-        self.robot.superAS = superAS
+        self.robot.super_cluster_id = superAS
         self.dir_x = self.robot.dir_x  #just for dbg
         self.dir_y = self.robot.dir_y  #just for dbg
 
@@ -24,11 +19,11 @@ class PhaseFive(ph.Phase):
         Returns the AS's that are in the same superAS that can be spot by the given robot.
         '''
         allowed = []
-        allowed.append(self.robot.AS)
+        allowed.append(self.robot.cluster_id)
         for n in self.robot.neighbors:
-            if n.superAS == self.robot.superAS:
-                if not n.AS in allowed:
-                    allowed.append(n.AS)
+            if n.super_cluster_id == self.robot.super_cluster_id:
+                if not n.cluster_id in allowed:
+                    allowed.append(n.cluster_id)
         return allowed
 
     def __closestNeighbor(self):
@@ -51,11 +46,11 @@ class PhaseFive(ph.Phase):
 
     def update(self):
         self.just_dbg()
-        self.robot.broadcast["superAS"] = self.robot.superAS
+        self.robot.broadcast["superAS"] = self.robot.super_cluster_id
 
     def check_phase(self):
         robot = self.robot
-        for m in robot.messages:
+        for m in robot.received_messages:
             if "Phase" in m.keys():
                 if m["Phase"] >= 4:
                     self.AS = m["AS"]

@@ -1,9 +1,3 @@
-import sys
-import numpy as np
-import pygame as pg
-import math
-import Simulation as sim
-import SpotNeighbor as spot
 from abc import ABC, abstractmethod
 
 

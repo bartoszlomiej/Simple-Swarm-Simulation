@@ -1,5 +1,5 @@
-from Robot import Robot
-import SpotNeighbor as spot
+from simulation.robot.Robot import Robot
+from src.utils import SpotNeighbor as spot
 
 r = Robot(200, 200, 1080, 720, [1, 1], 55)
 n1 = Robot(225, 200, 1080, 720, [1, 1], 55)
@@ -9,10 +9,10 @@ n3 = Robot(220, 180, 1080, 720, [1, 1], 55)
 r.neighbors.append(n1)
 r.neighbors.append(n2)
 r.neighbors.append(n3)
-r.AS = 1
-n1.AS = 1
-n2.AS = 1
-n3.AS = 3
+r.cluster_id = 1
+n1.cluster_id = 1
+n2.cluster_id = 1
+n3.cluster_id = 3
 for i in range(18):
     print(spot.check_line(r, i, 19, 55))
 print(r.find_direction())

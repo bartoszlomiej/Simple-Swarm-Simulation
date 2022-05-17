@@ -1,36 +1,33 @@
-import sys
-import numpy as np
 import pygame as pg
 import math
-import Simulation as sim
-import SpotNeighbor as spot
-import phase as ph
-import phaseone as ph1
-import phasetwo as ph2
-import phasefour as ph4
-import lattice as lt
+from utils import SpotNeighbor as spot
+from simulation.phases.phase import Phase
+import simulation.phases.phaseone as ph1
+import simulation.phases.phasetwo as ph2
+from simulation.robot import RobotState
+from simulation.robot.Velocity import Velocity
 
 
-class PhaseThree(ph.Phase):
+class PhaseThree(Phase):
     def __init__(self, Robot, superAS):
         super().__init__(Robot)
         self.phase = 3
-        self.robot.superAS = superAS
+        self.robot.super_cluster_id = superAS
         self.isIncreased = False
         self.timerSet = False
-        self.robot.velocity = [0, 0]
-        self.robot.state = "stopped"
+        self.robot.velocity = Velocity(0, 0)
+        self.robot.state = RobotState.STOPPED
 
     def __allowedAS(self):
         '''
         Returns the AS's that are in the same superAS that can be spot by the given robot.
         '''
         allowed = []
-        allowed.append(self.robot.AS)
+        allowed.append(self.robot.cluster_id)
         for n in self.robot.neighbors:
-            if n.superAS == self.robot.superAS:
-                if not n.AS in allowed:
-                    allowed.append(n.AS)
+            if n.super_cluster_id == self.robot.super_cluster_id:
+                if not n.cluster_id in allowed:
+                    allowed.append(n.cluster_id)
         return allowed
 
     def __closestNeighborAS(self):
@@ -38,37 +35,36 @@ class PhaseThree(ph.Phase):
         Returns the closest neighbor's AS that in the same superAS.
         '''
         allowedAS = self.__allowedAS()
-        best_neighbor, best_rd = spot.find_best_neighbor(
-            self.robot, True, allowedAS)
+        best_neighbor, best_rd = spot.find_best_neighbor(self.robot, True, allowedAS)
         if not best_neighbor:
-            return None  #The leader don't have the best neighbor
+            return None #The leader don't have the best neighbor
         else:
-            return best_neighbor.AS
+            return best_neighbor.cluster_id
 
     def __countToTwo(self):
         '''
         Polish equivalent is "Do dwóch odlicz" - every second robot updates it's local AS to be equal AS + 1.
         '''
         previous_AS = self.__closestNeighborAS()
-        if not previous_AS:  #only leader should not have a previous AS
+        if not previous_AS: #only leader should not have a previous AS
             if not self.timerSet:
-                self.robot.set_timer(20, False)
+                self.robot.setTimer(20)
                 self.timerSet = True
             else:
-                self.robot.timer = (self.robot.timer[0], self.robot.timer[1] - 1, self.robot.timer[2])
-                if self.robot.timer[1] < 0:
-                    self.upgrade(4, self.robot.superAS)
+                self.robot.timer.tick()
+                if self.robot.timer.duration < 0:
+                    self.upgrade(4, self.robot.super_cluster_id)
             return
-        if previous_AS == self.robot.AS:
+        if previous_AS == self.robot.cluster_id:
             if not self.isIncreased:
-                self.robot.AS += 100 #creation of the new AS
+                self.robot.cluster_id += 100 #creation of the new AS
                 self.isIncreased = True
             else:
-                self.robot.AS -= 100
+                self.robot.cluster_id -= 100
                 self.isIncreased = False
         else:
             robot = self.robot
-            check_me = robot.AS
+            check_me = robot.cluster_id
             red = check_me % 256
             green = math.floor(check_me / 4) % 256
             blue = math.floor(math.sqrt(check_me)) % 256
@@ -80,17 +76,17 @@ class PhaseThree(ph.Phase):
     def update(self):
         self.check_phase()
         self.__countToTwo()
-        self.robot.velocity[0] = 0
-        self.robot.velocity[1] = 0
-        self.robot.broadcast["superAS"] = self.robot.superAS
+        self.robot.velocity.x = 0
+        self.robot.velocity.y = 0
+        self.robot.broadcast["superAS"] = self.robot.super_cluster_id
         
     def check_phase(self):
         robot = self.robot
-        for m in robot.messages:
+        for m in robot.received_messages:
             if "Phase" in m.keys():
                 if m["Phase"] >= 4:
-                    robot.broadcast["superAS"] = self.robot.superAS
-                    self.upgrade(m["Phase"], self.robot.superAS)
+                    robot.broadcast["superAS"] = self.robot.super_cluster_id
+                    self.upgrade(m["Phase"], self.robot.super_cluster_id)
                     return
                 
     def upgrade(self, next_phase=4, superAS=None):
@@ -101,6 +97,5 @@ class PhaseThree(ph.Phase):
             self.robot.faza = ph1.PhaseOneAndHalf(self.robot)
         elif next_phase == 2:
             self.robot.faza = ph2.PhaseTwo(self.robot)
-        elif next_phase == 4:
-            self.robot.faza = lt.Lattice(self.robot, superAS)
+        #        elif next_phase == 4:
         #            self.robot.faza = ph4.PhaseFour(self.robot, superAS)

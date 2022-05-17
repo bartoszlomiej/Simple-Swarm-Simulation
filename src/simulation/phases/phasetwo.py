@@ -1,15 +1,11 @@
-import sys
-import numpy as np
-import pygame as pg
-import math
-import Simulation as sim
-import SpotNeighbor as spot
-import phase as ph
-import phaseone as ph1
-import phasethree as ph3
+from simulation.phases.phase import Phase
+import simulation.phases.phaseone as ph1
+import simulation.phases.phasethree as ph3
+from simulation.robot import RobotState
+from utils import SpotNeighbor as spot
 
 
-class PhaseTwo(ph.Phase):
+class PhaseTwo(Phase):
     def __init__(self, Robot):
         super().__init__(Robot)
         self.phase = 2
@@ -19,11 +15,11 @@ class PhaseTwo(ph.Phase):
 
     def collective_movement(self):
         '''
-        Transition from the state "stopped" to "moving" and runing the movement function
+        Transition from the state RobotState.STOPPED to RobotState.MOVING and runing the movement function
         #to be removed in the future.
         '''
         robot = self.robot
-        if robot.state != "moving":
+        if robot.state != RobotState.MOVING:
             self.initial_direction()
         else:
             self.movement()
@@ -34,8 +30,8 @@ class PhaseTwo(ph.Phase):
         '''
         robot = self.robot
         self.leader_follower()
-        robot.velocity[0] = robot.dir_x  # * 0.5
-        robot.velocity[1] = robot.dir_y  # * 0.5
+        robot.velocity.x = robot.dir_x  # * 0.5
+        robot.velocity.y = robot.dir_y  # * 0.5
         '''
         Leader/follower
         '''
@@ -45,9 +41,9 @@ class PhaseTwo(ph.Phase):
         Sets the initial direction for all robots in the AS
         '''
         robot = self.robot
-        robot.state = "moving"
-        robot.velocity[0] = robot.dir_x
-        robot.velocity[1] = robot.dir_y
+        robot.state = RobotState.MOVING
+        robot.velocity.x = robot.dir_x
+        robot.velocity.y = robot.dir_y
 
         self.leader_follower()
 
@@ -93,7 +89,7 @@ class PhaseTwo(ph.Phase):
         '''
         a, b, d = spot.direction_line_equation(self.robot)
         for n in self.robot.neighbors:
-            if n.AS == self.robot.AS:
+            if n.cluster_id == self.robot.cluster_id:
                 if not spot.neighbor_check(self.robot, n, a, b, d):
                     return False
         return True
@@ -105,14 +101,14 @@ class PhaseTwo(ph.Phase):
         '''
         robot = self.robot
         for n in robot.neighbors:
-            if (abs(n.position[0] - robot.position[0]) <= robot.radius) and (
-                    abs(n.position[1] - robot.position[1]) <= robot.radius):
+            if (abs(n.position.x - robot.position.x) <= robot.radius) and (
+                    abs(n.position.y - robot.position.y) <= robot.radius):
                 return False
         return True
 
     def check_phase(self):
         robot = self.robot
-        for m in robot.messages:
+        for m in robot.received_messages:
             if "Phase" in m.keys():
                 if m["Phase"] >= 3:
                     superAS = m["superAS"]

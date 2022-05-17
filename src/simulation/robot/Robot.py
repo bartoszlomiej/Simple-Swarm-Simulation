@@ -1,54 +1,39 @@
-import sys
 import numpy as np
 import pygame as pg
 import math
-import Simulation as sim
-import SpotNeighbor as spot
-import phase as ph
-from phaseone import PhaseOne, PhaseOneAndHalf
+
+from simulation.robot.Timer import Timer
+from utils import SpotNeighbor as spot
+from simulation.phases.phaseone import PhaseOne
+from simulation.robot import RobotState
+from simulation.robot.Velocity import Velocity
+from utils.colors import WHITE, GREEN
 
 
 class Robot(pg.sprite.Sprite):
-    '''
-    The object of the class Robot represents the robot on a board.
-    
-    It inherit from the base class sprite as this class is a basic representation of a character in pygame.
-    '''
-    def __init__(self,
-                 x,
-                 y,
-                 width,
-                 height,
-                 velocity=[0, 0],
-                 s_range=55,
-                 val=4):
+    def __init__(self, position, board_resolution, sensor_range, velocity_level, radius=10):
         super().__init__()
-        '''
-        Creates a robot on board with the initial coordinates (x, y) and the given velocity.
-        '''
-        self.x = x
-        self.y = y
-        self.radius = 10
-        self.width = width
-        self.height = height
-        self.s_range = s_range
-        self.k = math.ceil(
-            math.ceil(2 * np.pi * self.s_range) / (2 * self.radius))
-        self.neighbors = []
-        self.in_range_robots = 0
-        self.iterator = 0
-        self.messages = []  #obtained messages from other robots
-        self.broadcast = {}  #messages to be broadcast
-        '''
-        Broadcast messages are the dictionary -> {msg_type : msg_value}
-        Messages are the list of gather broadcasts from the neighbors
-        It is assumed that it doesn't matter which robot place the massage
-        '''
-        self.AS = None
-        self.superAS = None
-        self.joined = True  #indicates if the AS was created by us or not
 
-        self.timer = (-1, -1, 0)
+        self.position = position
+        self.board_resolution = board_resolution
+        self.sensor_range = sensor_range
+        self.velocity = Velocity.generateRandom(velocity_level)
+        self.velocity_level = velocity_level
+        self.radius = radius
+
+        self.detected_robots_number = 0
+        self.iterator = 0
+
+        self.sensors_number = self.calculate_sensors_number(sensor_range, radius)
+        self.neighbors = []
+        self.received_messages = []
+        self.broadcast = {}
+
+        self.cluster_id = None
+        self.super_cluster_id = None
+        self.joined_to_cluster = True  # indicates if the AS was created by us or not
+
+        self.timer = Timer(-1, -1, 0)
         '''
         It is important to posses the AS number -> if it changes than timer must immediately stop!
         tuple (AS number, timer_value, number_of_neighbors)
@@ -56,91 +41,83 @@ class Robot(pg.sprite.Sprite):
         '''
 
         self.image = pg.Surface([self.radius * 2, self.radius * 2])
-        self.image.fill((255, 255, 255))  #background color (white)
+        self.image.fill(WHITE)  # background color (white)
 
-        pg.draw.circle(self.image, (50, 150, 50), (self.radius, self.radius),
-                       self.radius)  #(50, 150, 50) - GREEN
+        pg.draw.circle(self.image, GREEN, (self.radius, self.radius), self.radius)
 
         self.rect = self.image.get_rect()
-        self.position = np.array([x, y], dtype=np.float64)
-        self.velocity = np.asarray(velocity, dtype=np.float64)
         self.moved = False
 
-        self.ap = None  #JUST FOR DBG
+        self.ap = None  # JUST FOR DBG
 
-        #for the sake of changing direction
+        # for the sake of changing direction
         self.dir_x = 0
         self.dir_y = 0
         self.sensors = []
         self.S = []
 
-        self.state = "moving"  #initially robots move (just for aggregation algorithm)
+        self.state = RobotState.MOVING  # initially robots move (just for aggregation algorithm)
         self.waiting = False
 
-        if not self.k % 2:
-            self.k += 1
+        if not self.sensors_number % 2:
+            self.sensors_number += 1
         self.initialize_sensors()
-        self.val = val
         self.faza = PhaseOne(self)
 
     def update(self):
         '''
         Updates the robot position on board, as well as it's state. Necessary behaviors are to be applied here.
         '''
-        self.position += self.velocity
-        x, y = self.position
+        self.position.moveBy(self.velocity)
         self.moved = False
 
         self.update_msg()
 
-        #place for the swarm behaviors
-        #First phase bahaviors:
+        # place for the swarm behaviors
+        # First phase bahaviors:
 
         self.clear_broadcast()
         self.faza.update()
 
-        #boundary parameters
-        if x < 0 or x > self.width - 2 * self.radius:
-            if self.faza.phase == 2:  #just for dbg
+        # boundary parameters
+        if self.position.x < 0 or self.position.x > self.board_resolution.width - 2 * self.radius:
+            if self.faza.phase == 2:  # just for dbg
                 self.broadcast["Return"] = -self.dir_x, -self.dir_y
                 self.dir_x, self.dir_y = -self.dir_x, -self.dir_y
                 #                self.velocity = [0, 0]
-            self.velocity[0] = -self.velocity[0]
-        if y < 0 or y > self.height - 2 * self.radius:
-            if self.faza.phase == 2:  #just for dbg
+            self.velocity.x = -self.velocity.x
+        if self.position.y < 0 or self.position.y > self.board_resolution.height - 2 * self.radius:
+            if self.faza.phase == 2:  # just for dbg
                 self.broadcast["Return"] = -self.dir_x, -self.dir_y
                 self.dir_x, self.dir_y = -self.dir_x, -self.dir_y
                 #                self.velocity = [0, 0]
-            self.velocity[1] = -self.velocity[1]
-            
-        self.broadcast["Phase"] = self.faza.phase  #always broadcast the phase
-        self.broadcast["AS"] = self.AS
+            self.velocity.y = -self.velocity.y
+
+        self.broadcast["Phase"] = self.faza.phase  # always broadcast the phase
+        self.broadcast["AS"] = self.cluster_id
         if self.faza.phase > 2:
-            self.broadcast["superAS"] = self.superAS
+            self.broadcast["superAS"] = self.super_cluster_id
 
-        self.neighbors.clear(
-        )  #list of neighbors must be refreshed in each update
-        self.in_range_robots = 0
+        self.neighbors.clear()  # list of neighbors must be refreshed in each update
+        self.detected_robots_number = 0
 
-        self.rect.x = x
-        self.rect.y = y
-        self.x = int(x)
-        self.y = int(y)
+        self.rect.x = self.position.x
+        self.rect.y = self.position.y
 
     def initialize_sensors(self):
         '''
         Calculates a slope for each sensor. This is important due to optimization.
         '''
-        for i in range(1, self.k):
-            a = spot.calculate_slope(0, 0, spot.calc_x(i, self.radius, self.k),
-                                 spot.calc_y(i, self.radius, self.k))
+        for i in range(1, self.sensors_number):
+            a = spot.calculate_slope(0, 0, spot.calc_x(i, self.radius, self.sensors_number),
+                                     spot.calc_y(i, self.radius, self.sensors_number))
             self.sensors.append(a)
 
     def sensorFunction(self, i):
         '''
         Returns the b in y = ax + b function from the current position of the robot.
         '''
-        return (self.y - self.sensors[i] * self.x)
+        return (self.position.y - self.sensors[i] * self.position.x)
 
     def spotted(self, r):
         '''
@@ -152,8 +129,7 @@ class Robot(pg.sprite.Sprite):
         '''
         Returns the number of neighbors that are in given range
         '''
-        self.in_range_robots = self.in_range_robots + 1
-
+        self.detected_robots_number = self.detected_robots_number + 1
 
     def is_allone(self):
         '''
@@ -163,64 +139,59 @@ class Robot(pg.sprite.Sprite):
             self.faza = PhaseOne(self)
             return
         for n in self.neighbors:
-            if self.AS == n.AS:
+            if self.cluster_id == n.cluster_id:
                 return
         if not spot.is_collision_distance(self):
             self.faza = PhaseOne(self)
 
     def update_msg(self):
-        self.messages.clear()
+        self.received_messages.clear()
         for n in self.neighbors:
-            self.messages.append(n.broadcast)
+            self.received_messages.append(n.broadcast)
 
     def clear_broadcast(self):
         self.broadcast.clear()
-        self.broadcast["AS"] = self.AS
+        self.broadcast["AS"] = self.cluster_id
 
     def update_color(self):
         '''
         Mathematical operations are performed in order to get nicer colors
         '''
-        red = self.AS % 256
-        green = math.floor(self.AS / 4) % 256
-        blue = math.floor(math.sqrt(self.AS)) % 256
+        red = self.cluster_id % 256
+        green = math.floor(self.cluster_id / 4) % 256
+        blue = math.floor(math.sqrt(self.cluster_id)) % 256
         color = (red, green, blue)
         pg.draw.circle(self.image, color, (self.radius, self.radius),
                        self.radius)
 
     def create_AS(self):
-        self.AS = np.random.randint(
-            0, 65025)  #arbitrary number to be changed in the future
-        self.broadcast['AS'] = self.AS
+        self.cluster_id = np.random.randint(
+            0, 65025)  # arbitrary number to be changed in the future
+        self.broadcast['AS'] = self.cluster_id
         self.update_color()
 
     def get_AS(self):
         votes = {}
         remain = False
-        for m in self.messages:
+        for m in self.received_messages:
             if 'AS' in m.keys():
                 if not m['AS'] in votes:
                     votes[m['AS']] = 1
-                    if m['AS'] == self.AS:  #don't change AS if you can still spot your colleagues
+                    if m['AS'] == self.cluster_id:  # don't change AS if you can still spot your colleagues
                         remain = True
                 else:
                     votes[m['AS']] = votes[m['AS']] + 1
-        if not votes:  #or remain:
+        if not votes:  # or remain:
             return None
         k = list(votes.keys())
         v = list(votes.values())
-        return k[v.index(max(v))]  #getting the AS that is most common nearby
+        return k[v.index(max(v))]  # getting the AS that is most common nearby
 
-    def set_timer(self, t_min=1000, random=True, t_max=2000):
-        '''
-        Set the timer. if random is set to True, then the random time (from t_min to t_max) will be chosen
-        Otherwise, the t_min value will be set
-        '''
-        if random:
-            self.timer = (self.AS, np.random.randint(t_min, t_max),
-                          len(self.neighbors))
-        else:
-            self.timer = (self.AS, t_min, len(self.neighbors))
+    def setTimer(self, duration):
+        self.timer = Timer(self.cluster_id, duration, len(self.neighbors))
+
+    def setRandomTimer(self, duration_from=1000, duration_to=2000):
+        self.timer = Timer.generateRandom(self.cluster_id, duration_from, duration_to, len(self.neighbors))
 
     def find_direction(self):
         '''
@@ -231,19 +202,19 @@ class Robot(pg.sprite.Sprite):
         S = self.S
         S.clear()
         radius = int(
-            self.s_range *
-            1.4141)  #in simulation the range is not a circuit - it is a square
+            self.sensor_range *
+            1.4141)  # in simulation the range is not a circuit - it is a square
 
-        for i in range(1, self.k):
-            S.append(False)  #initial data, for the purpouse of chain
+        for i in range(1, self.sensors_number):
+            S.append(False)  # initial data, for the purpouse of chain
         S.append(spot.check_x0_line(self, radius))
-        for i in range(self.k - 1):
-            si = spot.check_line(self, i, self.k, radius)
+        for i in range(self.sensors_number - 1):
+            si = spot.check_line(self, i, self.sensors_number, radius)
             #            si = spot.check_line(self, i + 1, self.k, radius)
             S[i] = si
             if si:
                 continue
-        chain = (0, 0)  #pair -> [index, chain_lenght]
+        chain = (0, 0)  # pair -> [index, chain_lenght]
         longest_chain = (0, 0)
         iterator = 0
         '''
@@ -252,7 +223,7 @@ class Robot(pg.sprite.Sprite):
         0 - is false, 1 - is true
         Then in order to find best direction, one should treat table as a ring.
         '''
-        for i in S:  #finding free chain
+        for i in S:  # finding free chain
             if not i:
                 if chain[0] == iterator - 1:
                     chain = (iterator, chain[1] + 1)
@@ -268,13 +239,13 @@ class Robot(pg.sprite.Sprite):
             if direction == 0:
                 return 0, 1
         else:
-            #There is a need to change the leader
+            # There is a need to change the leader
             if self.dir_x != 0 and self.dir_y != 0:
                 self.broadcast["Return"] = -self.dir_x, -self.dir_y
             return -self.dir_x, -self.dir_y
 
-        return (spot.calc_x(direction, 100, self.k) / 100,
-                spot.calc_y(direction, 100, self.k) / 100)
+        return (spot.calc_x(direction, 100, self.sensors_number) / 100,
+                spot.calc_y(direction, 100, self.sensors_number) / 100)
 
     def __threeStateReturn(self, m):
         '''
@@ -284,14 +255,14 @@ class Robot(pg.sprite.Sprite):
         Parameters:
         m - message
         '''
-        if "Return" in m.keys() and m["AS"] == self.AS and not self.waiting:
+        if "Return" in m.keys() and m["AS"] == self.cluster_id and not self.waiting:
             if m["Return"][0] == 0 and m["Return"][1] == 0:
                 return False
             self.broadcast["Return"] = m["Return"]
             self.dir_x = m["Return"][0]
             self.dir_y = m["Return"][1]
             return True
-        elif "Return" in m.keys() and m["AS"] == self.AS and self.waiting:
+        elif "Return" in m.keys() and m["AS"] == self.cluster_id and self.waiting:
             self.broadcast["Waiting"] = self.waiting
             self.dir_x = m["Return"][0]
             self.dir_y = m["Return"][1]
@@ -299,23 +270,26 @@ class Robot(pg.sprite.Sprite):
                 return True
             self.broadcast["Return"] = m["Return"]
             return True
-        elif not "Return" in m.keys() and m["AS"] == self.AS and "Waiting" in m.keys():
-             return False
-         
+        elif not "Return" in m.keys() and m["AS"] == self.cluster_id and "Waiting" in m.keys():
+            return False
+
     def follower_msg(self):
         '''
         Gets the route given by the leader.
         '''
         buffer_wait = False
-        for m in self.messages:
+        for m in self.received_messages:
             if self.__threeStateReturn(m):
                 buffer_wait = True
             if "Return" in m.keys():
                 continue
-            if "Direction" in m.keys() and m["AS"] == self.AS:
+            if "Direction" in m.keys() and m["AS"] == self.cluster_id:
                 if m["Direction"][0] == 0 and m["Direction"][1] == 0:
                     continue
                 self.broadcast["Direction"] = m["Direction"]
                 self.dir_x = m["Direction"][0]
                 self.dir_y = m["Direction"][1]
         self.waiting = buffer_wait
+
+    def calculate_sensors_number(self, sensor_range, radius):
+        return math.ceil(math.ceil(2 * np.pi * sensor_range) / (2 * radius))
