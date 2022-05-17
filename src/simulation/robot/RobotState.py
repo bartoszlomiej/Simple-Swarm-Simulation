@@ -1,0 +1,3 @@
+MOVING = 1
+WAITING = 2
+STOPPED = 3

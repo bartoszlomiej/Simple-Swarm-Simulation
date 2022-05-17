@@ -1,25 +1,20 @@
-import sys
-import numpy as np
 import pygame as pg
 import math
-import Simulation as sim
-import SpotNeighbor as spot
-import phase as ph
-import phaseone as ph1
-import phasetwo as ph2
-import phasethree as ph3
-import phasefive as ph5
+from utils import SpotNeighbor as spot
+from simulation.phases.phase import Phase
+import simulation.phases.phaseone as ph1
+import simulation.phases.phasetwo as ph2
+import simulation.phases.phasethree as ph3
+import simulation.phases.phasefive as ph5
 
 
-class Lattice(ph.Phase):
+class Lattice(Phase):
     def __init__(self, Robot, superAS):
         super().__init__(Robot)
         self.phase = 4
-        self.robot.superAS = superAS
+        self.robot.super_cluster_id = superAS
         self.dir_x = self.robot.dir_x  #just for dbg
         self.dir_y = self.robot.dir_y  #just for dbg
-        self.robot.velocity = [0, 0]
-        self.robot.state = "stopped"
 
     def __checkPriority(self):
         '''
@@ -29,46 +24,12 @@ class Lattice(ph.Phase):
         neighbor = self.__closestNeighbor()
         if not neighbor:  #leader doesn't have neighbors
             return
-        if neighbor.AS < self.robot.AS:
+        if neighbor.AS < self.robot.cluster_id:
             self.__higherPriority(neighbor)
         else:
             self.__lowerPriority()
-        self.robot.velocity[0] = self.robot.dir_x  # * 0.5
-        self.robot.velocity[1] = self.robot.dir_y  # * 0.5
-
-    def __keepDistance(self, neighbor):
-        '''
-        Keeps distance to the given neighbor
-        '''
-        rd = spot.relative_distance(self.robot.x, self.robot.y, neighbor.x,
-                                    neighbor.y)
-        epsilon = 5
-        if rd > self.robot.radius * 2 + epsilon:
-            spot.follower(self.robot, neighbor)
-            return True
-        return False
-
-    def __rownajWPrawo(self):
-        neighbor = self.__closestNeighbor(False)
-        if not neighbor:
-            neighbor = self.__closestNeighbor()
-            if neighbor:
-                self.__keepDistance(neighbor)
-                return
-            robot = self.robot
-            BLACK = (0, 0, 0)
-            pg.draw.circle(robot.image, BLACK, (robot.radius, robot.radius),
-                           robot.radius)
-            self.robot.find_direction()
-            self.robot.velocity[0] = 0
-            self.robot.velocity[1] = 0
-            return  #it should never happen - invastigate it if necessary
-
-        if not self.__keepDistance(neighbor):
-            self.__perpendicularDirection(neighbor)
-            return
-        self.robot.velocity[0] = self.robot.dir_x
-        self.robot.velocity[1] = self.robot.dir_y
+        self.robot.velocity.x = self.robot.dir_x  # * 0.5
+        self.robot.velocity.y = self.robot.dir_y  # * 0.5
 
     def __perpendicularDirection(self, neighbor):
         '''
@@ -76,30 +37,17 @@ class Lattice(ph.Phase):
 
         Ax + By = 0 - initial direction from the direction_to_neighbor
         Bx - Ay = 0 - perpendicular to the above line
-
-        vector = math.ceil(self.robot.k / 4)
-        delta_x = (neighbor.x - self.robot.x
+        '''
+        vector = math.ceil(self.robot.sensors_number / 4)
+        delta_x = (neighbor.position.x - self.robot.position.x
                    )  #it must be greater than 0 - robots cannot overlap
-        delta_y = (neighbor.y - self.robot.y)
+        delta_y = (neighbor.position.y - self.robot.position.y)
 
         suma = math.sqrt(delta_x**2 + delta_y**2)
 
         self.robot.dir_x = delta_y / suma
         self.robot.dir_y = -delta_x / suma
         #        return dir_x, dir_y  #collision avoidance must be implemented!!!
-        '''
-        spot.follower(self.robot, neighbor)
-
-        delta_x = (self.robot.ap[0] - self.robot.x)
-        delta_y = (self.robot.ap[1] - self.robot.y)
-
-        if delta_x < 0:
-            self.robot.dir_x *= -1
-        if delta_y > 0:
-            self.robot.dir_y *= -1
-
-        #        dir_x, dir_y = 0, 0
-        return
 
     def __higherPriority(self, neighbor):
         '''
@@ -119,24 +67,23 @@ class Lattice(ph.Phase):
         spot.follower(self.robot)
         pass
 
-    def __allowedAS(self, myAS=True):
+    def __allowedAS(self):
         '''
         Returns the AS's that are in the same superAS that can be spot by the given robot.
         '''
         allowed = []
-        if myAS:
-            allowed.append(self.robot.AS)
+        allowed.append(self.robot.cluster_id)
         for n in self.robot.neighbors:
-            if n.superAS == self.robot.superAS:
-                if not n.AS in allowed:
-                    allowed.append(n.AS)
+            if n.super_cluster_id == self.robot.super_cluster_id:
+                if not n.cluster_id in allowed:
+                    allowed.append(n.cluster_id)
         return allowed
 
-    def __closestNeighbor(self, myAS=True):
+    def __closestNeighbor(self):
         '''
-        Returns the closest neighbor that is in the same superAS.
+        Returns the closest neighbor's AS that is in the same superAS.
         '''
-        allowedAS = self.__allowedAS(myAS)
+        allowedAS = self.__allowedAS()
         best_neighbor, best_rd = spot.find_best_neighbor(
             self.robot, True, allowedAS)
         if not best_neighbor:
@@ -149,8 +96,13 @@ class Lattice(ph.Phase):
         Checks if the minimal distance between robots is being kept.
         Returns true if minimal distance is being kept; otherwise returns false.
         '''
-        if spot.is_any_collision(self.robot, 5, True):
-            self.robot.velocity = [0, 0]
+        robot = self.robot
+        for n in robot.neighbors:
+            if (abs(n.position.x - robot.position.x) <= robot.radius) and (
+                    abs(n.position.y - robot.position.y) <= robot.radius):
+                robot.dir_x, robot.dir_y = 0, 0
+                return
+        return
 
     def just_dbg(self):
         robot = self.robot
@@ -159,20 +111,14 @@ class Lattice(ph.Phase):
                        robot.radius)
 
     def update(self):
-        #        self.__checkPriority()
-        if self.robot.AS != self.robot.superAS:
-            self.__rownajWPrawo()
-        else:
-            self.robot.velocity[0], self.robot.velocity[1] = 0, 0
-
+        self.__checkPriority()
         self.__minimal_distance()
-
         self.robot.broadcast["Direction"] = (self.dir_x, self.dir_y)
-        self.robot.broadcast["superAS"] = self.robot.superAS
+        self.robot.broadcast["superAS"] = self.robot.super_cluster_id
 
     def check_phase(self):
         robot = self.robot
-        for m in robot.messages:
+        for m in robot.received_messages:
             if "Phase" in m.keys():
                 if m["Phase"] >= 4:
                     self.AS = m["AS"]

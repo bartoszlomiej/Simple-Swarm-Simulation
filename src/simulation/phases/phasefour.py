@@ -1,21 +1,19 @@
-import sys
-import numpy as np
 import pygame as pg
 import math
-import Simulation as sim
-import SpotNeighbor as spot
-import phase as ph
-import phaseone as ph1
-import phasetwo as ph2
-import phasethree as ph3
-import phasefive as ph5
+from utils import SpotNeighbor as spot
+
+from simulation.phases.phase import Phase
+import simulation.phases.phaseone as ph1
+import simulation.phases.phasetwo as ph2
+import simulation.phases.phasethree as ph3
+import simulation.phases.phasefive as ph5
 
 
-class PhaseFour(ph.Phase):
+class PhaseFour(Phase):
     def __init__(self, Robot, superAS):
         super().__init__(Robot)
         self.phase = 4
-        self.robot.superAS = superAS
+        self.robot.super_cluster_id = superAS
         self.dir_x = self.robot.dir_x  #just for dbg
         self.dir_y = self.robot.dir_y  #just for dbg
 
@@ -27,12 +25,12 @@ class PhaseFour(ph.Phase):
         neighbor = self.__closestNeighbor()
         if not neighbor:  #leader doesn't have neighbors
             return
-        if neighbor.AS < self.robot.AS:
+        if neighbor.AS < self.robot.cluster_id:
             self.__higherPriority(neighbor)
         else:
             self.__lowerPriority()
-        self.robot.velocity[0] = self.robot.dir_x  # * 0.5
-        self.robot.velocity[1] = self.robot.dir_y  # * 0.5
+        self.robot.velocity.x = self.robot.dir_x  # * 0.5
+        self.robot.velocity.y = self.robot.dir_y  # * 0.5
 
     def __perpendicularDirection(self, neighbor):
         '''
@@ -41,10 +39,10 @@ class PhaseFour(ph.Phase):
         Ax + By = 0 - initial direction from the direction_to_neighbor
         Bx - Ay = 0 - perpendicular to the above line
         '''
-        vector = math.ceil(self.robot.k / 4)
-        delta_x = (neighbor.x - self.robot.x
+        vector = math.ceil(self.robot.sensors_number / 4)
+        delta_x = (neighbor.position.x - self.robot.position.x
                    )  #it must be greater than 0 - robots cannot overlap
-        delta_y = (neighbor.y - self.robot.y)
+        delta_y = (neighbor.position.y - self.robot.position.y)
 
         suma = math.sqrt(delta_x**2 + delta_y**2)
 
@@ -75,11 +73,11 @@ class PhaseFour(ph.Phase):
         Returns the AS's that are in the same superAS that can be spot by the given robot.
         '''
         allowed = []
-        allowed.append(self.robot.AS)
+        allowed.append(self.robot.cluster_id)
         for n in self.robot.neighbors:
-            if n.superAS == self.robot.superAS:
-                if not n.AS in allowed:
-                    allowed.append(n.AS)
+            if n.super_cluster_id == self.robot.super_cluster_id:
+                if not n.cluster_id in allowed:
+                    allowed.append(n.cluster_id)
         return allowed
 
     def __closestNeighbor(self):
@@ -101,8 +99,8 @@ class PhaseFour(ph.Phase):
         '''
         robot = self.robot
         for n in robot.neighbors:
-            if (abs(n.position[0] - robot.position[0]) <= robot.radius) and (
-                    abs(n.position[1] - robot.position[1]) <= robot.radius):
+            if (abs(n.position.x - robot.position.x) <= robot.radius) and (
+                    abs(n.position.y - robot.position.y) <= robot.radius):
                 robot.dir_x, robot.dir_y = 0, 0
                 return
         return
@@ -117,11 +115,11 @@ class PhaseFour(ph.Phase):
         self.__checkPriority()
         self.__minimal_distance()
         self.robot.broadcast["Direction"] = (self.dir_x, self.dir_y)
-        self.robot.broadcast["superAS"] = self.robot.superAS
+        self.robot.broadcast["superAS"] = self.robot.super_cluster_id
 
     def check_phase(self):
         robot = self.robot
-        for m in robot.messages:
+        for m in robot.received_messages:
             if "Phase" in m.keys():
                 if m["Phase"] >= 4:
                     self.AS = m["AS"]
