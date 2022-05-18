@@ -1,6 +1,7 @@
 import pygame as pg
 import math
 from utils import SpotNeighbor as spot
+from simulation.robot.Timer import Timer
 from simulation.phases.phase import Phase
 import simulation.phases.phaseone as ph1
 import simulation.phases.phasetwo as ph2

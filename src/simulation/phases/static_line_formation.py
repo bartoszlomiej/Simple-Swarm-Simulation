@@ -7,6 +7,7 @@ import simulation.phases.phasetwo as ph2
 from simulation.robot import RobotState
 from simulation.robot.Velocity import Velocity
 from simulation.robot.Direction import Direction
+
 import simulation.phases.merge_clusters_to_static_line as mg
 
 
@@ -65,12 +66,11 @@ class StaticLineFormation(Phase):
             if self.checkAngle(closest_neighbor, self.robot,
                                opposite_neighbor) > 90.0:
                 return opposite_neighbor, distance
-
+              
             self.same_cluster_neighbors.remove(opposite_neighbor)
 
         self.upgrade(3, self.robot.super_cluster_id)
         return None, 0
-
     def changeClosestRobot(self, closest_neighbor):
         self.same_cluster_neighbors.remove(closest_neighbor)
         self.insideRobotFunctionallity()
