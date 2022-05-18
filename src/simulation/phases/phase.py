@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import math
 
 
 class Phase(ABC):
@@ -8,13 +9,14 @@ class Phase(ABC):
     '''
     def __init__(self, Robot):
         self.robot = Robot
-        
+
     @abstractmethod
     def check_phase(self):
         '''
         If robot in the same AS have higher phase, then we update ours
         '''
         pass
+
     @abstractmethod
     def upgrade(self, next_phase):
         '''
@@ -28,3 +30,15 @@ class Phase(ABC):
         Performes all operations in the given phase
         '''
         pass
+
+    def makeMove(self):
+        self.robot.velocity.x = self.robot.direction.x * self.robot.velocity_level
+        self.robot.velocity.y = self.robot.direction.y * self.robot.velocity_level
+
+    def checkAngle(self, n1, robot, n2):
+        angle = math.atan2(n1.position.y - robot.position.y,
+                           n1.position.x - robot.position.x) - math.atan2(
+                               n2.position.y - robot.position.y,
+                               n2.position.x - robot.position.x)
+
+        return math.degrees(abs(angle))

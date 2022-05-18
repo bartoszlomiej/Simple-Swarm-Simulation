@@ -7,11 +7,17 @@ from utils import SpotNeighbor as spot
 from simulation.phases.phaseone import PhaseOne
 from simulation.robot import RobotState
 from simulation.robot.Velocity import Velocity
+from simulation.robot.Direction import Direction
 from utils.colors import WHITE, GREEN
 
 
 class Robot(pg.sprite.Sprite):
-    def __init__(self, position, board_resolution, sensor_range, velocity_level, radius=10):
+    def __init__(self,
+                 position,
+                 board_resolution,
+                 sensor_range,
+                 velocity_level,
+                 radius=10):
         super().__init__()
 
         self.position = position
@@ -24,7 +30,8 @@ class Robot(pg.sprite.Sprite):
         self.detected_robots_number = 0
         self.iterator = 0
 
-        self.sensors_number = self.calculate_sensors_number(sensor_range, radius)
+        self.sensors_number = self.calculate_sensors_number(
+            sensor_range, radius)
         self.neighbors = []
         self.received_messages = []
         self.broadcast = {}
@@ -43,7 +50,8 @@ class Robot(pg.sprite.Sprite):
         self.image = pg.Surface([self.radius * 2, self.radius * 2])
         self.image.fill(WHITE)  # background color (white)
 
-        pg.draw.circle(self.image, GREEN, (self.radius, self.radius), self.radius)
+        pg.draw.circle(self.image, GREEN, (self.radius, self.radius),
+                       self.radius)
 
         self.rect = self.image.get_rect()
         self.moved = False
@@ -51,8 +59,7 @@ class Robot(pg.sprite.Sprite):
         self.ap = None  # JUST FOR DBG
 
         # for the sake of changing direction
-        self.dir_x = 0
-        self.dir_y = 0
+        self.direction = Direction(0, 0)
         self.sensors = []
         self.S = []
 
@@ -82,14 +89,14 @@ class Robot(pg.sprite.Sprite):
         # boundary parameters
         if self.position.x < 0 or self.position.x > self.board_resolution.width - 2 * self.radius:
             if self.faza.phase == 2:  # just for dbg
-                self.broadcast["Return"] = -self.dir_x, -self.dir_y
-                self.dir_x, self.dir_y = -self.dir_x, -self.dir_y
+                self.direction.negate()
+                self.broadcast["Return"] = self.direction
                 #                self.velocity = [0, 0]
             self.velocity.x = -self.velocity.x
         if self.position.y < 0 or self.position.y > self.board_resolution.height - 2 * self.radius:
             if self.faza.phase == 2:  # just for dbg
-                self.broadcast["Return"] = -self.dir_x, -self.dir_y
-                self.dir_x, self.dir_y = -self.dir_x, -self.dir_y
+                self.direction.negate()
+                self.broadcast["Return"] = self.direction
                 #                self.velocity = [0, 0]
             self.velocity.y = -self.velocity.y
 
@@ -98,7 +105,8 @@ class Robot(pg.sprite.Sprite):
         if self.faza.phase > 2:
             self.broadcast["superAS"] = self.super_cluster_id
 
-        self.neighbors.clear()  # list of neighbors must be refreshed in each update
+        self.neighbors.clear(
+        )  # list of neighbors must be refreshed in each update
         self.detected_robots_number = 0
 
         self.rect.x = self.position.x
@@ -109,8 +117,9 @@ class Robot(pg.sprite.Sprite):
         Calculates a slope for each sensor. This is important due to optimization.
         '''
         for i in range(1, self.sensors_number):
-            a = spot.calculate_slope(0, 0, spot.calc_x(i, self.radius, self.sensors_number),
-                                     spot.calc_y(i, self.radius, self.sensors_number))
+            a = spot.calculate_slope(
+                0, 0, spot.calc_x(i, self.radius, self.sensors_number),
+                spot.calc_y(i, self.radius, self.sensors_number))
             self.sensors.append(a)
 
     def sensorFunction(self, i):
@@ -191,7 +200,8 @@ class Robot(pg.sprite.Sprite):
         self.timer = Timer(self.cluster_id, duration, len(self.neighbors))
 
     def setRandomTimer(self, duration_from=1000, duration_to=2000):
-        self.timer = Timer.generateRandom(self.cluster_id, duration_from, duration_to, len(self.neighbors))
+        self.timer = Timer.generateRandom(self.cluster_id, duration_from,
+                                          duration_to, len(self.neighbors))
 
     def find_direction(self):
         '''
@@ -202,8 +212,8 @@ class Robot(pg.sprite.Sprite):
         S = self.S
         S.clear()
         radius = int(
-            self.sensor_range *
-            1.4141)  # in simulation the range is not a circuit - it is a square
+            self.sensor_range * 1.4141
+        )  # in simulation the range is not a circuit - it is a square
 
         for i in range(1, self.sensors_number):
             S.append(False)  # initial data, for the purpouse of chain
@@ -237,15 +247,17 @@ class Robot(pg.sprite.Sprite):
         if longest_chain[1] > (len(S) / 4):
             direction = longest_chain[0] - int(longest_chain[1] / 2)
             if direction == 0:
-                return 0, 1
+                return Direction(0, 1)
         else:
             # There is a need to change the leader
-            if self.dir_x != 0 and self.dir_y != 0:
-                self.broadcast["Return"] = -self.dir_x, -self.dir_y
-            return -self.dir_x, -self.dir_y
+            if self.direction.x != 0 and self.direction.y != 0:
+                self.direction.negate()
+                self.broadcast["Return"] = self.direction
+            return self.direction
 
-        return (spot.calc_x(direction, 100, self.sensors_number) / 100,
-                spot.calc_y(direction, 100, self.sensors_number) / 100)
+        return Direction(
+            spot.calc_x(direction, 100, self.sensors_number) / 100,
+            spot.calc_y(direction, 100, self.sensors_number) / 100)
 
     def __threeStateReturn(self, m):
         '''
@@ -255,22 +267,23 @@ class Robot(pg.sprite.Sprite):
         Parameters:
         m - message
         '''
-        if "Return" in m.keys() and m["AS"] == self.cluster_id and not self.waiting:
-            if m["Return"][0] == 0 and m["Return"][1] == 0:
+        if "Return" in m.keys(
+        ) and m["AS"] == self.cluster_id and not self.waiting:
+            if m["Return"].x == 0 and m["Return"].y == 0:
                 return False
             self.broadcast["Return"] = m["Return"]
-            self.dir_x = m["Return"][0]
-            self.dir_y = m["Return"][1]
+            self.direction = m["Return"]
             return True
-        elif "Return" in m.keys() and m["AS"] == self.cluster_id and self.waiting:
+        elif "Return" in m.keys(
+        ) and m["AS"] == self.cluster_id and self.waiting:
             self.broadcast["Waiting"] = self.waiting
-            self.dir_x = m["Return"][0]
-            self.dir_y = m["Return"][1]
+            self.direction = m["Return"]
             if "Waiting" in m.keys():
                 return True
             self.broadcast["Return"] = m["Return"]
             return True
-        elif not "Return" in m.keys() and m["AS"] == self.cluster_id and "Waiting" in m.keys():
+        elif not "Return" in m.keys(
+        ) and m["AS"] == self.cluster_id and "Waiting" in m.keys():
             return False
 
     def follower_msg(self):
@@ -284,11 +297,10 @@ class Robot(pg.sprite.Sprite):
             if "Return" in m.keys():
                 continue
             if "Direction" in m.keys() and m["AS"] == self.cluster_id:
-                if m["Direction"][0] == 0 and m["Direction"][1] == 0:
+                if m["Direction"].x == 0 and m["Direction"].y == 0:
                     continue
                 self.broadcast["Direction"] = m["Direction"]
-                self.dir_x = m["Direction"][0]
-                self.dir_y = m["Direction"][1]
+                self.direction = m["Direction"]
         self.waiting = buffer_wait
 
     def calculate_sensors_number(self, sensor_range, radius):

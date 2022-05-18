@@ -4,6 +4,7 @@ from simulation.robot import RobotState
 from utils import SpotNeighbor as spot
 from simulation.phases.phase import Phase
 from simulation.robot.Velocity import Velocity
+from simulation.robot.Direction import Direction
 
 import simulation.phases.phaseone as ph1
 import simulation.phases.phasethree as ph3
@@ -51,8 +52,7 @@ class AttractionPoint(Phase):
         '''
         robot = self.robot
         robot.state = RobotState.MOVING
-        robot.velocity.x = robot.dir_x * robot.velocity_level
-        robot.velocity.y = robot.dir_y * robot.velocity_level
+        self.makeMove()
 
         self.leader_follower()
 
@@ -72,10 +72,10 @@ class AttractionPoint(Phase):
             Simply goes in the given direction
             '''
             if spot.is_any_collision(robot, 0.4):
-                robot.dir_x, robot.dir_y =  robot.find_direction()
+                robot.direction = robot.find_direction()
             else:
-                robot.dir_x, robot.dir_y = self.__attract()
-            robot.broadcast["Direction"] = (robot.dir_x, robot.dir_y)
+                robot.direction = self.__attract()
+            robot.broadcast["Direction"] = robot.direction
         else:
             spot.follower(robot)
 
@@ -87,16 +87,16 @@ class AttractionPoint(Phase):
         2) Bias the current direction that robot follows
         '''
         ap = self.__direction_to_attraction_point()
-        
-        v1 = self.robot.dir_x + ap[0] * ap[2]
-        v2 = self.robot.dir_y + ap[1] * ap[2]
-        
+
+        v1 = self.robot.direction.x + ap[0] * ap[2]
+        v2 = self.robot.direction.y + ap[1] * ap[2]
+
         rescale = math.sqrt(v1**2 + v2**2)
         v1 /= rescale
-        v2 /= rescale            
+        v2 /= rescale
 
-        return v1, v2
-    
+        return Direction(v1, v2)
+
     def __direction_to_attraction_point(self):
         '''
         Change the Robot direction to approach the given neighbor.
@@ -105,23 +105,24 @@ class AttractionPoint(Phase):
 
         The closer the robot is to the attraction point the higher is the attraction value.
         '''
-        
+
         delta_x = (self.robot.ap[0] - self.robot.position.x)
         delta_y = (self.robot.ap[1] - self.robot.position.y)
 
-        if not delta_x and not delta_y: #robot catched the attraction point
+        if not delta_x and not delta_y:  #robot catched the attraction point
             return 0, 0, 0
-        
+
         suma = math.sqrt(delta_x**2 + delta_y**2)
         dir_x = delta_x / suma
         dir_y = delta_y / suma
-        
-        attraction_value = 1 - (spot.relative_distance(self.robot.position.x, self.robot.position.y, self.robot.ap[0], self.robot.ap[1])**2)/self.robot.ap[2]
+
+        attraction_value = 1 - (spot.relative_distance(
+            self.robot.position.x, self.robot.position.y, self.robot.ap[0],
+            self.robot.ap[1])**2) / self.robot.ap[2]
         ap_val = 0.00001 if attraction_value < 0 else attraction_value
-        
+
         return (dir_x, dir_y, ap_val)
 
-            
     def minimal_distance(self):
         '''
         Checks if the minimal distance between robots is being kept.
@@ -139,7 +140,8 @@ class AttractionPoint(Phase):
         If phase should be upgraded then upgrade it (leader only)
         '''
         delta = 10
-        if (self.robot.position.x - self.robot.ap[0])**2 + (self.robot.position.y - self.robot.ap[1])**2 <= delta**2:
+        if (self.robot.position.x - self.robot.ap[0])**2 + (
+                self.robot.position.y - self.robot.ap[1])**2 <= delta**2:
             self.upgrade(3, self.robot.cluster_id)
             self.robot.broadcast["superAS"] = self.robot.cluster_id
 
@@ -155,21 +157,15 @@ class AttractionPoint(Phase):
         return True
 
     def __moveIfPathIsFree(self):
-        a, b, d = spot.direction_line_equation(self.robot)
         if not spot.is_any_collision(self.robot, 0.2):
-            self.__makeMove()
+            self.makeMove()
 
-    def __makeMove(self):
-        self.robot.velocity.x = self.robot.dir_x * self.robot.velocity_level
-        self.robot.velocity.y = self.robot.dir_y * self.robot.velocity_level            
-
-            
     def check_phase(self):
         robot = self.robot
         for m in robot.received_messages:
             if "Phase" in m.keys():
                 if m["Phase"] >= 3 and self.__followerStoppingCondition():
-                #if m["Phase"] >= 3: #unlock to make phase 3 work                    
+                    #if m["Phase"] >= 3: #unlock to make phase 3 work
                     superAS = m["superAS"]
                     robot.broadcast["superAS"] = superAS
                     self.upgrade(m["Phase"], superAS)
@@ -182,7 +178,6 @@ class AttractionPoint(Phase):
         self.check_phase()
         self.isPhaseUpgrade()
 
-
     def upgrade(self, next_phase=3, superAS=None):
         '''
         Upgrades the phase to further one.
@@ -193,5 +188,6 @@ class AttractionPoint(Phase):
             if self.robot.cluster_id == superAS:
                 self.robot.faza = st.StaticLineFormation(self.robot, superAS)
             else:
-                self.robot.faza = mg.MergeClustersToStaticLine(self.robot, superAS)
+                self.robot.faza = mg.MergeClustersToStaticLine(
+                    self.robot, superAS)
             #            self.robot.faza = ph3.PhaseThree(self.robot, superAS)

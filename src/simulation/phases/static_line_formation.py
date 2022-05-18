@@ -6,6 +6,7 @@ import simulation.phases.phaseone as ph1
 import simulation.phases.phasetwo as ph2
 from simulation.robot import RobotState
 from simulation.robot.Velocity import Velocity
+from simulation.robot.Direction import Direction
 import simulation.phases.merge_clusters_to_static_line as mg
 
 
@@ -50,12 +51,10 @@ class StaticLineFormation(Phase):
         delta_x = (point_x - self.robot.position.x)
         delta_y = (point_y - self.robot.position.y)
         if not delta_x or not delta_y:
-            self.robot.dir_x = 0
-            self.robot.dir_y = 0
+            self.robot.direction.stop()
             return
         suma = math.sqrt(delta_x**2 + delta_y**2)
-        self.robot.dir_x = delta_x / suma
-        self.robot.dir_y = delta_y / suma
+        self.robot.direction = Direction(delta_x / suma, delta_y / suma)
         self.moveIfPathIsFree()
 
     def findRobotOnOppositeSide(self, closest_neighbor):
@@ -68,10 +67,10 @@ class StaticLineFormation(Phase):
                 return opposite_neighbor, distance
 
             self.same_cluster_neighbors.remove(opposite_neighbor)
-        
+
         self.upgrade(3, self.robot.super_cluster_id)
         return None, 0
-    
+
     def changeClosestRobot(self, closest_neighbor):
         self.same_cluster_neighbors.remove(closest_neighbor)
         self.insideRobotFunctionallity()
@@ -81,14 +80,6 @@ class StaticLineFormation(Phase):
         if not closest_neighbor:
             return
         self.keepDistance(closest_neighbor, distance_to_neighbor)
-
-    def checkAngle(self, n1, robot, n2):
-        angle = math.atan2(n1.position.y - robot.position.y,
-                           n1.position.x - robot.position.x) - math.atan2(
-                               n2.position.y - robot.position.y,
-                               n2.position.x - robot.position.x)
-
-        return math.degrees(abs(angle))
 
     def findClosestNeighbor(self):
         closest_distance = 10000
@@ -108,24 +99,15 @@ class StaticLineFormation(Phase):
                 0.8 *
             (self.robot.sensor_range - self.robot.radius)) + self.robot.radius:
             spot.direction_to_neighbor(self.robot, neighbor)
-            self.robot.dir_x *= -1
-            self.robot.dir_y *= -1
+            self.robot.direction.negate()
             self.moveIfPathIsFree()
 
     def moveIfPathIsFree(self):
-        a, b, d = spot.direction_line_equation(self.robot)
         if not spot.is_any_collision(self.robot):
+            self.robot.direction.normalize()
             self.makeMove()
         else:
-            self.dir_x = 0
-            self.dir_y = 0
-
-    def makeMove(self):
-        while (self.robot.dir_x**2 + self.robot.dir_y**2) > 1:
-            self.robot.dir_x /= 2
-            self.robot.dir_y /= 2
-        self.robot.velocity.x = self.robot.dir_x * self.robot.velocity_level
-        self.robot.velocity.y = self.robot.dir_y * self.robot.velocity_level
+            self.robot.direction.stop()
 
     def getSameClusterMembers(self):
         self.same_cluster_neighbors = []

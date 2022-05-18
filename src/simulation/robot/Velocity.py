@@ -10,6 +10,7 @@ class Velocity:
     def generateRandom(multiplier):
         return Velocity((rand() - 0.5) * multiplier,
                         (rand() - 0.5) * multiplier)
+
     def negate(self):
         self.x = self.x * -1
         self.y = self.y * -1
