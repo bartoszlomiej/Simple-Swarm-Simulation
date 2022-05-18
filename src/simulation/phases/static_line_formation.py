@@ -38,6 +38,8 @@ class StaticLineFormation(Phase):
         )
         opposite_neighbor, opposite_neighbor_distance = self.findRobotOnOppositeSide(
             closest_neighbor)
+        if not opposite_neighbor:
+            return
         self.equalizeDistances(closest_neighbor, opposite_neighbor)
 
     def equalizeDistances(self, closest_neighbor, opposite_neighbor):
@@ -63,18 +65,13 @@ class StaticLineFormation(Phase):
             opposite_neighbor, distance = self.findClosestNeighbor()
             if self.checkAngle(closest_neighbor, self.robot,
                                opposite_neighbor) > 90.0:
-                if not opposite_neighbor:
-                    print("XDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD")
                 return opposite_neighbor, distance
 
             self.same_cluster_neighbors.remove(opposite_neighbor)
-
+        
         self.upgrade(3, self.robot.super_cluster_id)
-        print("BLAD!!!!!!!!!!!!!!!!!!!!!!!!")
-        print("NUMBER OF MEMBERS:", len(self.same_cluster_neighbors))
-        print(self.checkAngle(closest_neighbor, self.robot, opposite_neighbor))
-        print("==============================================================")
-
+        return None, 0
+    
     def changeClosestRobot(self, closest_neighbor):
         self.same_cluster_neighbors.remove(closest_neighbor)
         self.insideRobotFunctionallity()
@@ -173,8 +170,6 @@ class StaticLineFormation(Phase):
         elif next_phase == 2:
             self.robot.faza = ph2.PhaseTwo(self.robot)
         elif next_phase == 3:
-            print("powinienm byc tutaj!!!!!!!")
             self.robot.faza = mg.MergeClustersToStaticLine(self.robot, superAS)
-            print("czy ja jestem tutaj?")
         #        elif next_phase == 4:
         #            self.robot.faza = ph4.PhaseFour(self.robot, superAS)

@@ -1,6 +1,7 @@
 import pygame as pg
 import math
 from utils import SpotNeighbor as spot
+from simulation.robot.Timer import Timer
 from simulation.phases.phase import Phase
 import simulation.phases.phaseone as ph1
 import simulation.phases.phasetwo as ph2
@@ -15,10 +16,9 @@ class MergeClustersToStaticLine(Phase):
         self.phase = 3
         self.robot.super_cluster_id = superAS
         self.isIncreased = False
-        self.timerSet = False
         self.robot.velocity = Velocity(0, 0)
         self.robot.update_color()
-        self.robot.state = RobotState.STOPPED
+        self.robot.state = RobotState.MOVING
 
     def followerFunctionallity(self):
         spot.follower(self.robot)
@@ -125,7 +125,7 @@ class MergeClustersToStaticLine(Phase):
         if not main_cluster_neighbors:
             BLACK = (100, 200, 50)
             pg.draw.circle(self.robot.image, BLACK, (self.robot.radius, self.robot.radius),
-                           self.robot.radius)        
+                           self.robot.radius)
             return
         
         best_neighbor = self.findClosestNeighbor(main_cluster_neighbors)
