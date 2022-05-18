@@ -10,6 +10,7 @@ from simulation.robot.Timer import Timer
 from simulation.robot.Velocity import Velocity
 import simulation.phases.merge_clusters_to_static_line as mg
 
+
 class PhaseOne(Phase):
     def __init__(self, Robot):
         super().__init__(Robot)
@@ -108,13 +109,14 @@ class PhaseOne(Phase):
             return
 
         if robot.cluster_id == robot.timer.cluster_id:
-            if len(robot.neighbors
-                   ) > robot.timer.neighbors_number and robot.state != "Timer phase 1":
+            if len(
+                    robot.neighbors
+            ) > robot.timer.neighbors_number and robot.state != "Timer phase 1":
                 robot.state = RobotState.WAITING  #number of neighbors changed -> we are not border robot
             if robot.state != RobotState.WAITING:
                 robot.timer.tick()
                 if robot.timer.duration < 0:
-                    robot.dir_x, robot.dir_y = robot.find_direction()
+                    robot.direction = robot.find_direction()
                     robot.setRandomTimer()
                     self.upgrade(1.5)
                     robot.state = "Timer phase 1"
@@ -127,13 +129,13 @@ class PhaseOne(Phase):
 
             for m in robot.received_messages:
                 if "Timer phase 1" in m.keys():
-                    if robot.timer.duration > m["Timer phase 1"].duration or robot.timer.duration == -1 or robot.state != "Timer phase 1":
+                    if robot.timer.duration > m[
+                            "Timer phase 1"].duration or robot.timer.duration == -1 or robot.state != "Timer phase 1":
                         robot.state = "Timer phase 1"
                         robot.timer = m["Timer phase 1"]
                         self.upgrade(1.5)
                 if "Direction" in m.keys():
-                    robot.dir_x = m["Direction"][0]
-                    robot.dir_y = m["Direction"][1]
+                    robot.direciton = m["Direction"]
         else:
             robot.setRandomTimer()
 
@@ -156,7 +158,8 @@ class PhaseOne(Phase):
         Performes all functions of the current phase in proper order.
         '''
         robot = self.robot
-        aggregation_states = (RobotState.MOVING, RobotState.STOPPED, "moving after stopped")
+        aggregation_states = (RobotState.MOVING, RobotState.STOPPED,
+                              "moving after stopped")
         if robot.state in aggregation_states:
             self.aggregate()  #???
         self.autonomus_system()
@@ -180,6 +183,7 @@ class PhaseOne(Phase):
         elif next_phase == 3:
             self.robot.faza = mg.MergeClustersToStaticLine(self.robot, superAS)
 
+
 class PhaseOneAndHalf(Phase):
     def __init__(self, Robot):
         super().__init__(Robot)
@@ -194,22 +198,22 @@ class PhaseOneAndHalf(Phase):
             return
 
         if robot.cluster_id == robot.timer.cluster_id:
-            if len(robot.neighbors
-                   ) > robot.timer.neighbors_number and robot.state != "Timer phase 1":
+            if len(
+                    robot.neighbors
+            ) > robot.timer.neighbors_number and robot.state != "Timer phase 1":
                 robot.state = RobotState.WAITING  #number of neighbors changed -> we are not border robot
             if robot.state != RobotState.WAITING:
                 robot.timer.tick()
 
                 robot.broadcast['Timer phase 1'] = robot.timer
-                robot.broadcast['Direction'] = (robot.dir_x, robot.dir_y)
+                robot.broadcast['Direction'] = robot.direction
 
                 if robot.timer.duration < 0:
                     self.upgrade(2)
                     return
             for m in robot.received_messages:
                 if "Direction" in m.keys():
-                    robot.dir_x = m["Direction"][0]
-                    robot.dir_y = m["Direction"][1]
+                    robot.direction = m["Direction"]
         else:
             robot.setRandomTimer()
 
