@@ -8,22 +8,21 @@ from simulation.robot import RobotState
 from simulation.robot.Velocity import Velocity
 import simulation.phases.static_line_formation as st
 
+
 class MergeClustersToStaticLine(Phase):
     def __init__(self, Robot, superAS):
         super().__init__(Robot)
         self.phase = 3
         self.robot.super_cluster_id = superAS
         self.isIncreased = False
-        self.timerSet = False
         self.robot.velocity = Velocity(0, 0)
-        self.robot.state = RobotState.STOPPED
-
+        self.robot.update_color()
+        self.robot.state = RobotState.MOVING
 
     def followerFunctionallity(self):
         spot.follower(self.robot)
         self.moveIfPathIsFree()
 
-    
     def leaderFunctionallity(self, main_cluster_neighbors):
         if len(main_cluster_neighbors) == 1:
             self.goToSingleRobot(main_cluster_neighbors[-1])
@@ -31,11 +30,9 @@ class MergeClustersToStaticLine(Phase):
         elif len(main_cluster_neighbors) > 1:
             self.mergeIfPossible(main_cluster_neighbors)
 
-            
     def goToSingleRobot(self, neighbor):
         spot.direction_to_neighbor(self.robot, neighbor)
         self.moveIfPathIsFree()
-
 
     def joinTheEdgeRobot(self, edge_robot):
         minimal_distance = 0.4 * (self.robot.sensor_range - self.robot.radius) \
@@ -58,9 +55,8 @@ class MergeClustersToStaticLine(Phase):
     
     def mergeIfPossible(self, main_cluster_neighbors):
         first_neighbor, second_neighbor = self.chooseBestTwoNeighbors(main_cluster_neighbors)
-        epsilon = 10
+        epsilon = 20
         if self.checkAngle(first_neighbor, self.robot, second_neighbor) > (90.0 + epsilon):
-
             self.upgrade(3, self.robot.super_cluster_id)
         else:
             self.goBetweenTwoRobots(first_neighbor, second_neighbor)
@@ -121,17 +117,14 @@ class MergeClustersToStaticLine(Phase):
             self.makeMove()
         else:
             self.tryPerpendicularMotion()
-            '''
-            self.dir_x = 0
-            self.dir_y = 0
-            '''
+
 
     def tryPerpendicularMotion(self):
         main_cluster_neighbors = self.getMainClusterNeighbors()
         if not main_cluster_neighbors:
             BLACK = (100, 200, 50)
             pg.draw.circle(self.robot.image, BLACK, (self.robot.radius, self.robot.radius),
-                           self.robot.radius)        
+                           self.robot.radius)
             return
         
         best_neighbor = self.findClosestNeighbor(main_cluster_neighbors)

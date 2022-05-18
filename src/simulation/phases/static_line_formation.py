@@ -6,6 +6,7 @@ import simulation.phases.phaseone as ph1
 import simulation.phases.phasetwo as ph2
 from simulation.robot import RobotState
 from simulation.robot.Velocity import Velocity
+import simulation.phases.merge_clusters_to_static_line as mg
 
 
 class StaticLineFormation(Phase):
@@ -20,11 +21,25 @@ class StaticLineFormation(Phase):
         self.robot.state = RobotState.STOPPED
         self.same_cluster_neighbors = []
 
+    def isEdgeRobot(self):
+        iterator = 1
+        delta = 20
+        for n in self.same_cluster_neighbors:
+            for i in range(iterator, len(self.same_cluster_neighbors)):
+                if self.checkAngle(
+                        n, self.robot,
+                        self.same_cluster_neighbors[i]) > (90.0 + delta):
+                    return False
+            iterator += 1
+        return True
+
     def insideRobotFunctionallity(self):
         closest_neighbor, closest_neighbor_distance = self.findClosestNeighbor(
         )
         opposite_neighbor, opposite_neighbor_distance = self.findRobotOnOppositeSide(
             closest_neighbor)
+        if not opposite_neighbor:
+            return
         self.equalizeDistances(closest_neighbor, opposite_neighbor)
 
     def equalizeDistances(self, closest_neighbor, opposite_neighbor):
@@ -45,27 +60,21 @@ class StaticLineFormation(Phase):
 
     def findRobotOnOppositeSide(self, closest_neighbor):
         self.same_cluster_neighbors.remove(closest_neighbor)
+
         while self.same_cluster_neighbors:
             opposite_neighbor, distance = self.findClosestNeighbor()
             if self.checkAngle(closest_neighbor, self.robot,
                                opposite_neighbor) > 90.0:
                 return opposite_neighbor, distance
-            self.same_cluster_neighbors.remove(opposite_neighbor)
-        print("BLAD!!!!!!!!!!!!!!!!!!!!!!!!")
-        print("There is a robot", opposite_neighbor)
-        print(self.checkAngle(closest_neighbor, self.robot, opposite_neighbor))
-        print("==============================================================")
 
-    def isEdgeRobot(self):
-        iterator = 1
-        delta = 20
-        for n in self.same_cluster_neighbors:
-            for i in range(iterator, len(self.same_cluster_neighbors)):
-                if self.checkAngle(n, self.robot,
-                                   self.same_cluster_neighbors[i]) > (90.0 + delta):
-                    return False
-            iterator += 1
-        return True
+            self.same_cluster_neighbors.remove(opposite_neighbor)
+        
+        self.upgrade(3, self.robot.super_cluster_id)
+        return None, 0
+    
+    def changeClosestRobot(self, closest_neighbor):
+        self.same_cluster_neighbors.remove(closest_neighbor)
+        self.insideRobotFunctionallity()
 
     def edgeRobotFunctionallity(self):
         closest_neighbor, distance_to_neighbor = self.findClosestNeighbor()
@@ -132,8 +141,10 @@ class StaticLineFormation(Phase):
         self.robot.velocity.y = 0
 
         BLACK = (0, 0, 0)
-        pg.draw.circle(self.robot.image, BLACK, (self.robot.radius, self.robot.radius),
-                       self.robot.radius)        
+        pg.draw.circle(self.robot.image, BLACK,
+                       (self.robot.radius, self.robot.radius),
+                       self.robot.radius)
+        self.same_cluster_neighbors.clear()
         self.same_cluster_neighbors = self.getSameClusterMembers()
         if self.isEdgeRobot():
             self.edgeRobotFunctionallity()
@@ -158,5 +169,7 @@ class StaticLineFormation(Phase):
             self.robot.faza = ph1.PhaseOneAndHalf(self.robot)
         elif next_phase == 2:
             self.robot.faza = ph2.PhaseTwo(self.robot)
+        elif next_phase == 3:
+            self.robot.faza = mg.MergeClustersToStaticLine(self.robot, superAS)
         #        elif next_phase == 4:
         #            self.robot.faza = ph4.PhaseFour(self.robot, superAS)

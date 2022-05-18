@@ -71,7 +71,7 @@ class AttractionPoint(Phase):
             '''
             Simply goes in the given direction
             '''
-            if spot.is_collision(robot):
+            if spot.is_any_collision(robot, 0.4):
                 robot.dir_x, robot.dir_y =  robot.find_direction()
             else:
                 robot.dir_x, robot.dir_y = self.__attract()
@@ -157,7 +157,7 @@ class AttractionPoint(Phase):
     def __moveIfPathIsFree(self):
         a, b, d = spot.direction_line_equation(self.robot)
         if not spot.is_any_collision(self.robot, 0.2):
-            self.__makeMove()    
+            self.__makeMove()
 
     def __makeMove(self):
         self.robot.velocity.x = self.robot.dir_x * self.robot.velocity_level
