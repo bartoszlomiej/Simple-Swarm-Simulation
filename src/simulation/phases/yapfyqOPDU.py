@@ -110,9 +110,9 @@ class MergeClustersToStaticLine(Phase):
             self.tryPerpendicularMotion()
 
     def downgrade(self):
-        self.robot.broadcast["Downgrade"] = 2
+        self.broadcast["Downgrade"] = 2
         self.robot.find_direction()
-        self.robot.broadcast["Direction"] = self.robot.direction.copy()
+        self.robot.broadcast["Direction"] = robot.direction.copy()
 
     def checkForDowngrade(self):
         if self.robot.checkIfDowngrade:
