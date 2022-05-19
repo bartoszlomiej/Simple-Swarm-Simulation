@@ -11,6 +11,7 @@ from simulation.robot.Velocity import Velocity
 import simulation.phases.merge_clusters_to_static_line as mg
 import pygame as pg
 
+
 class PhaseOne(Phase):
     def __init__(self, Robot):
         super().__init__(Robot)
@@ -117,11 +118,10 @@ class PhaseOne(Phase):
                 robot.timer.tick()
                 if robot.timer.duration < 0:
                     robot.direction = robot.find_direction()
-
+                    robot.broadcast["Direction"] = robot.direction
                     robot.setRandomTimer()
                     self.upgrade(1.5)
                     robot.state = RobotState.TIMER
-                    
 
                     return
 
@@ -131,9 +131,11 @@ class PhaseOne(Phase):
                             "Timer phase 1"].duration or robot.timer.duration == -1 or robot.state != RobotState.TIMER:
                         robot.state = RobotState.TIMER
                         robot.timer = m["Timer phase 1"]
+                        self.robot.follower_msg()
+
                         self.upgrade(1.5)
                         return
-            self.robot.follower_msg()                    
+
         else:
             robot.setRandomTimer()
 
@@ -182,7 +184,6 @@ class PhaseOneAndHalf(Phase):
         super().__init__(Robot)
         self.phase = 1.5
 
-
     def use_timer(self):
         '''
         just the loop (with each iteration of the simulation loop decrease by 1)
@@ -201,7 +202,7 @@ class PhaseOneAndHalf(Phase):
 
                 robot.broadcast['Timer phase 1'] = robot.timer
                 robot.broadcast['Direction'] = robot.direction
-                    
+
                 if robot.timer.duration < 0:
                     self.upgrade(2)
                     return

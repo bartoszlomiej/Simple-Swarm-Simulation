@@ -12,6 +12,7 @@ import simulation.phases.static_line_formation as st
 import simulation.phases.attraction_point as dbg
 from simulation.phases.fix_stacked_robots import Stacked
 
+
 class MergeClustersToStaticLine(Phase):
     def __init__(self, Robot, superAS):
         super().__init__(Robot)
@@ -56,14 +57,12 @@ class MergeClustersToStaticLine(Phase):
                 main_cluster_neighbors.append(n)
         return main_cluster_neighbors
 
-
     def mergeIfPossible(self, main_cluster_neighbors):
         first_neighbor, second_neighbor = self.chooseBestTwoNeighbors(
             main_cluster_neighbors)
         epsilon = 20
-        angle = self.checkAngle(first_neighbor, self.robot,
-                                second_neighbor)
-        if angle  > (90.0 + epsilon):
+        angle = self.checkAngle(first_neighbor, self.robot, second_neighbor)
+        if angle > (90.0 + epsilon):
             self.upgrade(3, self.robot.super_cluster_id)
         elif angle < (epsilon / 2):
             self.joinTheEdgeRobot(first_neighbor)
@@ -113,7 +112,7 @@ class MergeClustersToStaticLine(Phase):
     def downgrade(self):
         self.broadcast["Downgrade"] = 2
         self.robot.find_direction()
-        self.robot.broadcast["Direction"] = robot.direction
+        self.robot.broadcast["Direction"] = robot.direction.copy()
         
     def checkForDowngrade(self):
         if self.robot.checkIfDowngrade:

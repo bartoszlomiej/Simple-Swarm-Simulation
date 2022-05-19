@@ -13,7 +13,6 @@ from utils.Resolution import Resolution
 
 
 class Simulation:
-
     def run(self):
         pg.init()
         screen = pg.display.set_mode([self.window_resolution.width, self.window_resolution.height])
@@ -118,7 +117,7 @@ class Simulation:
 
     def __higherPhaseCollision(self, robot):
         if robot.faza.phase > 2:
-            robot.find_direction()
+            self.robot.direction = self.robot.find_direction()
 
     def __updateMovementsOnCollision(self, robot, neighbor):
         if robot.faza.phase > 1:

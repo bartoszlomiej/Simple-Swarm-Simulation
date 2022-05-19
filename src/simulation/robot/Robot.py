@@ -88,7 +88,6 @@ class Robot(pg.sprite.Sprite):
 
         self.faza.update()
 
-
         # boundary parameters
         if self.position.x < 0 or self.position.x > self.board_resolution.width - 2 * self.radius:
             if self.faza.phase == 2:  # just for dbg
@@ -102,7 +101,8 @@ class Robot(pg.sprite.Sprite):
             self.velocity.y = -self.velocity.y
 
         if not self.is_downgrade:
-            self.broadcast["Phase"] = self.faza.phase  # always broadcast the phase
+            self.broadcast[
+                "Phase"] = self.faza.phase  # always broadcast the phase
         self.broadcast["AS"] = self.cluster_id
         if self.faza.phase > 2:
             self.broadcast["superAS"] = self.super_cluster_id
@@ -255,26 +255,29 @@ class Robot(pg.sprite.Sprite):
             self.direction.negate()
             if self.direction.x != 0 and self.direction.y != 0:
                 self.broadcast["Return"] = self.direction
-            return self.direction
+                return self.direction.copy()
 
         return Direction(
             spot.calc_x(direction, 100, self.sensors_number) / 100,
             spot.calc_y(direction, 100, self.sensors_number) / 100)
 
     def __threeStateDowngrade(self, m):
-        if "Downgrade" in m.keys() and m["AS"] == self.cluster_id and not self.waiting:
+        if "Downgrade" in m.keys(
+        ) and m["AS"] == self.cluster_id and not self.waiting:
             self.broadcast["Downgrade"] = m["Downgrade"]
             self.robot.is_downgrade = True
-            self.direction = m["Direction"]
+            self.direction = m["Direction"].copy()
             return True
-        elif "Downgrade" in m.keys() and m["AS"] == self.cluster_id and self.waiting:
+        elif "Downgrade" in m.keys(
+        ) and m["AS"] == self.cluster_id and self.waiting:
             self.broadcast["Waiting"] = self.waiting
-            self.direction = m["Direction"]
+            self.direction = m["Direction"].copy()
             if "Waiting" in m.keys():
                 return True
             self.broadcast["Downgrade"] = m["Downgrade"]
             return True
-        elif not "Downgrade" in m.keys() and m["AS"] == self.cluster_id and "Waiting" in m.keys():
+        elif not "Downgrade" in m.keys(
+        ) and m["AS"] == self.cluster_id and "Waiting" in m.keys():
             return False
 
     def checkIfDowngrade(self):
@@ -299,12 +302,12 @@ class Robot(pg.sprite.Sprite):
             if m["Return"].x == 0 and m["Return"].y == 0:
                 return False
             self.broadcast["Return"] = m["Return"]
-            self.direction = m["Return"]
+            self.direction = m["Return"].copy()
             return True
         elif "Return" in m.keys(
         ) and m["AS"] == self.cluster_id and self.waiting:
             self.broadcast["Waiting"] = self.waiting
-            self.direction = m["Return"]
+            self.direction = m["Return"].copy()
             if "Waiting" in m.keys():
                 return True
             self.broadcast["Return"] = m["Return"]
@@ -327,7 +330,7 @@ class Robot(pg.sprite.Sprite):
                 if m["Direction"].x == 0 and m["Direction"].y == 0:
                     continue
                 self.broadcast["Direction"] = m["Direction"]
-                self.direction = m["Direction"]
+                self.direction = m["Direction"].copy()
         self.waiting = buffer_wait
 
     def calculate_sensors_number(self, sensor_range, radius):
