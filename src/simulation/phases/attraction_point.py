@@ -97,6 +97,8 @@ class AttractionPoint(Phase):
         rescale = math.sqrt(v1**2 + v2**2)
         v1 /= rescale
         v2 /= rescale
+        if not v1 and not v2:
+            self.robot.direction = self.robot.find_direction()
 
         return Direction(v1, v2)
 

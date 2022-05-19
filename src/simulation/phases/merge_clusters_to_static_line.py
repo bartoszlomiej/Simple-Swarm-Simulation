@@ -143,6 +143,7 @@ class MergeClustersToStaticLine(Phase):
             self.followerFunctionallity()
 
         self.robot.broadcast["superAS"] = self.robot.super_cluster_id
+        self.robot.is_allone()
 
     def check_phase(self):
         robot = self.robot
