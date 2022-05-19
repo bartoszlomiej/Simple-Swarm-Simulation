@@ -62,6 +62,7 @@ class Robot(pg.sprite.Sprite):
         self.direction = Direction(0, 0)
         self.sensors = []
         self.S = []
+        self.is_downgrade = False
 
         self.state = RobotState.MOVING  # initially robots move (just for aggregation algorithm)
         self.waiting = False
@@ -100,7 +101,8 @@ class Robot(pg.sprite.Sprite):
                 self.broadcast["Return"] = self.direction
             self.velocity.y = -self.velocity.y
 
-        self.broadcast["Phase"] = self.faza.phase  # always broadcast the phase
+        if not self.is_downgrade:
+            self.broadcast["Phase"] = self.faza.phase  # always broadcast the phase
         self.broadcast["AS"] = self.cluster_id
         if self.faza.phase > 2:
             self.broadcast["superAS"] = self.super_cluster_id
@@ -258,6 +260,31 @@ class Robot(pg.sprite.Sprite):
         return Direction(
             spot.calc_x(direction, 100, self.sensors_number) / 100,
             spot.calc_y(direction, 100, self.sensors_number) / 100)
+
+    def __threeStateDowngrade(self, m):
+        if "Downgrade" in m.keys() and m["AS"] == self.cluster_id and not self.waiting:
+            self.broadcast["Downgrade"] = m["Downgrade"]
+            self.robot.is_downgrade = True
+            self.direction = m["Direction"]
+            return True
+        elif "Downgrade" in m.keys() and m["AS"] == self.cluster_id and self.waiting:
+            self.broadcast["Waiting"] = self.waiting
+            self.direction = m["Direction"]
+            if "Waiting" in m.keys():
+                return True
+            self.broadcast["Downgrade"] = m["Downgrade"]
+            return True
+        elif not "Downgrade" in m.keys() and m["AS"] == self.cluster_id and "Waiting" in m.keys():
+            return False
+
+    def checkIfDowngrade(self):
+        if self.waiting == True:
+            self.is_downgrade = True
+        for m in self.received_messages:
+            if self.__threeStateDowngrade() == True:
+                self.waiting = True
+                return True
+        return False
 
     def __threeStateReturn(self, m):
         '''

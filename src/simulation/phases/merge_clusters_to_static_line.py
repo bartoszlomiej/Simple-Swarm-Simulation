@@ -9,7 +9,8 @@ from simulation.robot import RobotState
 from simulation.robot.Velocity import Velocity
 from simulation.robot.Direction import Direction
 import simulation.phases.static_line_formation as st
-
+import simulation.phases.attraction_point as dbg
+from simulation.phases.fix_stacked_robots import Stacked
 
 class MergeClustersToStaticLine(Phase):
     def __init__(self, Robot, superAS):
@@ -20,6 +21,8 @@ class MergeClustersToStaticLine(Phase):
         self.robot.velocity = Velocity(0, 0)
         self.robot.update_color()
         self.robot.state = RobotState.MOVING
+        self.stacked = None
+        self.robot.waiting = False
 
     def followerFunctionallity(self):
         spot.follower(self.robot)
@@ -106,18 +109,38 @@ class MergeClustersToStaticLine(Phase):
             self.makeMove()
         else:
             self.tryPerpendicularMotion()
+        
+    def downgrade(self):
+        self.broadcast["Downgrade"] = 2
+        self.robot.find_direction()
+        self.robot.broadcast["Direction"] = robot.direction
+        
+    def checkForDowngrade(self):
+        if self.robot.checkIfDowngrade:
+            self.robot.is_downgrade = False
+            self.upgrade(2)        
+            
+    def mainClusterTimeout(self):
+        if not self.stacked:
+            self.stacked = Stacked(self.robot)
+        else:
+            if self.stacked.isStacked():
+                self.stacked = None
+                self.robot.downgrade()
+
 
     def tryPerpendicularMotion(self):
         main_cluster_neighbors = self.getMainClusterNeighbors()
         if not main_cluster_neighbors:
+            self.mainClusterTimeout()
             GREEN = (100, 200, 50)
             pg.draw.circle(self.robot.image, GREEN,
                            (self.robot.radius, self.robot.radius),
                            self.robot.radius)
             return
         else:
-            GREEN = (200, 50, 200)
-            pg.draw.circle(self.robot.image, GREEN,
+            OTHER = (200, 50, 200)
+            pg.draw.circle(self.robot.image, OTHER,
                            (self.robot.radius, self.robot.radius),
                            self.robot.radius)
 
@@ -144,6 +167,7 @@ class MergeClustersToStaticLine(Phase):
 
         self.robot.broadcast["superAS"] = self.robot.super_cluster_id
         self.robot.is_allone()
+        #self.checkForDowngrade()
 
     def check_phase(self):
         robot = self.robot
@@ -161,7 +185,7 @@ class MergeClustersToStaticLine(Phase):
         if next_phase == 1.5:
             self.robot.faza = ph1.PhaseOneAndHalf(self.robot)
         elif next_phase == 2:
-            self.robot.faza = ph2.PhaseTwo(self.robot)
+            self.robot.faza = dbg.AttractionPoint(self.robot)
         elif next_phase == 3:
             self.robot.faza = st.StaticLineFormation(self.robot, superAS)
         #        elif next_phase == 4:
