@@ -1,6 +1,7 @@
 import pygame as pg
 import math
 from utils import SpotNeighbor as spot
+from utils.colors import HORRIBLE_YELLOW
 from simulation.phases.phase import Phase
 import simulation.phases.phaseone as ph1
 import simulation.phases.phasetwo as ph2
@@ -71,6 +72,7 @@ class StaticLineFormation(Phase):
 
         self.upgrade(3, self.robot.super_cluster_id)
         return None, 0
+
     def changeClosestRobot(self, closest_neighbor):
         self.same_cluster_neighbors.remove(closest_neighbor)
         self.insideRobotFunctionallity()
@@ -102,15 +104,15 @@ class StaticLineFormation(Phase):
             self.robot.direction.negate()
             self.moveIfPathIsFree()
 
+
     def moveIfPathIsFree(self):
-        if not spot.is_any_collision(self.robot):
+        if not spot.is_any_collision(self.robot, 0.2):
             self.robot.direction.normalize()
             self.makeMove()
-        else:
-            self.robot.direction.stop()
+
 
     def getSameClusterMembers(self):
-        self.same_cluster_neighbors = []
+        self.same_cluster_neighbors.clear()
         for n in self.robot.neighbors:
             if n.cluster_id != self.robot.cluster_id:
                 continue
@@ -129,8 +131,15 @@ class StaticLineFormation(Phase):
         self.same_cluster_neighbors.clear()
         self.same_cluster_neighbors = self.getSameClusterMembers()
         if self.isEdgeRobot():
+            pg.draw.circle(self.robot.image, HORRIBLE_YELLOW,
+                           (self.robot.radius, self.robot.radius),
+                           self.robot.radius)
             self.edgeRobotFunctionallity()
         else:
+            BLACK = (0, 0, 0)
+            pg.draw.circle(self.robot.image, BLACK,
+                           (self.robot.radius, self.robot.radius),
+                           self.robot.radius)
             self.insideRobotFunctionallity()
         self.robot.broadcast["superAS"] = self.robot.super_cluster_id
 

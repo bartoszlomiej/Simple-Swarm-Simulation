@@ -53,13 +53,17 @@ class MergeClustersToStaticLine(Phase):
                 main_cluster_neighbors.append(n)
         return main_cluster_neighbors
 
+
     def mergeIfPossible(self, main_cluster_neighbors):
         first_neighbor, second_neighbor = self.chooseBestTwoNeighbors(
             main_cluster_neighbors)
         epsilon = 20
-        if self.checkAngle(first_neighbor, self.robot,
-                           second_neighbor) > (90.0 + epsilon):
+        angle = self.checkAngle(first_neighbor, self.robot,
+                                second_neighbor)
+        if angle  > (90.0 + epsilon):
             self.upgrade(3, self.robot.super_cluster_id)
+        elif angle < (epsilon / 2):
+            self.joinTheEdgeRobot(first_neighbor)
         else:
             self.goBetweenTwoRobots(first_neighbor, second_neighbor)
 
@@ -97,7 +101,7 @@ class MergeClustersToStaticLine(Phase):
         return closest_neighbor
 
     def moveIfPathIsFree(self):
-        if not spot.is_any_collision(self.robot, 0.2):
+        if not spot.is_any_collision(self.robot):
             self.robot.direction.normalize()
             self.makeMove()
         else:
@@ -106,18 +110,23 @@ class MergeClustersToStaticLine(Phase):
     def tryPerpendicularMotion(self):
         main_cluster_neighbors = self.getMainClusterNeighbors()
         if not main_cluster_neighbors:
-            BLACK = (100, 200, 50)
-            pg.draw.circle(self.robot.image, BLACK,
+            GREEN = (100, 200, 50)
+            pg.draw.circle(self.robot.image, GREEN,
                            (self.robot.radius, self.robot.radius),
                            self.robot.radius)
             return
+        else:
+            GREEN = (200, 50, 200)
+            pg.draw.circle(self.robot.image, GREEN,
+                           (self.robot.radius, self.robot.radius),
+                           self.robot.radius)
 
         best_neighbor = self.findClosestNeighbor(main_cluster_neighbors)
         spot.direction_to_neighbor(self.robot, best_neighbor)
         self.robot.direction.perpendicular()
 
         if not spot.is_any_collision(self.robot, 0.15):
-            self.direction.normalize()
+            self.robot.direction.normalize()
             self.makeMove()
 
     def update(self):
