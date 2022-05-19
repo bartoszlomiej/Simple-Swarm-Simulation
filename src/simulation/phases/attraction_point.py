@@ -14,6 +14,7 @@ import simulation.phases.merge_clusters_to_static_line as mg
 from utils.colors import GREY
 import pygame as pg
 
+
 class AttractionPoint(Phase):
     '''
     Class alternative to PhaseTwo. It is used only for testing purposes of the attraction point.
@@ -25,6 +26,7 @@ class AttractionPoint(Phase):
         Robot.clear_broadcast()
         Robot.initialize_sensors()
         self.robot.velocity_level /= 2  #just for dbg
+        self.robot.state = RobotState.STOPPED
 
     def collective_movement(self):
         '''
@@ -41,6 +43,7 @@ class AttractionPoint(Phase):
         '''
         The general movement function.
         '''
+
         self.robot.velocity = Velocity(0, 0)
         self.leader_follower()
         self.__moveIfPathIsFree()

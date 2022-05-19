@@ -255,8 +255,11 @@ class Robot(pg.sprite.Sprite):
             self.direction.negate()
             if self.direction.x != 0 and self.direction.y != 0:
                 self.broadcast["Return"] = self.direction
-                return self.direction.copy()
+            return self.direction
 
+        Direction(
+            spot.calc_x(direction, 100, self.sensors_number) / 100,
+            spot.calc_y(direction, 100, self.sensors_number) / 100)
         return Direction(
             spot.calc_x(direction, 100, self.sensors_number) / 100,
             spot.calc_y(direction, 100, self.sensors_number) / 100)
@@ -266,12 +269,12 @@ class Robot(pg.sprite.Sprite):
         ) and m["AS"] == self.cluster_id and not self.waiting:
             self.broadcast["Downgrade"] = m["Downgrade"]
             self.robot.is_downgrade = True
-            self.direction = m["Direction"].copy()
+            self.direction = m["Direction"]
             return True
         elif "Downgrade" in m.keys(
         ) and m["AS"] == self.cluster_id and self.waiting:
             self.broadcast["Waiting"] = self.waiting
-            self.direction = m["Direction"].copy()
+            self.direction = m["Direction"]
             if "Waiting" in m.keys():
                 return True
             self.broadcast["Downgrade"] = m["Downgrade"]
@@ -302,12 +305,12 @@ class Robot(pg.sprite.Sprite):
             if m["Return"].x == 0 and m["Return"].y == 0:
                 return False
             self.broadcast["Return"] = m["Return"]
-            self.direction = m["Return"].copy()
+            self.direction = m["Return"]
             return True
         elif "Return" in m.keys(
         ) and m["AS"] == self.cluster_id and self.waiting:
             self.broadcast["Waiting"] = self.waiting
-            self.direction = m["Return"].copy()
+            self.direction = m["Return"]
             if "Waiting" in m.keys():
                 return True
             self.broadcast["Return"] = m["Return"]
@@ -330,7 +333,7 @@ class Robot(pg.sprite.Sprite):
                 if m["Direction"].x == 0 and m["Direction"].y == 0:
                     continue
                 self.broadcast["Direction"] = m["Direction"]
-                self.direction = m["Direction"].copy()
+                self.direction = m["Direction"]
         self.waiting = buffer_wait
 
     def calculate_sensors_number(self, sensor_range, radius):

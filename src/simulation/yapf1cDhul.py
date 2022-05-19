@@ -15,7 +15,8 @@ from utils.Resolution import Resolution
 class Simulation:
     def run(self):
         pg.init()
-        screen = pg.display.set_mode([self.window_resolution.width, self.window_resolution.height])
+        screen = pg.display.set_mode(
+            [self.window_resolution.width, self.window_resolution.height])
         clock = pg.time.Clock()
         time = 100000
         for i in range(time):
@@ -55,10 +56,9 @@ class Simulation:
         for i in range(self.swarm_quantity):
             spawn_new_rect = self.__createNonCollidingRect()
 
-            robot = Robot(Position(spawn_new_rect.x, spawn_new_rect.y),
-                          self.window_resolution,
-                          self.sensor_range,
-                          self.velocity_lvl)
+            robot = Robot(Position(spawn_new_rect.x,
+                                   spawn_new_rect.y), self.window_resolution,
+                          self.sensor_range, self.velocity_lvl)
 
             robot.ap = self.attraction_point
             self.swarm.add(robot)
@@ -68,20 +68,24 @@ class Simulation:
         for _ in range(tries):
             spawn_distance_margin = self.robot_radius * 2 + 5
             spawn_new_rect = self.__createSpawnRect(spawn_distance_margin)
-            if not any(neighbor for neighbor in self.swarm if
-                       spawn_new_rect.colliderect(neighbor.position.x,
-                                                  neighbor.position.y,
-                                                  spawn_distance_margin,
-                                                  spawn_distance_margin)):
+            if not any(
+                    neighbor
+                    for neighbor in self.swarm if spawn_new_rect.colliderect(
+                        neighbor.position.x, neighbor.position.y,
+                        spawn_distance_margin, spawn_distance_margin)):
                 return spawn_new_rect
 
     def __createSpawnRect(self, spawn_distance_margin):
         robot_distance_from_edge = self.robot_radius * 2
         up_to_x = self.window_resolution.width - self.robot_radius * 2 - 10
         up_to_y = self.window_resolution.height - self.robot_radius * 2 - 10
-        spawn_position = Position.generateRandom(robot_distance_from_edge, up_to_x, robot_distance_from_edge, up_to_y)
+        spawn_position = Position.generateRandom(robot_distance_from_edge,
+                                                 up_to_x,
+                                                 robot_distance_from_edge,
+                                                 up_to_y)
 
-        return pg.Rect(spawn_position.x, spawn_position.y, spawn_distance_margin, spawn_distance_margin)
+        return pg.Rect(spawn_position.x, spawn_position.y,
+                       spawn_distance_margin, spawn_distance_margin)
 
     def __initializeMultithreading(self):
         if self.multithreading:
@@ -97,7 +101,7 @@ class Simulation:
     def __updateAll(self):
         t = []
         for i in range(self.swarm_quantity):
-            t.append(threading.Thread(target=self.__updateGroup, args=(i,)))
+            t.append(threading.Thread(target=self.__updateGroup, args=(i, )))
             t[i].start()
 
         for i in t:
@@ -108,8 +112,10 @@ class Simulation:
 
     def __handleCollisions(self):
         for robot in self.swarm:
-            other_robots = pg.sprite.Group([s for s in self.swarm if s != robot])
-            collisions = pg.sprite.spritecollide(robot, other_robots, False, pg.sprite.collide_circle)
+            other_robots = pg.sprite.Group(
+                [s for s in self.swarm if s != robot])
+            collisions = pg.sprite.spritecollide(robot, other_robots, False,
+                                                 pg.sprite.collide_circle)
             if collisions:
                 for c in collisions:
                     self.__updateMovementsOnCollision(robot, c)
@@ -152,9 +158,9 @@ class Simulation:
                 dx = (r.position.x - i.position.x)**2
                 dy = (r.position.y - i.position.y)**2
 
-                if (self.sensor_range ** 2) >= (dx + dy):
+                if (self.sensor_range**2) >= (dx + dy):
                     r.spotted(i)
-                    if (0.15 * self.sensor_range ** 2) < (dx + dy):
+                    if (0.15 * self.sensor_range**2) < (dx + dy):
                         r.in_range()
 
     def __exitOnQuitEvent(self):

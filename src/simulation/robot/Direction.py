@@ -17,3 +17,6 @@ class Direction:
 
     def stop(self):
         return Direction(0, 0)
+
+    def copy(self):
+        return Direction(self.x, self.y)

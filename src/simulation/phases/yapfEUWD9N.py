@@ -118,7 +118,7 @@ class PhaseOne(Phase):
                 robot.timer.tick()
                 if robot.timer.duration < 0:
                     robot.direction = robot.find_direction()
-                    robot.broadcast["Direction"] = robot.direction
+
                     robot.setRandomTimer()
                     self.upgrade(1.5)
                     robot.state = RobotState.TIMER
@@ -131,11 +131,9 @@ class PhaseOne(Phase):
                             "Timer phase 1"].duration or robot.timer.duration == -1 or robot.state != RobotState.TIMER:
                         robot.state = RobotState.TIMER
                         robot.timer = m["Timer phase 1"]
-                        self.robot.follower_msg()
-
                         self.upgrade(1.5)
                         return
-
+            self.robot.follower_msg()
         else:
             robot.setRandomTimer()
 
@@ -202,6 +200,8 @@ class PhaseOneAndHalf(Phase):
 
                 robot.broadcast['Timer phase 1'] = robot.timer
                 robot.broadcast['Direction'] = robot.direction
+                print("Co ja kurwa broadcast'uje", self.robot.cluster_id,
+                      "AS: ", self.robot.direction.x, self.robot.direction.y)
 
                 if robot.timer.duration < 0:
                     self.upgrade(2)
