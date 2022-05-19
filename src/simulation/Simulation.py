@@ -117,7 +117,7 @@ class Simulation:
                     self.__higherPhaseCollision(robot)
 
     def __higherPhaseCollision(self, robot):
-        if robot.faza.phase > 1:
+        if robot.faza.phase > 2:
             robot.find_direction()
 
     def __updateMovementsOnCollision(self, robot, neighbor):

@@ -11,6 +11,8 @@ import simulation.phases.phasethree as ph3
 import simulation.phases.static_line_formation as st
 import simulation.phases.merge_clusters_to_static_line as mg
 
+from utils.colors import GREY
+import pygame as pg
 
 class AttractionPoint(Phase):
     '''
@@ -50,10 +52,7 @@ class AttractionPoint(Phase):
         '''
         Sets the initial direction for all robots in the AS
         '''
-        robot = self.robot
-        robot.state = RobotState.MOVING
-        self.makeMove()
-
+        self.__moveIfPathIsFree()
         self.leader_follower()
 
     def leader_follower(self):
@@ -71,12 +70,16 @@ class AttractionPoint(Phase):
             '''
             Simply goes in the given direction
             '''
+            pg.draw.circle(self.robot.image, GREY,
+                           (self.robot.radius, self.robot.radius),
+                           self.robot.radius)
             if spot.is_any_collision(robot, 0.4):
                 robot.direction = robot.find_direction()
             else:
                 robot.direction = self.__attract()
             robot.broadcast["Direction"] = robot.direction
         else:
+            self.robot.update_color()
             spot.follower(robot)
 
     def __attract(self):
