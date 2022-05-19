@@ -115,8 +115,8 @@ class MergeClustersToStaticLine(Phase):
         spot.direction_to_neighbor(self.robot, best_neighbor)
         self.robot.direction.perpendicular()
 
-        a, b, d = spot.direction_line_equation(self.robot)
         if not spot.is_any_collision(self.robot, 0.15):
+            self.direction.normalize()
             self.makeMove()
 
     def update(self):
