@@ -8,8 +8,7 @@ class Direction:
         self.y = self.y * -1
 
     def perpendicular(self):
-        self.x = self.x
-        self.y = self.y * -1
+        (self.x, self.y) = (self.y, -self.x)
 
     def normalize(self):
         while (self.x**2 + self.y**2) > 1:

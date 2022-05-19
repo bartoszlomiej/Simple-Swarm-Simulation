@@ -9,7 +9,7 @@ from simulation.robot import RobotState
 from simulation.robot.Timer import Timer
 from simulation.robot.Velocity import Velocity
 import simulation.phases.merge_clusters_to_static_line as mg
-
+import pygame as pg
 
 class PhaseOne(Phase):
     def __init__(self, Robot):
@@ -87,11 +87,11 @@ class PhaseOne(Phase):
             '''
             robot.iterator = robot.iterator + 1
             if robot.iterator < -1:  #> 5000: #replace -1 with natural number to obtain move after stop behavior
-                robot.state = "moving after stopped"
+                robot.state = RobotState.MOVINGAGAIN
                 robot.iterator = 0
                 robot.velocity = Velocity.generateRandom(robot.velocity_level)
 
-        elif robot.state == "moving after stopped":
+        elif robot.state == RobotState.MOVINGAGAIN:
             '''
             if robot is moving after being stopped, than for some time it cannot stop again
             '''
@@ -111,31 +111,29 @@ class PhaseOne(Phase):
         if robot.cluster_id == robot.timer.cluster_id:
             if len(
                     robot.neighbors
-            ) > robot.timer.neighbors_number and robot.state != "Timer phase 1":
+            ) > robot.timer.neighbors_number and robot.state != RobotState.TIMER:
                 robot.state = RobotState.WAITING  #number of neighbors changed -> we are not border robot
             if robot.state != RobotState.WAITING:
                 robot.timer.tick()
                 if robot.timer.duration < 0:
                     robot.direction = robot.find_direction()
+
                     robot.setRandomTimer()
                     self.upgrade(1.5)
-                    robot.state = "Timer phase 1"
-                    ''''
-                    HORRIBLE_YELLOW = (190, 175, 50)
-                    pg.draw.circle(robot.image, HORRIBLE_YELLOW,
-                                   (robot.radius, robot.radius), robot.radius)
-                    '''
+                    robot.state = RobotState.TIMER
+                    
+
                     return
 
             for m in robot.received_messages:
                 if "Timer phase 1" in m.keys():
                     if robot.timer.duration > m[
-                            "Timer phase 1"].duration or robot.timer.duration == -1 or robot.state != "Timer phase 1":
-                        robot.state = "Timer phase 1"
+                            "Timer phase 1"].duration or robot.timer.duration == -1 or robot.state != RobotState.TIMER:
+                        robot.state = RobotState.TIMER
                         robot.timer = m["Timer phase 1"]
                         self.upgrade(1.5)
-                if "Direction" in m.keys():
-                    robot.direciton = m["Direction"]
+                        return
+            self.robot.follower_msg()                    
         else:
             robot.setRandomTimer()
 
@@ -159,16 +157,11 @@ class PhaseOne(Phase):
         '''
         robot = self.robot
         aggregation_states = (RobotState.MOVING, RobotState.STOPPED,
-                              "moving after stopped")
+                              RobotState.MOVINGAGAIN)
         if robot.state in aggregation_states:
             self.aggregate()  #???
         self.autonomus_system()
         self.use_timer()
-        '''
-        if self.robot.timer.duration == 0:
-            print("CZEMU SIE NIE KONCZYSZ??????")
-        print(self.robot.timer.duration)
-        '''
         self.check_phase()
 
     def upgrade(self, next_phase, superAS=None):
@@ -189,6 +182,7 @@ class PhaseOneAndHalf(Phase):
         super().__init__(Robot)
         self.phase = 1.5
 
+
     def use_timer(self):
         '''
         just the loop (with each iteration of the simulation loop decrease by 1)
@@ -200,20 +194,18 @@ class PhaseOneAndHalf(Phase):
         if robot.cluster_id == robot.timer.cluster_id:
             if len(
                     robot.neighbors
-            ) > robot.timer.neighbors_number and robot.state != "Timer phase 1":
+            ) > robot.timer.neighbors_number and robot.state != RobotState.TIMER:
                 robot.state = RobotState.WAITING  #number of neighbors changed -> we are not border robot
             if robot.state != RobotState.WAITING:
                 robot.timer.tick()
 
                 robot.broadcast['Timer phase 1'] = robot.timer
                 robot.broadcast['Direction'] = robot.direction
-
+                    
                 if robot.timer.duration < 0:
                     self.upgrade(2)
                     return
-            for m in robot.received_messages:
-                if "Direction" in m.keys():
-                    robot.direction = m["Direction"]
+            self.robot.follower_msg()
         else:
             robot.setRandomTimer()
 

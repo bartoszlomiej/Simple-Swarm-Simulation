@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from simulation.robot import RobotState
 import math
 
 
@@ -32,6 +33,7 @@ class Phase(ABC):
         pass
 
     def makeMove(self):
+        self.robot.state = RobotState.MOVING
         self.robot.velocity.x = self.robot.direction.x * self.robot.velocity_level
         self.robot.velocity.y = self.robot.direction.y * self.robot.velocity_level
 
