@@ -1,4 +1,11 @@
 from simulation.robot.Robot import Robot
+from simulation.robot.Position import Position
+from utils.Resolution import Resolution
+
+import time
+'''
+
+
 from src.utils import SpotNeighbor as spot
 
 r = Robot(200, 200, 1080, 720, [1, 1], 55)
@@ -16,6 +23,34 @@ n3.cluster_id = 3
 for i in range(18):
     print(spot.check_line(r, i, 19, 55))
 print(r.find_direction())
+'''
+import math
+import pygame as pg
+
+def createSwarm():
+    swarm = pg.sprite.Group()
+    for i in range(200):
+        robot = Robot(Position(200, 100), Resolution(640, 400), 50, 2, 8)
+        swarm.add(robot)
+    return swarm
+
+def memoryLeak(swarm):
+    for robot in swarm:
+        other_robots = pg.sprite.Group([s for s in swarm if s != robot])
+        collisions = pg.sprite.spritecollide(robot, other_robots, False, pg.sprite.collide_circle)
+        other_robots.empty()
+        #collisions.empty()
+        del other_robots
+        del collisions
+
+def main():
+    swarm = createSwarm()
+    for i in range(100):
+        memoryLeak(swarm)
+        time.sleep(1/100)
+        print("ok")
+
+
 #r.neighbors.append(n3)
 #r.dir_x, r.dir_y = r.find_direction()
 '''

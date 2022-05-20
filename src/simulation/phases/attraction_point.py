@@ -28,6 +28,7 @@ class AttractionPoint(Phase):
         self.robot.velocity_level /= 2  #just for dbg
         self.robot.state = RobotState.STOPPED
 
+
     def collective_movement(self):
         '''
         Transition from the state RobotState.STOPPED to RobotState.MOVING and runing the movement function
@@ -80,7 +81,7 @@ class AttractionPoint(Phase):
                 robot.direction = robot.find_direction()
             else:
                 robot.direction = self.__attract()
-            robot.broadcast["Direction"] = robot.direction
+            robot.broadcast["Direction"] = robot.direction.copy()
         else:
             self.robot.update_color()
             spot.follower(robot)

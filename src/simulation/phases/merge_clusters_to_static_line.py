@@ -111,12 +111,11 @@ class MergeClustersToStaticLine(Phase):
 
     def downgrade(self):
         self.robot.broadcast["Downgrade"] = 2
-        self.robot.find_direction()
+        self.robot.direction = self.robot.find_direction()
         self.robot.broadcast["Direction"] = self.robot.direction.copy()
 
     def checkForDowngrade(self):
-        if self.robot.checkIfDowngrade:
-            self.robot.is_downgrade = False
+        if self.robot.checkIfDowngrade():
             self.upgrade(2)
 
     def mainClusterTimeout(self):
@@ -165,7 +164,7 @@ class MergeClustersToStaticLine(Phase):
 
         self.robot.broadcast["superAS"] = self.robot.super_cluster_id
         self.robot.is_allone()
-        #self.checkForDowngrade()
+        self.checkForDowngrade()
 
     def check_phase(self):
         robot = self.robot

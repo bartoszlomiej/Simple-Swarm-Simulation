@@ -16,6 +16,7 @@ class PhaseOne(Phase):
     def __init__(self, Robot):
         super().__init__(Robot)
         self.phase = 1
+        self.state = RobotState.MOVING
 
     def minimal_distance(self):
         '''
@@ -118,7 +119,7 @@ class PhaseOne(Phase):
                 robot.timer.tick()
                 if robot.timer.duration < 0:
                     robot.direction = robot.find_direction()
-                    robot.broadcast["Direction"] = robot.direction
+                    robot.broadcast["Direction"] = robot.direction.copy()
                     robot.setRandomTimer()
                     self.upgrade(1.5)
                     robot.state = RobotState.TIMER
@@ -201,7 +202,7 @@ class PhaseOneAndHalf(Phase):
                 robot.timer.tick()
 
                 robot.broadcast['Timer phase 1'] = robot.timer
-                robot.broadcast['Direction'] = robot.direction
+                robot.broadcast['Direction'] = robot.direction.copy()
 
                 if robot.timer.duration < 0:
                     self.upgrade(2)
