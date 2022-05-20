@@ -108,25 +108,24 @@ class MergeClustersToStaticLine(Phase):
             self.makeMove()
         else:
             self.tryPerpendicularMotion()
-        
+
     def downgrade(self):
-        self.broadcast["Downgrade"] = 2
+        self.robot.broadcast["Downgrade"] = 2
         self.robot.find_direction()
-        self.robot.broadcast["Direction"] = robot.direction.copy()
-        
+        self.robot.broadcast["Direction"] = self.robot.direction.copy()
+
     def checkForDowngrade(self):
         if self.robot.checkIfDowngrade:
             self.robot.is_downgrade = False
-            self.upgrade(2)        
-            
+            self.upgrade(2)
+
     def mainClusterTimeout(self):
         if not self.stacked:
             self.stacked = Stacked(self.robot)
         else:
             if self.stacked.isStacked():
                 self.stacked = None
-                self.robot.downgrade()
-
+                self.downgrade()
 
     def tryPerpendicularMotion(self):
         main_cluster_neighbors = self.getMainClusterNeighbors()

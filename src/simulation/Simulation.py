@@ -15,7 +15,8 @@ from utils.Resolution import Resolution
 class Simulation:
     def run(self):
         pg.init()
-        screen = pg.display.set_mode([self.window_resolution.width, self.window_resolution.height])
+        screen = pg.display.set_mode(
+            [self.window_resolution.width, self.window_resolution.height])
         clock = pg.time.Clock()
         time = 100000
         for i in range(time):
@@ -55,10 +56,9 @@ class Simulation:
         for i in range(self.swarm_quantity):
             spawn_new_rect = self.__createNonCollidingRect()
 
-            robot = Robot(Position(spawn_new_rect.x, spawn_new_rect.y),
-                          self.window_resolution,
-                          self.sensor_range,
-                          self.velocity_lvl)
+            robot = Robot(Position(spawn_new_rect.x,
+                                   spawn_new_rect.y), self.window_resolution,
+                          self.sensor_range, self.velocity_lvl)
 
             robot.ap = self.attraction_point
             self.swarm.add(robot)
@@ -117,7 +117,7 @@ class Simulation:
 
     def __higherPhaseCollision(self, robot):
         if robot.faza.phase > 2:
-            self.robot.direction = self.robot.find_direction()
+            robot.direction = robot.find_direction()
 
     def __updateMovementsOnCollision(self, robot, neighbor):
         if robot.faza.phase > 1:
