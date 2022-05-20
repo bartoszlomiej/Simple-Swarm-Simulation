@@ -254,38 +254,47 @@ class Robot(pg.sprite.Sprite):
             # There is a need to change the leader
             self.direction.negate()
             if self.direction.x != 0 and self.direction.y != 0:
-                self.broadcast["Return"] = self.direction
+                self.broadcast["Return"] = self.direction.copy()
                 return self.direction.copy()
 
         return Direction(
             spot.calc_x(direction, 100, self.sensors_number) / 100,
             spot.calc_y(direction, 100, self.sensors_number) / 100)
 
+    def __repeatDirection(self, message):
+        if "Direction" in message.keys():
+            self.direction = message["Direction"].copy()
+            self.broadcast["Direction"] = self.direction.copy()
+
     def __threeStateDowngrade(self, m):
         if "Downgrade" in m.keys(
         ) and m["AS"] == self.cluster_id and not self.waiting:
             self.broadcast["Downgrade"] = m["Downgrade"]
-            self.robot.is_downgrade = True
-            self.direction = m["Direction"].copy()
+            self.is_downgrade = True
+            self.__repeatDirection(m)
             return True
         elif "Downgrade" in m.keys(
         ) and m["AS"] == self.cluster_id and self.waiting:
             self.broadcast["Waiting"] = self.waiting
-            self.direction = m["Direction"].copy()
+            self.__repeatDirection(m)
             if "Waiting" in m.keys():
                 return True
             self.broadcast["Downgrade"] = m["Downgrade"]
             return True
         elif not "Downgrade" in m.keys(
         ) and m["AS"] == self.cluster_id and "Waiting" in m.keys():
+            self.__repeatDirection(m)
+            self.is_downgrade = False
+            self.waiting = False
             return False
 
     def checkIfDowngrade(self):
-        if self.waiting == True:
-            self.is_downgrade = True
         for m in self.received_messages:
-            if self.__threeStateDowngrade() == True:
+            downgrade_in_msg = self.__threeStateDowngrade(m)
+            if downgrade_in_msg == True:
                 self.waiting = True
+                return False
+            elif downgrade_in_msg == False:
                 return True
         return False
 
