@@ -18,7 +18,7 @@ class Simulation:
         screen = pg.display.set_mode(
             [self.window_resolution.width, self.window_resolution.height])
         clock = pg.time.Clock()
-        time = 100000
+        time = 1000000
         for i in range(time):
             self.__exitOnQuitEvent()
             self.__updateSwarm()
@@ -58,7 +58,7 @@ class Simulation:
 
             robot = Robot(Position(spawn_new_rect.x,
                                    spawn_new_rect.y), self.window_resolution,
-                          self.sensor_range, self.velocity_lvl)
+                          self.sensor_range, self.velocity_lvl, self.robot_radius)
 
             robot.ap = self.attraction_point
             self.swarm.add(robot)
@@ -108,12 +108,16 @@ class Simulation:
 
     def __handleCollisions(self):
         for robot in self.swarm:
+            if robot.faza.phase > 1:
+                return
             other_robots = pg.sprite.Group([s for s in self.swarm if s != robot])
             collisions = pg.sprite.spritecollide(robot, other_robots, False, pg.sprite.collide_circle)
             if collisions:
                 for c in collisions:
                     self.__updateMovementsOnCollision(robot, c)
                     self.__higherPhaseCollision(robot)
+            other_robots.empty()
+
 
     def __higherPhaseCollision(self, robot):
         if robot.faza.phase > 2:

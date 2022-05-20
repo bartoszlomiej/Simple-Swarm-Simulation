@@ -3,10 +3,11 @@ from simulation.Simulation import Simulation
 from utils.Resolution import Resolution
 
 if __name__ == "__main__":
-    screen_resolution = Resolution(1024, 720)
+    screen_resolution = Resolution(1920, 1024)
 
     attraction_strength = (screen_resolution.height**2 +
-                           screen_resolution.width**2) / 8
-    attraction_point = (500, 300, attraction_strength)
+                           screen_resolution.width**2) #/8
+    attraction_point = (screen_resolution.width/2, screen_resolution.height/2, attraction_strength)
 
-    Simulation(screen_resolution, 40, 55, 2, 40, attraction_point).run()
+    #    Simulation(screen_resolution, 40, 55, 2, 40, attraction_point).run() #change clock tick to 100
+    Simulation(screen_resolution, 200, 22, 2, True, attraction_point, 4).run()
