@@ -1,9 +1,10 @@
-from src.simulation.robot.Robot import Robot
-from src.simulation.robot.Position import Position
-from utils.Resolution import Resolution
+from simulation.robot.Robot import Robot
+from simulation.robot.ThreeStateAgreement import ThreeStateAgreement
+from simulation.robot.Position import Position
+#from utils.Resolution import Resolution
 
 import time
-'''
+
 
 
 from src.utils import SpotNeighbor as spot
@@ -20,9 +21,12 @@ r.cluster_id = 1
 n1.cluster_id = 1
 n2.cluster_id = 1
 n3.cluster_id = 3
+dbg = ThreeStateAgreement(r.cluster_id, r.messages)
+'''
 for i in range(18):
     print(spot.check_line(r, i, 19, 55))
 print(r.find_direction())
+'''
 '''
 import math
 import pygame as pg
@@ -50,7 +54,7 @@ def main():
         time.sleep(1/100)
         print("ok")
 
-
+'''
 #r.neighbors.append(n3)
 #r.dir_x, r.dir_y = r.find_direction()
 '''

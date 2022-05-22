@@ -344,3 +344,6 @@ class Robot(pg.sprite.Sprite):
 
     def calculate_sensors_number(self, sensor_range, radius):
         return math.ceil(math.ceil(2 * np.pi * sensor_range) / (2 * radius))
+
+    def broadcastMessage(self, messsage, value):
+        self.broadcast[message] = value
