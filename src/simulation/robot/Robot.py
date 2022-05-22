@@ -9,6 +9,8 @@ from simulation.robot import RobotState
 from simulation.robot.Velocity import Velocity
 from simulation.robot.Direction import Direction
 from utils.colors import WHITE, GREEN
+from simulation.robot.agreement.TurnBack import TurnBack
+from simulation.robot.agreement.Downgrade import Downgrade
 
 
 class Robot(pg.sprite.Sprite):
@@ -66,6 +68,7 @@ class Robot(pg.sprite.Sprite):
 
         self.state = RobotState.MOVING  # initially robots move (just for aggregation algorithm)
         self.waiting = False
+        self.agreement = None
 
         if not self.sensors_number % 2:
             self.sensors_number += 1
@@ -92,12 +95,12 @@ class Robot(pg.sprite.Sprite):
         if self.position.x < 0 or self.position.x > self.board_resolution.width - 2 * self.radius:
             if self.faza.phase == 2:  # just for dbg
                 self.direction.negate()
-                self.broadcast["Return"] = self.direction.copy()
+                self.broadcast["Turn back"] = self.direction.copy()
             self.velocity.x = -self.velocity.x
         if self.position.y < 0 or self.position.y > self.board_resolution.height - 2 * self.radius:
             if self.faza.phase == 2:  # just for dbg
                 self.direction.negate()
-                self.broadcast["Return"] = self.direction.copy()
+                self.broadcast["Turn back"] = self.direction.copy()
             self.velocity.y = -self.velocity.y
 
         if not self.is_downgrade:
@@ -254,18 +257,18 @@ class Robot(pg.sprite.Sprite):
             # There is a need to change the leader
             self.direction.negate()
             if self.direction.x != 0 and self.direction.y != 0:
-                self.broadcast["Return"] = self.direction.copy()
+                self.broadcast["Turn back"] = self.direction.copy()
                 return self.direction.copy()
 
         return Direction(
             spot.calc_x(direction, 100, self.sensors_number) / 100,
             spot.calc_y(direction, 100, self.sensors_number) / 100)
 
-    def __repeatDirection(self, message):
+    def repeatDirection(self, message):
         if "Direction" in message.keys():
             self.direction = message["Direction"].copy()
             self.broadcast["Direction"] = self.direction.copy()
-
+    '''
     def __threeStateDowngrade(self, m):
         if "Downgrade" in m.keys(
         ) and m["AS"] == self.cluster_id and not self.waiting:
@@ -299,13 +302,6 @@ class Robot(pg.sprite.Sprite):
         return False
 
     def __threeStateReturn(self, m):
-        '''
-        Confirmed return of all neighbors.
-        It consists of 3 states:
-        "Return" -> "Return/Waiting" -> "Waiting"
-        Parameters:
-        m - message
-        '''
         if "Return" in m.keys(
         ) and m["AS"] == self.cluster_id and not self.waiting:
             if m["Return"].x == 0 and m["Return"].y == 0:
@@ -324,8 +320,8 @@ class Robot(pg.sprite.Sprite):
         elif not "Return" in m.keys(
         ) and m["AS"] == self.cluster_id and "Waiting" in m.keys():
             return False
-
-    def follower_msg(self):
+    '''
+    def old_follower_msg(self):
         '''
         Gets the route given by the leader.
         '''
@@ -342,8 +338,29 @@ class Robot(pg.sprite.Sprite):
                 self.direction = m["Direction"].copy()
         self.waiting = buffer_wait
 
+    def follower_msg(self):
+        agreement = TurnBack(self.cluster_id, self.received_messages, self.broadcastMessage, self.getDirection, self.checkCorrectness)
+        agreement.checkIfTurnBack()
+        if agreement.isTurnBack == True:
+            print("am i here?")
+            return
+        for m in self.received_messages:
+            if "Direction" in m.keys() and m["AS"] == self.cluster_id:
+                if not self.checkCorrectness(m["Direction"]):
+                    continue
+                self.broadcast["Direction"] = m["Direction"].copy()
+                self.getDirection(m["Direction"])
+
     def calculate_sensors_number(self, sensor_range, radius):
         return math.ceil(math.ceil(2 * np.pi * sensor_range) / (2 * radius))
 
-    def broadcastMessage(self, messsage, value):
+    def broadcastMessage(self, message, value):
         self.broadcast[message] = value
+
+    def getDirection(self, value):
+        self.direction = value.copy()
+        
+    def checkCorrectness(self, direction):
+        if direction.x == 0 and direction.y == 0:
+            return False
+        return True

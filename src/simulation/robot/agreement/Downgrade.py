@@ -1,10 +1,10 @@
-from robot.agreement.ThreeStateAgreement import ThreeStateAgreement, CLOSED, SYN, SYN_ACK, ACK
+from simulation.robot.agreement.ThreeStateAgreement import ThreeStateAgreement, SYN, SYN_ACK, ACK
 
 ANT = "Downgrade" #announcement
 
 class Downgrade(ThreeStateAgreement):
     def __init__(self, cluster_id, messages, broadcastMessage, repeatDirection):
-        self.super().__init__(cluster_id, messages, broadcastMessage)
+        super().__init__(cluster_id, messages, broadcastMessage)
         self.repeatDirection = repeatDirection
         self.is_downgrade = False
 
@@ -24,11 +24,11 @@ class Downgrade(ThreeStateAgreement):
         return True
 
     def _ack(self, message):
-            self.repeatDirection(message)
-            self.state = ACK
-            return False        
+        self.repeatDirection(message)
+        self.state = ACK
+        return False        
 
-    def _downgrade(self, message, announcement):
+    def _downgrade(self, announcement, message):
         messageExists = self._isAnnouncementIn(announcement, message)
         if messageExists and self.state == SYN:
             return self._syn(message)
@@ -47,4 +47,3 @@ class Downgrade(ThreeStateAgreement):
                 self.is_downgrade = False
                 return True
         return False
-            

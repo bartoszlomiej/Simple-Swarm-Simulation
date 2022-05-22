@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 
 SYN = 1
 SYN_ACK = 2
@@ -17,14 +17,14 @@ class ThreeStateAgreement(ABC):
             return True
         return False
 
-    def _isAnnouncementIn(self, announcement, message)
+    def _isAnnouncementIn(self, announcement, message):
         if announcement in message.keys():
             return True
         return False
 
     def _searchInMessages(self, announcement):
         for m in self.messages:
-            if self.__isMessageInCluster(m) and self.__isAnnouncementIn(announcemen, message):
+            if self._isMessageInCluster(m) and self._isAnnouncementIn(announcement, m):
                 return True
         return False
     
