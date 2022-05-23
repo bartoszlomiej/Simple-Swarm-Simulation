@@ -314,16 +314,7 @@ class Robot(pg.sprite.Sprite):
                     continue
                 self.broadcast["Direction"] = m["Direction"].copy()
                 self.getDirection(m["Direction"])
-    '''
-    def __threeStateTurnBack(self):
-        agreement = TurnBack(self.cluster_id, self.received_messages, self.broadcastMessage, self.getDirection, self.checkCorrectness)
-        agreement.state = self.agreement_state
-        if agreement.isTurnBack():
-            self.agreement_state = agreement.state
-            self.__communicationFinished()
-            return True
-        return False
-    '''
+
     def threeStateAgreement(self, agreement):
         agreement.state = self.agreement_state
         if agreement.isAgreementOn():
