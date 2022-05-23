@@ -266,45 +266,16 @@ class Robot(pg.sprite.Sprite):
             spot.calc_y(direction, 100, self.sensors_number) / 100)
 
     def repeatDirection(self, message):
-        if "Direction" in message.keys():
+        if not message:
+            self.broadcast["Direction"] = self.direction.copy()
+        elif "Direction" in message.keys():
             self.direction = message["Direction"].copy()
             self.broadcast["Direction"] = self.direction.copy()
-    '''
-    def __threeStateDowngrade(self, m):
-        if "Downgrade" in m.keys(
-        ) and m["AS"] == self.cluster_id and not self.waiting:
-            self.broadcast["Downgrade"] = m["Downgrade"]
-            self.is_downgrade = True
-            self.__repeatDirection(m)
-            return True
-        elif "Downgrade" in m.keys(
-        ) and m["AS"] == self.cluster_id and self.waiting:
-            self.broadcast["Waiting"] = self.waiting
-            self.__repeatDirection(m)
-            if "Waiting" in m.keys():
-                return True
-            self.broadcast["Downgrade"] = m["Downgrade"]
-            return True
-        elif not "Downgrade" in m.keys(
-        ) and m["AS"] == self.cluster_id and "Waiting" in m.keys():
-            self.__repeatDirection(m)
-            self.is_downgrade = False
-            self.waiting = False
-            return False
 
-    def checkIfDowngrade(self):
-        for m in self.received_messages:
-            downgrade_in_msg = self.__threeStateDowngrade(m)
-            if downgrade_in_msg == True:
-                self.waiting = True
-                return False
-            elif downgrade_in_msg == False:
-                return True
-        return False
-    '''
-    
     def follower_msg(self):
-        turn_back = TurnBack(self.cluster_id, self.received_messages, self.broadcastMessage, self.getDirection, self.checkCorrectness)
+        turn_back = TurnBack(self.cluster_id, self.received_messages,
+                             self.broadcastMessage, self.getDirection,
+                             self.checkCorrectness)
         if self.threeStateAgreement(turn_back):
             self.communicationFinished()
             return
@@ -321,7 +292,7 @@ class Robot(pg.sprite.Sprite):
             self.agreement_state = agreement.state
             return True
         return False
-    
+
     def communicationFinished(self):
         if self.agreement_state == ACK:
             self.agreement_state = SYN
@@ -334,7 +305,7 @@ class Robot(pg.sprite.Sprite):
 
     def getDirection(self, value):
         self.direction = value.copy()
-        
+
     def checkCorrectness(self, direction):
         if direction.x == 0 and direction.y == 0:
             return False
