@@ -125,18 +125,10 @@ class MergeClustersToStaticLine(Phase):
         if self.robot.threeStateAgreement(downgrade):
             self.robot.is_downgrade = True
             if downgrade.state == ACK:
-                self.robot.is_downgrade = False                
+                self.robot.is_downgrade = False
                 self.robot.communicationFinished()
                 self.upgrade(2)
-    '''
-    def checkForDowngrade(self):
-        downgrade = Downgrade(self.robot.cluster_id, self.robot.received_messages, self.robot.broadcastMessage, self.robot.repeatDirection)
-        if downgrade.checkIfDowngrade():
-            self.upgrade(2)
-        else:
-            if downgrade.is_downgrade:
-                pass #don't check phase???
-    '''
+
     def mainClusterTimeout(self):
         if not self.stacked:
             self.stacked = Stacked(self.robot)

@@ -7,7 +7,7 @@ if __name__ == "__main__":
     screen_resolution = Resolution(1024, 720)
 
     attraction_strength = (screen_resolution.height**2 +
-                           screen_resolution.width**2)
+                           screen_resolution.width**2) / 100
     attraction_point = (screen_resolution.width / 2,
                         screen_resolution.height / 2, attraction_strength)
 
