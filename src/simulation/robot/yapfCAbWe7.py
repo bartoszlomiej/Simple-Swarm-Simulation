@@ -266,10 +266,10 @@ class Robot(pg.sprite.Sprite):
             spot.calc_y(direction, 100, self.sensors_number) / 100)
 
     def repeatDirection(self, message):
-        if not message:
-            self.broadcast["Direction"] = self.direction.copy()
-        elif "Direction" in message.keys():
+        if "Direction" in message.keys():
             self.direction = message["Direction"].copy()
+            self.broadcast["Direction"] = self.direction.copy()
+        else:
             self.broadcast["Direction"] = self.direction.copy()
 
     '''
