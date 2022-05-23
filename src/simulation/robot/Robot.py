@@ -343,12 +343,17 @@ class Robot(pg.sprite.Sprite):
         if self.agreement_state == ACK:
             self.agreement_state = SYN
 
-    def follower_msg(self):
+    def __threeStateTurnBack(self):
         agreement = TurnBack(self.cluster_id, self.received_messages, self.broadcastMessage, self.getDirection, self.checkCorrectness)
         agreement.state = self.agreement_state
         if agreement.isTurnBack():
             self.agreement_state = agreement.state
             self.__communicationFinished()
+            return True
+        return False
+
+    def follower_msg(self):
+        if self.__threeStateTurnBack():
             return
         for m in self.received_messages:
             if "Direction" in m.keys() and m["AS"] == self.cluster_id:
