@@ -9,6 +9,7 @@ from simulation.robot import RobotState
 from simulation.robot.Velocity import Velocity
 from simulation.robot.Direction import Direction
 from utils.colors import WHITE, GREEN
+from simulation.robot.agreement.ThreeStateAgreement import SYN, SYN_ACK, ACK
 from simulation.robot.agreement.TurnBack import TurnBack
 from simulation.robot.agreement.Downgrade import Downgrade
 
@@ -68,7 +69,7 @@ class Robot(pg.sprite.Sprite):
 
         self.state = RobotState.MOVING  # initially robots move (just for aggregation algorithm)
         self.waiting = False
-        self.agreement = None
+        self.agreement_state = SYN
 
         if not self.sensors_number % 2:
             self.sensors_number += 1
@@ -338,11 +339,16 @@ class Robot(pg.sprite.Sprite):
                 self.direction = m["Direction"].copy()
         self.waiting = buffer_wait
 
+    def __communicationFinished(self):
+        if self.agreement_state == ACK:
+            self.agreement_state = SYN
+
     def follower_msg(self):
         agreement = TurnBack(self.cluster_id, self.received_messages, self.broadcastMessage, self.getDirection, self.checkCorrectness)
-        agreement.checkIfTurnBack()
-        if agreement.isTurnBack == True:
-            print("am i here?")
+        agreement.state = self.agreement_state
+        if agreement.isTurnBack():
+            self.agreement_state = agreement.state
+            self.__communicationFinished()
             return
         for m in self.received_messages:
             if "Direction" in m.keys() and m["AS"] == self.cluster_id:
