@@ -301,48 +301,20 @@ class Robot(pg.sprite.Sprite):
             elif downgrade_in_msg == False:
                 return True
         return False
-
-    def __threeStateReturn(self, m):
-        if "Return" in m.keys(
-        ) and m["AS"] == self.cluster_id and not self.waiting:
-            if m["Return"].x == 0 and m["Return"].y == 0:
-                return False
-            self.broadcast["Return"] = m["Return"].copy()
-            self.direction = m["Return"].copy()
-            return True
-        elif "Return" in m.keys(
-        ) and m["AS"] == self.cluster_id and self.waiting:
-            self.broadcast["Waiting"] = self.waiting
-            self.direction = m["Return"].copy()
-            if "Waiting" in m.keys():
-                return True
-            self.broadcast["Return"] = m["Return"].copy()
-            return True
-        elif not "Return" in m.keys(
-        ) and m["AS"] == self.cluster_id and "Waiting" in m.keys():
-            return False
     '''
-    def old_follower_msg(self):
-        '''
-        Gets the route given by the leader.
-        '''
-        buffer_wait = False
+    
+    def follower_msg(self):
+        turn_back = TurnBack(self.cluster_id, self.received_messages, self.broadcastMessage, self.getDirection, self.checkCorrectness)
+        if self.threeStateAgreement(turn_back):
+            self.communicationFinished()
+            return
         for m in self.received_messages:
-            if self.__threeStateReturn(m):
-                buffer_wait = True
-            if "Return" in m.keys():
-                continue
             if "Direction" in m.keys() and m["AS"] == self.cluster_id:
-                if m["Direction"].x == 0 and m["Direction"].y == 0:
+                if not self.checkCorrectness(m["Direction"]):
                     continue
                 self.broadcast["Direction"] = m["Direction"].copy()
-                self.direction = m["Direction"].copy()
-        self.waiting = buffer_wait
-
-    def __communicationFinished(self):
-        if self.agreement_state == ACK:
-            self.agreement_state = SYN
-
+                self.getDirection(m["Direction"])
+    '''
     def __threeStateTurnBack(self):
         agreement = TurnBack(self.cluster_id, self.received_messages, self.broadcastMessage, self.getDirection, self.checkCorrectness)
         agreement.state = self.agreement_state
@@ -351,16 +323,17 @@ class Robot(pg.sprite.Sprite):
             self.__communicationFinished()
             return True
         return False
-
-    def follower_msg(self):
-        if self.__threeStateTurnBack():
-            return
-        for m in self.received_messages:
-            if "Direction" in m.keys() and m["AS"] == self.cluster_id:
-                if not self.checkCorrectness(m["Direction"]):
-                    continue
-                self.broadcast["Direction"] = m["Direction"].copy()
-                self.getDirection(m["Direction"])
+    '''
+    def threeStateAgreement(self, agreement):
+        agreement.state = self.agreement_state
+        if agreement.isAgreementOn():
+            self.agreement_state = agreement.state
+            return True
+        return False
+    
+    def communicationFinished(self):
+        if self.agreement_state == ACK:
+            self.agreement_state = SYN
 
     def calculate_sensors_number(self, sensor_range, radius):
         return math.ceil(math.ceil(2 * np.pi * sensor_range) / (2 * radius))

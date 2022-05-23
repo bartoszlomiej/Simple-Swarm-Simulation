@@ -12,6 +12,7 @@ import simulation.phases.static_line_formation as st
 import simulation.phases.attraction_point as dbg
 from simulation.phases.fix_stacked_robots import Stacked
 from simulation.robot.agreement.Downgrade import Downgrade
+from simulation.robot.agreement.ThreeStateAgreement import SYN
 
 class MergeClustersToStaticLine(Phase):
     def __init__(self, Robot, superAS):
@@ -24,6 +25,7 @@ class MergeClustersToStaticLine(Phase):
         self.robot.state = RobotState.MOVING
         self.stacked = None
         self.robot.waiting = False
+        self.robot.agreement_state = SYN
 
     def followerFunctionallity(self):
         spot.follower(self.robot)
@@ -116,12 +118,21 @@ class MergeClustersToStaticLine(Phase):
 
     def checkForDowngrade(self):
         downgrade = Downgrade(self.robot.cluster_id, self.robot.received_messages, self.robot.broadcastMessage, self.robot.repeatDirection)
+        if self.robot.threeStateAgreement(downgrade):
+            self.robot.is_downgrade = True
+            if downgrade.state == ACK:
+                self.robot.is_downgrade = False                
+                self.robot.communicationFinished()
+                self.upgrade(2)
+    '''
+    def checkForDowngrade(self):
+        downgrade = Downgrade(self.robot.cluster_id, self.robot.received_messages, self.robot.broadcastMessage, self.robot.repeatDirection)
         if downgrade.checkIfDowngrade():
             self.upgrade(2)
         else:
             if downgrade.is_downgrade:
                 pass #don't check phase???
-
+    '''
     def mainClusterTimeout(self):
         if not self.stacked:
             self.stacked = Stacked(self.robot)

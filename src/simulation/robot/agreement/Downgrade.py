@@ -12,32 +12,33 @@ class Downgrade(ThreeStateAgreement):
         self.broadcastMessage(ANT, message[ANT])
         self.repeatDirection(message)
         self.state = SYN_ACK
-        return True
 
     def _synAck(self, message):
-        self.state = SYN_ACK
         self.broadcastMessage("Waiting", self.state)
         self.repeatDirection(message)
-        if self._searchInMessages("Waiting"):
-            return True
-        self.broadcastMessage(ANT, message[ANT])
-        return True
+        if not self._searchInMessages("Waiting"):
+            self.broadcastMessage(ANT, message[ANT])
 
     def _ack(self, message):
         self.repeatDirection(message)
         self.state = ACK
-        return False        
 
-    def _downgrade(self, announcement, message):
-        messageExists = self._isAnnouncementIn(announcement, message)
-        if messageExists and self.state == SYN:
-            return self._syn(message)
-        elif messageExists and self.state == SYN_ACK:
-            return self._synAck(message)
-        elif not messageExists and self._searchInMessages("Waiting"):
-            return self._ack(message)
+    def __downgrade(self, message):
+        if message and self.state == SYN:
+            self._syn(message)
+        elif message and self.state == SYN_ACK:
+            self._synAck(message)
+        elif not message and self.state == SYN_ACK:
+            self._ack(message)
 
-    def checkIfDowngrade(self):
+    def isAgreementOn(self):
+        message = self._searchInMessages(ANT)
+        if not message and self.state != SYN_ACK:
+            return False
+        self.__downgrade(message)
+        return True
+
+        '''
         for m in self.messages:
             downgrade_in_msg = self._downgrade(ANT, m)
             if downgrade_in_msg == True:
@@ -47,3 +48,4 @@ class Downgrade(ThreeStateAgreement):
                 self.is_downgrade = False
                 return True
         return False
+        '''

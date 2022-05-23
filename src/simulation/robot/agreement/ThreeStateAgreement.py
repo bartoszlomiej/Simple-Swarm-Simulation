@@ -11,7 +11,6 @@ class ThreeStateAgreement(ABC):
         self.messages = deepcopy(messages)
         self.broadcastMessage = broadcastMessage
         self.state = SYN
-
         
     def _isMessageInCluster(self, message):
         if message["AS"] == self.cluster_id:
@@ -39,4 +38,8 @@ class ThreeStateAgreement(ABC):
         
     @abstractmethod
     def _ack(self, message):
+        pass
+    
+    @abstractmethod    
+    def isAgreementOn(self):
         pass

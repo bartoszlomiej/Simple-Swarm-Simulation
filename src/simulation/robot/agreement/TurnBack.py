@@ -8,7 +8,6 @@ class TurnBack(ThreeStateAgreement):
         self.getDirection = getDirection
         self.checkCorrectness = checkCorrectness
 
-
     def _syn(self, message):
         if not self.checkCorrectness(message[ANT]):
             return
@@ -34,8 +33,7 @@ class TurnBack(ThreeStateAgreement):
         elif not message and self.state == SYN_ACK:
             self._ack(message)
 
-
-    def isTurnBack(self):
+    def isAgreementOn(self):
         message = self._searchInMessages(ANT)
         if not message and self.state != SYN_ACK:
             return False
