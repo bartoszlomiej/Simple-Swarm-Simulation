@@ -46,13 +46,14 @@ class StaticLineFormation(Phase):
 
     def __checkForFlood(self, isEdgeRobot):
         if self.timestamp_flood.repeat():
+            self.dbg_msg()
             return self.timestamp_flood.getTimeWhenFinished(isEdgeRobot)
         return 0
         
     def __startFlood(self):
         if self.timerSet and self.__isTimerFinished():
-            self.dbg_msg()
             self.timestamp_flood.spillOver()
+            self.timerSet = False
         else:
             self.__setTimer()
         
