@@ -1,7 +1,7 @@
 import pygame as pg
 import math
 from utils import SpotNeighbor as spot
-from utils.colors import HORRIBLE_YELLOW
+from utils.colors import HORRIBLE_YELLOW, PURPLE, BLUE
 from simulation.phases.phase import Phase
 import simulation.phases.phaseone as ph1
 import simulation.phases.phasetwo as ph2
@@ -10,6 +10,7 @@ from simulation.robot.Velocity import Velocity
 from simulation.robot.Direction import Direction
 from simulation.robot.agreement.Flooding import Flooding
 from simulation.phases.flooding.TimestampFlood import TimestampFlood
+from simulation.robot.agreement.ThreeStateAgreement import SYN, SYN_ACK, ACK
 
 import simulation.phases.merge_clusters_to_static_line as mg
 
@@ -27,47 +28,45 @@ class StaticLineFormation(Phase):
         self.same_cluster_neighbors = []
         self.timestamp_flood = TimestampFlood(self.robot.threeStateAgreement, \
                                               Flooding(superAS, self.robot.received_messages, self.robot.broadcastMessage))
+        self.robot.agreement_state = SYN
 
     def dbg_msg(self):
         print("TUTAJ JESTEM!!!")
 
-    def updateColor(self, new_colour): #just for dbg
-        red = new_colour % 256
-        green = math.floor(new_colour / 4) % 256
-        blue = math.floor(math.sqrt(new_colour)) % 256
-        color = (red, green, blue)
-        pg.draw.circle(self.robot.image, color, (self.robot.radius, self.robot.radius),
+    def updateColor(self, new_color):  #just for dbg
+        pg.draw.circle(self.robot.image, new_color,
+                       (self.robot.radius, self.robot.radius),
                        self.robot.radius)
 
-    def __changeColorIfTimestamp(self, isEdgeRobot): #just for dbg
+    def __changeColorIfTimestamp(self, isEdgeRobot):  #just for dbg
         new_color = self.__checkForFlood(isEdgeRobot)
         if new_color > 0:
-            self.updateColor(new_color)
+            self.dbg_msg()
+            self.updateColor(BLUE)
 
     def __checkForFlood(self, isEdgeRobot):
         if self.timestamp_flood.repeat():
-            self.dbg_msg()
             return self.timestamp_flood.getTimeWhenFinished(isEdgeRobot)
         return 0
-        
+
     def __startFlood(self):
         if self.timerSet and self.__isTimerFinished():
             self.timestamp_flood.spillOver()
             self.timerSet = False
         else:
             self.__setTimer()
-        
+
     def __isTimerFinished(self):
         self.robot.timer.tick()
         if self.robot.timer.duration <= 0:
             return True
         return False
-        
+
     def __setTimer(self):
         if not self.timerSet:
             self.timerSet = True
             self.robot.setRandomTimer(500, 1000)
-        
+
     def isEdgeRobot(self):
         iterator = 1
         delta = 20
@@ -112,7 +111,7 @@ class StaticLineFormation(Phase):
             if self.checkAngle(closest_neighbor, self.robot,
                                opposite_neighbor) > 90.0:
                 return opposite_neighbor, distance
-              
+
             self.same_cluster_neighbors.remove(opposite_neighbor)
 
         self.upgrade(3, self.robot.super_cluster_id)
@@ -151,12 +150,10 @@ class StaticLineFormation(Phase):
             self.robot.direction.negate()
             self.moveIfPathIsFree()
 
-
     def moveIfPathIsFree(self):
         if not spot.is_any_collision(self.robot, 0.2):
             self.robot.direction.normalize()
             self.makeMove()
-
 
     def getSameClusterMembers(self):
         self.same_cluster_neighbors.clear()
@@ -171,16 +168,17 @@ class StaticLineFormation(Phase):
         self.robot.velocity.x = 0
         self.robot.velocity.y = 0
 
-        BLACK = (0, 0, 0)
-        pg.draw.circle(self.robot.image, BLACK,
-                       (self.robot.radius, self.robot.radius),
-                       self.robot.radius)
+        self.timestamp_flood.agreement.updateMessages(
+            self.robot.received_messages)
+
         self.same_cluster_neighbors.clear()
         self.same_cluster_neighbors = self.getSameClusterMembers()
         if self.isEdgeRobot():
+            '''
             pg.draw.circle(self.robot.image, HORRIBLE_YELLOW,
                            (self.robot.radius, self.robot.radius),
                            self.robot.radius)
+            '''
             self.edgeRobotFunctionallity()
         else:
             BLACK = (0, 0, 0)

@@ -12,4 +12,5 @@ class Position:
 
     @staticmethod
     def generateRandom(startX, endX, startY, endY):
-        return Position(random.randint(startX, endX), random.randint(startY, endY))
+        return Position(random.randint(startX, endX),
+                        random.randint(startY, endY))
