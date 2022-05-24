@@ -8,6 +8,8 @@ import simulation.phases.phasetwo as ph2
 from simulation.robot import RobotState
 from simulation.robot.Velocity import Velocity
 from simulation.robot.Direction import Direction
+from simulation.robot.agreement.Flooding import Flooding
+from simulation.phases.flooding.TimestampFlood import TimestampFlood
 
 import simulation.phases.merge_clusters_to_static_line as mg
 
@@ -23,7 +25,48 @@ class StaticLineFormation(Phase):
         self.robot.velocity = Velocity(0, 0)
         self.robot.state = RobotState.STOPPED
         self.same_cluster_neighbors = []
+        self.timestamp_flood = TimestampFlood(self.robot.threeStateAgreement, \
+                                              Flooding(superAS, self.robot.received_messages, self.robot.broadcastMessage))
 
+    def dbg_msg(self):
+        print("TUTAJ JESTEM!!!")
+
+    def updateColor(self, new_colour): #just for dbg
+        red = new_colour % 256
+        green = math.floor(new_colour / 4) % 256
+        blue = math.floor(math.sqrt(new_colour)) % 256
+        color = (red, green, blue)
+        pg.draw.circle(self.robot.image, color, (self.robot.radius, self.robot.radius),
+                       self.robot.radius)
+
+    def __changeColorIfTimestamp(self, isEdgeRobot): #just for dbg
+        new_color = self.__checkForFlood(isEdgeRobot)
+        if new_color > 0:
+            self.updateColor(new_color)
+
+    def __checkForFlood(self, isEdgeRobot):
+        if self.timestamp_flood.repeat():
+            return self.timestamp_flood.getTimeWhenFinished(isEdgeRobot)
+        return 0
+        
+    def __startFlood(self):
+        if self.timerSet and self.__isTimerFinished():
+            self.dbg_msg()
+            self.timestamp_flood.spillOver()
+        else:
+            self.__setTimer()
+        
+    def __isTimerFinished(self):
+        self.robot.timer.tick()
+        if self.robot.timer.duration <= 0:
+            return True
+        return False
+        
+    def __setTimer(self):
+        if not self.timerSet:
+            self.timerSet = True
+            self.robot.setRandomTimer(500, 1000)
+        
     def isEdgeRobot(self):
         iterator = 1
         delta = 20
@@ -37,6 +80,7 @@ class StaticLineFormation(Phase):
         return True
 
     def insideRobotFunctionallity(self):
+        self.__changeColorIfTimestamp(False)
         closest_neighbor, closest_neighbor_distance = self.findClosestNeighbor(
         )
         opposite_neighbor, opposite_neighbor_distance = self.findRobotOnOppositeSide(
@@ -78,10 +122,12 @@ class StaticLineFormation(Phase):
         self.insideRobotFunctionallity()
 
     def edgeRobotFunctionallity(self):
+        self.__startFlood()
+        self.__changeColorIfTimestamp(self)
         closest_neighbor, distance_to_neighbor = self.findClosestNeighbor()
         if not closest_neighbor:
             return
-        self.keepDistance(closest_neighbor, distance_to_neighbor)
+        self.__keepDistance(closest_neighbor, distance_to_neighbor)
 
     def findClosestNeighbor(self):
         closest_distance = 10000
@@ -96,7 +142,7 @@ class StaticLineFormation(Phase):
                 closest_neighbor = n
         return closest_neighbor, distance
 
-    def keepDistance(self, neighbor, distance_to_neighbor):
+    def __keepDistance(self, neighbor, distance_to_neighbor):
         if distance_to_neighbor < (
                 0.8 *
             (self.robot.sensor_range - self.robot.radius)) + self.robot.radius:
