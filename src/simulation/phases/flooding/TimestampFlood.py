@@ -30,7 +30,6 @@ class TimestampFlood:
         if self.time in messages:
             return False
         return True
-        #        return (self.agreement.state == ACK)
 
     def __estimateFloodingTime(self, messages):
         total_time = 0
