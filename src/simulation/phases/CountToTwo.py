@@ -82,7 +82,7 @@ class CountToTwo(StaticLine):
     def __keepStaticLine(self):
         self.same_cluster_neighbors.clear()
         self.same_cluster_neighbors = self.__getSuperclustersMembers()
-        if self.isEdgeRobot():
+        if self._isEdgeRobot():
             self.edgeRobotFunctionallity()
         else:
             self.insideRobotFunctionallity()

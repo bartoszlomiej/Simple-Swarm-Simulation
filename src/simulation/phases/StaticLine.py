@@ -24,7 +24,7 @@ class StaticLine(Phase):
         self.robot.state = RobotState.STOPPED
         self.same_cluster_neighbors = []
 
-    def isEdgeRobot(self):
+    def _isEdgeRobot(self):
         iterator = 1
         delta = 20
         for n in self.same_cluster_neighbors:
@@ -37,15 +37,15 @@ class StaticLine(Phase):
         return True
 
     def insideRobotFunctionallity(self):
-        closest_neighbor, closest_neighbor_distance = self.findClosestNeighbor(
+        closest_neighbor, closest_neighbor_distance = self.__findClosestNeighbor(
         )
-        opposite_neighbor, opposite_neighbor_distance = self.findRobotOnOppositeSide(
+        opposite_neighbor, opposite_neighbor_distance = self.__findRobotOnOppositeSide(
             closest_neighbor)
         if not opposite_neighbor:
             return
-        self.equalizeDistances(closest_neighbor, opposite_neighbor)
+        self.__equalizeDistances(closest_neighbor, opposite_neighbor)
 
-    def equalizeDistances(self, closest_neighbor, opposite_neighbor):
+    def __equalizeDistances(self, closest_neighbor, opposite_neighbor):
         point_x = (closest_neighbor.position.x +
                    opposite_neighbor.position.x) / 2
         point_y = (closest_neighbor.position.y +
@@ -57,13 +57,13 @@ class StaticLine(Phase):
             return
         suma = math.sqrt(delta_x**2 + delta_y**2)
         self.robot.direction = Direction(delta_x / suma, delta_y / suma)
-        self.moveIfPathIsFree()
+        self.__moveIfPathIsFree()
 
-    def findRobotOnOppositeSide(self, closest_neighbor):
+    def __findRobotOnOppositeSide(self, closest_neighbor):
         self.same_cluster_neighbors.remove(closest_neighbor)
 
         while self.same_cluster_neighbors:
-            opposite_neighbor, distance = self.findClosestNeighbor()
+            opposite_neighbor, distance = self.__findClosestNeighbor()
             if self.checkAngle(closest_neighbor, self.robot,
                                opposite_neighbor) > 90.0:
                 return opposite_neighbor, distance
@@ -73,17 +73,13 @@ class StaticLine(Phase):
         self.upgrade(3, self.robot.super_cluster_id)
         return None, 0
 
-    def changeClosestRobot(self, closest_neighbor):
-        self.same_cluster_neighbors.remove(closest_neighbor)
-        self.insideRobotFunctionallity()
-
     def edgeRobotFunctionallity(self):
-        closest_neighbor, distance_to_neighbor = self.findClosestNeighbor()
+        closest_neighbor, distance_to_neighbor = self.__findClosestNeighbor()
         if not closest_neighbor:
             return
         self.__keepDistance(closest_neighbor, distance_to_neighbor)
 
-    def findClosestNeighbor(self):
+    def __findClosestNeighbor(self):
         closest_distance = 10000
         closest_neighbor = None
         distance = None
@@ -102,28 +98,18 @@ class StaticLine(Phase):
             (self.robot.sensor_range - self.robot.radius)) + self.robot.radius:
             spot.direction_to_neighbor(self.robot, neighbor)
             self.robot.direction.negate()
-            self.moveIfPathIsFree()
+            self.__moveIfPathIsFree()
 
-    def moveIfPathIsFree(self):
+    def __moveIfPathIsFree(self):
         if not spot.is_any_collision(self.robot, 0.2):
             self.robot.direction.normalize()
             self.makeMove()
-
-    def getSameClusterMembers(self):
-        self.same_cluster_neighbors.clear()
-        for n in self.robot.neighbors:
-            if n.cluster_id != self.robot.cluster_id:
-                continue
-            self.same_cluster_neighbors.append(n)
-        return self.same_cluster_neighbors
 
     def update(self):
         self.check_phase()
         self.robot.velocity = Velocity(0, 0)
 
-        self.same_cluster_neighbors.clear()
-        self.same_cluster_neighbors = self.getSameClusterMembers()
-        if self.isEdgeRobot():
+        if self._isEdgeRobot():
             self.edgeRobotFunctionallity()
         else:
 

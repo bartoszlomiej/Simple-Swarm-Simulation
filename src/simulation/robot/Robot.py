@@ -275,8 +275,7 @@ class Robot(pg.sprite.Sprite):
             if self.direction.x != 0 and self.direction.y != 0:
                 self.agreement_state = SYN_ACK
                 self.broadcast["Turn back"] = self.direction.copy()
-                return self.direction.copy()
-
+            return self.direction.copy() #might be a problem here
         return Direction(
             spot.calc_x(direction, 100, self.sensors_number) / 100,
             spot.calc_y(direction, 100, self.sensors_number) / 100)
