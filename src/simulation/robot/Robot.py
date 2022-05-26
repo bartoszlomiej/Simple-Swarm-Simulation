@@ -161,6 +161,19 @@ class Robot(pg.sprite.Sprite):
         if not spot.is_collision_distance(self):
             self.faza = PhaseOne(self)
 
+    def isAlloneInSupercluster(self):
+        '''
+        If any robot for any reason stays allone, then it come back to phase one, and it's AS is being created again
+        '''
+        if not self.neighbors:
+            self.faza = PhaseOne(self)
+            return
+        for n in self.neighbors:
+            if self.super_cluster_id == n.super_cluster_id:
+                return
+        if not spot.is_collision_distance(self):
+            self.faza = PhaseOne(self)            
+
     def update_msg(self):
         self.received_messages.clear()
         for n in self.neighbors:

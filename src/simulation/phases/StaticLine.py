@@ -11,12 +11,11 @@ from simulation.robot.Direction import Direction
 from simulation.robot.agreement.Flooding import Flooding
 from simulation.phases.flooding.TimestampFlood import TimestampFlood
 from simulation.robot.agreement.ThreeStateAgreement import SYN, SYN_ACK, ACK
-from simulation.phases.CountToTwo import CountToTwo
 
 import simulation.phases.merge_clusters_to_static_line as mg
 
 
-class StaticLineFormation(Phase):
+class StaticLine(Phase):
     def __init__(self, Robot, superAS):
         super().__init__(Robot)
         self.phase = 3
@@ -29,7 +28,7 @@ class StaticLineFormation(Phase):
         self.timestamp_flood = TimestampFlood(self.robot.threeStateAgreement, \
                                               Flooding(superAS, self.robot.received_messages, self.robot.broadcastMessage))
         self.robot.agreement_state = SYN
-        self.paintItBlack()
+        #        self.paintItBlack()
 
     def paintItBlack(self):
         BLACK = (0, 0, 0)
@@ -49,7 +48,6 @@ class StaticLineFormation(Phase):
         new_color = self.__checkForFlood(isEdgeRobot)
         if new_color > 0.05:
             self.updateColor(BLUE)
-            self.upgrade(3.5, self.robot.super_cluster_id)
 
     def __checkForFlood(self, isEdgeRobot):
         if self.timestamp_flood.repeat():
@@ -198,7 +196,7 @@ class StaticLineFormation(Phase):
         robot = self.robot
         for m in robot.received_messages:
             if "Phase" in m.keys():
-                if m["Phase"] > 3:
+                if m["Phase"] >= 4:
                     robot.broadcast["superAS"] = self.robot.super_cluster_id
                     self.upgrade(m["Phase"], self.robot.super_cluster_id)
                     return
@@ -213,7 +211,5 @@ class StaticLineFormation(Phase):
             self.robot.faza = ph2.PhaseTwo(self.robot)
         elif next_phase == 3:
             self.robot.faza = mg.MergeClustersToStaticLine(self.robot, superAS)
-        elif next_phase == 3.5:
-            self.robot.faza = CountToTwo(self.robot, superAS)
         #        elif next_phase == 4:
         #            self.robot.faza = ph4.PhaseFour(self.robot, superAS)

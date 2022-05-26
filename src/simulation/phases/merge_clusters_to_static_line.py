@@ -194,7 +194,7 @@ class MergeClustersToStaticLine(Phase):
             self.robot.faza = ph1.PhaseOneAndHalf(self.robot)
         elif next_phase == 2:
             self.robot.faza = dbg.AttractionPoint(self.robot)
-        elif next_phase == 3:
+        elif next_phase >= 3:
             self.robot.faza = st.StaticLineFormation(self.robot, superAS)
         #        elif next_phase == 4:
         #            self.robot.faza = ph4.PhaseFour(self.robot, superAS)
