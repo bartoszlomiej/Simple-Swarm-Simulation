@@ -29,7 +29,14 @@ class StaticLineFormation(Phase):
         self.timestamp_flood = TimestampFlood(self.robot.threeStateAgreement, \
                                               Flooding(superAS, self.robot.received_messages, self.robot.broadcastMessage))
         self.robot.agreement_state = SYN
+        self.paintItBlack()
 
+    def paintItBlack(self):
+        BLACK = (0, 0, 0)
+        pg.draw.circle(self.robot.image, BLACK,
+                       (self.robot.radius, self.robot.radius),
+                       self.robot.radius)        
+        
     def dbg_msg(self):
         print("TUTAJ JESTEM!!!")
 
@@ -40,12 +47,12 @@ class StaticLineFormation(Phase):
 
     def __changeColorIfTimestamp(self, isEdgeRobot):  #just for dbg
         new_color = self.__checkForFlood(isEdgeRobot)
-        if new_color > 0:
-            self.dbg_msg()
+        if new_color > 0.05:
             self.updateColor(BLUE)
 
     def __checkForFlood(self, isEdgeRobot):
         if self.timestamp_flood.repeat():
+            #            self.updateColor(HORRIBLE_YELLOW)
             return self.timestamp_flood.getTimeWhenFinished(isEdgeRobot)
         return 0
 
@@ -181,10 +188,7 @@ class StaticLineFormation(Phase):
             '''
             self.edgeRobotFunctionallity()
         else:
-            BLACK = (0, 0, 0)
-            pg.draw.circle(self.robot.image, BLACK,
-                           (self.robot.radius, self.robot.radius),
-                           self.robot.radius)
+
             self.insideRobotFunctionallity()
         self.robot.broadcast["superAS"] = self.robot.super_cluster_id
         self.robot.is_allone()

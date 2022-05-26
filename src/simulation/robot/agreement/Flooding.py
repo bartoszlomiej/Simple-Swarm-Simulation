@@ -36,7 +36,7 @@ class Flooding(ThreeStateAgreement):
             self._synAck(message[-1])
         elif not message and self.state == SYN_ACK:
             self._ack(message)
-        elif not message and self.state == ACK:
+        elif (self.state == ACK) or (self.state == FINISHED):
             self._reset()
 
     def _searchInMessages(self, announcement):
@@ -55,11 +55,8 @@ class Flooding(ThreeStateAgreement):
 
     def __serveSingleMessage(self, message):
         self.output = message
-        '''
-        if message:
-            if not self.__isEqual(self.previous_message, message):
-                self._reset()
-        '''
+        if not message and self.state == ACK:
+            self._reset()
         self.__flood(message)
 
     def __serveMultipleMessages(self, messages):
@@ -68,7 +65,8 @@ class Flooding(ThreeStateAgreement):
 
     def isAgreementOn(self):
         messages = self._searchInMessages(ANT)
-        if not messages and self.state != SYN_ACK:
+        if not messages and self.state == SYN:
+            self._reset()
             return False
         if len(messages) <= 1:
             self.__serveSingleMessage(messages)
@@ -86,6 +84,3 @@ class Flooding(ThreeStateAgreement):
 
     def updateMessages(self, messages):
         self.messages = messages
-
-    def dbg_msg(self):
-        print("@@@@@@@@@@@@@@@")
