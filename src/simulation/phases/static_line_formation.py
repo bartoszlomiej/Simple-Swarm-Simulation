@@ -67,7 +67,7 @@ class StaticLineFormation(StaticLine):
     def __setTimer(self):
         if not self.timerSet:
             self.timerSet = True
-            self.robot.setTimer(700)
+            self.robot.setTimer(500)
 
     def __insideRobotFlooding(self):
         self.__changeColorIfTimestamp(False)
@@ -86,22 +86,22 @@ class StaticLineFormation(StaticLine):
             self.same_cluster_neighbors.append(n)
         return self.same_cluster_neighbors
 
+    def __keepStaticLine(self):
+        self.same_cluster_neighbors.clear()
+        self.same_cluster_neighbors = self.getSameClusterMembers()
+        if self._isEdgeRobot():
+            self.__edgeRobotFlooding()
+        else:
+            self.__insideRobotFlooding()    
+
     def update(self):
         self.check_phase()
         self.robot.velocity = Velocity(0, 0)
 
         self.timestamp_flood.agreement.updateMessages(
             self.robot.received_messages)
-
-        self.same_cluster_neighbors.clear()
-        self.same_cluster_neighbors = self.getSameClusterMembers()
         
-        if self._isEdgeRobot():
-            self.__edgeRobotFlooding()
-        else:
-            self.__insideRobotFlooding()
-
-        self.robot.broadcast["superAS"] = self.robot.super_cluster_id
+        self.__keepStaticLine()
         self.robot.is_allone()
 
     def check_phase(self):

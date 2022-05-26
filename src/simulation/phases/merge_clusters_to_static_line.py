@@ -181,7 +181,7 @@ class MergeClustersToStaticLine(Phase):
         robot = self.robot
         for m in robot.received_messages:
             if "Phase" in m.keys():
-                if m["Phase"] >= 4:
+                if m["Phase"] > 3:
                     robot.broadcast["superAS"] = self.robot.super_cluster_id
                     self.upgrade(m["Phase"], self.robot.super_cluster_id)
                     return
@@ -194,7 +194,7 @@ class MergeClustersToStaticLine(Phase):
             self.robot.faza = ph1.PhaseOneAndHalf(self.robot)
         elif next_phase == 2:
             self.robot.faza = dbg.AttractionPoint(self.robot)
-        elif next_phase >= 3:
+        elif next_phase == 3:
             self.robot.faza = st.StaticLineFormation(self.robot, superAS)
         #        elif next_phase == 4:
         #            self.robot.faza = ph4.PhaseFour(self.robot, superAS)

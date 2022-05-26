@@ -176,7 +176,7 @@ class PhaseOne(Phase):
         elif next_phase == 2:
             self.robot.faza = dbg.AttractionPoint(self.robot)
             #self.robot.faza = ph2.PhaseTwo(self.robot)
-        elif next_phase == 3:
+        elif next_phase == 3 or next_phase == 3.5:
             self.robot.faza = mg.MergeClustersToStaticLine(self.robot, superAS)
 
 
@@ -237,8 +237,7 @@ class PhaseOneAndHalf(Phase):
         elif next_phase == 2:
             self.robot.faza = dbg.AttractionPoint(self.robot)
             #            self.robot.faza = ph2.PhaseTwo(self.robot)
-        elif next_phase == 3:
+        elif next_phase == 3 or next_phase == 3.5:
             self.robot.faza = mg.MergeClustersToStaticLine(self.robot, superAS)
-            #            self.robot.faza = ph3.PhaseThree(self.robot, superAS)
         elif next_phase == 4:
             self.robot.faza = ph4.PhaseFour(self.robot, superAS)
