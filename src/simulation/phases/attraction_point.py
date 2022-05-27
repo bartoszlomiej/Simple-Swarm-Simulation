@@ -193,7 +193,7 @@ class AttractionPoint(Phase):
         '''
         if next_phase == 1.5:
             self.robot.faza = ph1.PhaseOneAndHalf(self.robot)
-        elif next_phase == 3:
+        elif next_phase >= 3:
             if self.robot.cluster_id == superAS:
                 self.robot.faza = st.StaticLineFormation(self.robot, superAS)
             else:

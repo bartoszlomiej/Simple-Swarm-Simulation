@@ -181,7 +181,7 @@ class MergeClustersToStaticLine(Phase):
         robot = self.robot
         for m in robot.received_messages:
             if "Phase" in m.keys():
-                if m["Phase"] >= 4:
+                if m["Phase"] > 3:
                     robot.broadcast["superAS"] = self.robot.super_cluster_id
                     self.upgrade(m["Phase"], self.robot.super_cluster_id)
                     return
