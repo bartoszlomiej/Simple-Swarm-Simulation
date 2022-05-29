@@ -86,7 +86,6 @@ class CountToTwo(StaticLine):
             self.edgeRobotFunctionallity(0.5)
         else:
             self.insideRobotFunctionallity()
-            
         
     def update(self):
         self.check_phase()

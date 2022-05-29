@@ -8,22 +8,6 @@ class StepForward(StaticLine):
         self.phase = 4
         self.isIncreased = False
 
-    def __getSuperclustersMembers(self):        
-        cluster_members = []
-        for n in self.robot.neighbors:
-            if n.super_cluster_id == self.robot.super_cluster_id:
-                cluster_members.append(n)
-        return cluster_members
-    
-    def __getSuperclustersMembersID(self):
-        allowed = []
-        allowed.append(self.robot.cluster_id)
-        for n in self.robot.neighbors:
-            if n.super_cluster_id == self.robot.super_cluster_id:
-                if not n.cluster_id in allowed:
-                    allowed.append(n.cluster_id)
-        return allowed
-
     def __getSameClusterMembers(self):
         self.same_cluster_neighbors.clear()
         for n in self.robot.neighbors:
@@ -31,14 +15,6 @@ class StepForward(StaticLine):
                 continue
             self.same_cluster_neighbors.append(n)
         return self.same_cluster_neighbors
-
-    def __getClosestNeighborCluster(self):
-        supercluster_members = self.__getSuperclustersMembersID()
-        best_neighbor, best_rd = spot.find_best_neighbor(self.robot, False, supercluster_members)
-        if not best_neighbor:
-            return None #The leader don't have the best neighbor
-        else:
-            return best_neighbor.cluster_id
 
     def __checkForStepForward(self):
         self.robot.follower_msg() #there is a need of direction
