@@ -37,7 +37,7 @@ class StaticLine(Phase):
         return True
 
     def insideRobotFunctionallity(self):
-        closest_neighbor, closest_neighbor_distance = self.__findClosestNeighbor(
+        closest_neighbor, closest_neighbor_distance = self._findClosestNeighbor(
         )
         opposite_neighbor, opposite_neighbor_distance = self.__findRobotOnOppositeSide(
             closest_neighbor)
@@ -63,7 +63,7 @@ class StaticLine(Phase):
         self.same_cluster_neighbors.remove(closest_neighbor)
 
         while self.same_cluster_neighbors:
-            opposite_neighbor, distance = self.__findClosestNeighbor()
+            opposite_neighbor, distance = self._findClosestNeighbor()
             if self.checkAngle(closest_neighbor, self.robot,
                                opposite_neighbor) > 90.0:
                 return opposite_neighbor, distance
@@ -73,13 +73,13 @@ class StaticLine(Phase):
         self.upgrade(3, self.robot.super_cluster_id)
         return None, 0
 
-    def edgeRobotFunctionallity(self):
-        closest_neighbor, distance_to_neighbor = self.__findClosestNeighbor()
+    def edgeRobotFunctionallity(self, desired_distance=0.8):
+        closest_neighbor, distance_to_neighbor = self._findClosestNeighbor()
         if not closest_neighbor:
             return
-        self.__keepDistance(closest_neighbor, distance_to_neighbor)
+        self.__keepDistance(closest_neighbor, distance_to_neighbor, desired_distance)
 
-    def __findClosestNeighbor(self):
+    def _findClosestNeighbor(self):
         closest_distance = 10000
         closest_neighbor = None
         distance = None
@@ -92,9 +92,9 @@ class StaticLine(Phase):
                 closest_neighbor = n
         return closest_neighbor, distance
 
-    def __keepDistance(self, neighbor, distance_to_neighbor):
+    def __keepDistance(self, neighbor, distance_to_neighbor, desired_distance=0.8):
         if distance_to_neighbor < (
-                0.8 *
+                desired_distance *
             (self.robot.sensor_range - self.robot.radius)) + self.robot.radius:
             spot.direction_to_neighbor(self.robot, neighbor)
             self.robot.direction.negate()

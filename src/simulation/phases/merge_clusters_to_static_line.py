@@ -161,7 +161,7 @@ class MergeClustersToStaticLine(Phase):
             self.makeMove()
 
     def update(self):
-        self.check_phase()
+        #self.check_phase()
         self.robot.velocity.x = 0
         self.robot.velocity.y = 0
         self.robot.update_color()
