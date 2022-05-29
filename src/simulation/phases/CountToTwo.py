@@ -1,20 +1,24 @@
 from simulation.robot.Velocity import Velocity
+from simulation.robot.Direction import Direction
 from simulation.phases.StaticLine import StaticLine
 from utils import SpotNeighbor as spot
+from simulation.phases.StepForward import StepForward
+
 
 class CountToTwo(StaticLine):
     def __init__(self, Robot, superAS):
         super().__init__(Robot, superAS)
         self.phase = 3.5
         self.isIncreased = False
+        self.robot.direction = Direction(1, 1)
 
-    def __getSuperclustersMembers(self):        
+    def __getSuperclustersMembers(self):
         cluster_members = []
         for n in self.robot.neighbors:
             if n.super_cluster_id == self.robot.super_cluster_id:
                 cluster_members.append(n)
         return cluster_members
-    
+
     def __getSuperclustersMembersID(self):
         allowed = []
         allowed.append(self.robot.cluster_id)
@@ -22,11 +26,12 @@ class CountToTwo(StaticLine):
             if n.super_cluster_id == self.robot.super_cluster_id:
                 if not n.cluster_id in allowed:
                     allowed.append(n.cluster_id)
-        return allowed        
+        return allowed
 
     def __getClosestNeighborCluster(self):
         supercluster_members = self.__getSuperclustersMembersID()
-        best_neighbor, best_rd = spot.find_best_neighbor(self.robot, False, supercluster_members)
+        best_neighbor, best_rd = spot.find_best_neighbor(
+            self.robot, False, supercluster_members)
         if not best_neighbor:
             return None #The leader don't have the best neighbor
         else:
@@ -83,7 +88,7 @@ class CountToTwo(StaticLine):
         self.same_cluster_neighbors.clear()
         self.same_cluster_neighbors = self.__getSuperclustersMembers()
         if self._isEdgeRobot():
-            self.edgeRobotFunctionallity(0.5)
+            self.edgeRobotFunctionallity(0.3)
         else:
             self.insideRobotFunctionallity()
         
@@ -108,5 +113,6 @@ class CountToTwo(StaticLine):
             self.robot.faza = ph1.PhaseOneAndHalf(self.robot)
         elif next_phase == 2:
             self.robot.faza = ph2.PhaseTwo(self.robot)
-        #        elif next_phase == 4:
+        elif next_phase == 4:
+            self.robot.faza = StepForward(self.robot, superAS)
         #            self.robot.faza = ph4.PhaseFour(self.robot, superAS)

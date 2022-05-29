@@ -29,8 +29,8 @@ class StaticLineFormation(StaticLine):
         BLACK = (0, 0, 0)
         pg.draw.circle(self.robot.image, BLACK,
                        (self.robot.radius, self.robot.radius),
-                       self.robot.radius)        
-        
+                       self.robot.radius)
+
     def dbg_msg(self):
         print("TUTAJ JESTEM!!!")
 
@@ -67,16 +67,16 @@ class StaticLineFormation(StaticLine):
     def __setTimer(self):
         if not self.timerSet:
             self.timerSet = True
-            self.robot.setTimer(500)
+            self.robot.setTimer(1500)
 
     def __insideRobotFlooding(self):
         self.__changeColorIfTimestamp(False)
         self.insideRobotFunctionallity()
-        
+
     def __edgeRobotFlooding(self):
         self.__startFlood()
         self.__changeColorIfTimestamp(self)
-        self.edgeRobotFunctionallity()
+        self.edgeRobotFunctionallity(0.5)
 
     def getSameClusterMembers(self):
         self.same_cluster_neighbors.clear()
@@ -92,7 +92,7 @@ class StaticLineFormation(StaticLine):
         if self._isEdgeRobot():
             self.__edgeRobotFlooding()
         else:
-            self.__insideRobotFlooding()    
+            self.__insideRobotFlooding()
 
     def update(self):
         self.check_phase()
