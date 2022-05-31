@@ -76,7 +76,7 @@ class StaticLineFormation(StaticLine):
     def __edgeRobotFlooding(self):
         self.__startFlood()
         self.__changeColorIfTimestamp(self)
-        self.edgeRobotFunctionallity(0.5)
+        self.edgeRobotFunctionallity(0.8)
 
     def getSameClusterMembers(self):
         self.same_cluster_neighbors.clear()
@@ -100,7 +100,7 @@ class StaticLineFormation(StaticLine):
 
         self.timestamp_flood.agreement.updateMessages(
             self.robot.received_messages)
-        
+
         self.__keepStaticLine()
         self.robot.is_allone()
 

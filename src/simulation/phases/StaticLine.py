@@ -44,6 +44,10 @@ class StaticLine(Phase):
         if not opposite_neighbor:
             return
         self.__equalizeDistances(closest_neighbor, opposite_neighbor)
+        self.__repeatCommonDirection()
+
+    def __repeatCommonDirection(self):
+        self.robot.follower_msg()
 
     def __equalizeDistances(self, closest_neighbor, opposite_neighbor):
         point_x = (closest_neighbor.position.x +
@@ -77,7 +81,17 @@ class StaticLine(Phase):
         closest_neighbor, distance_to_neighbor = self._findClosestNeighbor()
         if not closest_neighbor:
             return
-        self.__keepDistance(closest_neighbor, distance_to_neighbor, desired_distance)
+        self.__keepDistance(closest_neighbor, distance_to_neighbor,
+                            desired_distance)
+        self.__broadcastFreeDirection(closest_neighbor)
+
+    def __broadcastFreeDirection(self, closest_neighbor):
+        self.__oppositeDirectionTo(closest_neighbor)
+        self.robot.broadcastMessage("Direction", self.robot.direction.copy())
+
+    def __oppositeDirectionTo(self, closest_neighbor):
+        spot.direction_to_neighbor(self.robot, closest_neighbor)
+        self.robot.direction.negate()
 
     def _findClosestNeighbor(self):
         closest_distance = 10000
@@ -92,7 +106,10 @@ class StaticLine(Phase):
                 closest_neighbor = n
         return closest_neighbor, distance
 
-    def __keepDistance(self, neighbor, distance_to_neighbor, desired_distance=0.8):
+    def __keepDistance(self,
+                       neighbor,
+                       distance_to_neighbor,
+                       desired_distance=0.8):
         if distance_to_neighbor < (
                 desired_distance *
             (self.robot.sensor_range - self.robot.radius)) + self.robot.radius:
