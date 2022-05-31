@@ -118,7 +118,6 @@ class Simulation:
                     self.__higherPhaseCollision(robot)
             other_robots.empty()
 
-
     def __higherPhaseCollision(self, robot):
         if robot.faza.phase > 2:
             robot.direction = robot.find_direction()
@@ -133,6 +132,7 @@ class Simulation:
             self.__oppositeMovementWithNoise(robot)
         elif robot.state == RobotState.MOVING:
             robot.velocity.negate()
+            robot.direction.negate()
 
         angle = 0.5 * math.pi + math.atan2(dy, dx)
         self.__moveRobotByAngle(robot, angle)
@@ -140,6 +140,7 @@ class Simulation:
     def __oppositeMovementWithNoise(self, robot):
         noise = np.random.uniform(-0.2, 0.2, 2)
         robot.velocity.negate()
+        robot.direction.negate()
         robot.velocity.x += noise[0]
         robot.velocity.y += noise[1]
 

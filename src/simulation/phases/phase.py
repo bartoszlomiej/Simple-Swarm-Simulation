@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from simulation.robot import RobotState
+from utils import SpotNeighbor as spot
 import math
 
 
@@ -36,6 +37,7 @@ class Phase(ABC):
         self.robot.state = RobotState.MOVING
         self.robot.velocity.x = self.robot.direction.x * self.robot.velocity_level
         self.robot.velocity.y = self.robot.direction.y * self.robot.velocity_level
+
 
     def checkAngle(self, n1, robot, n2):
         angle = math.atan2(n1.position.y - robot.position.y,

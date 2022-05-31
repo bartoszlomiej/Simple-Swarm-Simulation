@@ -266,7 +266,14 @@ def is_collision_distance(robot):
         return False
     return True
 
-
+def border_return(robot):
+    if robot.position.x <= 0 or robot.position.x > robot.board_resolution.width - 2 * robot.radius:
+        robot.direction.x = -robot.direction.x
+        robot.velocity.x = -robot.velocity.x
+    if robot.position.y <= 0 or robot.position.y > robot.board_resolution.height - 2 * robot.radius:
+        robot.direction.y = -robot.direction.y
+        robot.velocity.y = -robot.velocity.y
+        
 def is_any_collision(robot, min_d = 0.3):
     '''
     Checks whether there is going to be a collision in the direciton we are approaching

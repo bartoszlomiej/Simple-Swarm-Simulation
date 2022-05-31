@@ -4,10 +4,13 @@ import simulation.phases.phasetwo as ph2
 import simulation.phases.phasethree as ph3
 import simulation.phases.phasefour as ph4
 
+from utils import SpotNeighbor as spot
+
 import simulation.phases.attraction_point as dbg
 from simulation.robot import RobotState
 from simulation.robot.Timer import Timer
 from simulation.robot.Velocity import Velocity
+from simulation.robot.Direction import Direction
 import simulation.phases.merge_clusters_to_static_line as mg
 import pygame as pg
 
@@ -66,7 +69,7 @@ class PhaseOne(Phase):
             '''
             If there are no neighbors -> start moving
             '''
-            robot.velocity = Velocity.generateRandom(self.robot.velocity_level)
+            robot.direction = Direction.generateRandom()
             robot.state = RobotState.MOVING
 
         if len(robot.neighbors) != robot.detected_robots_number:
@@ -81,17 +84,20 @@ class PhaseOne(Phase):
             if not self.minimal_distance():
                 return
             robot.state = RobotState.STOPPED
-            robot.velocity.x = 0
-            robot.velocity.y = 0
+            robot.Direction = Direction(0, 0)
+            #robot.Velocity = Velocity(0, 0)
         if robot.state == RobotState.STOPPED and p_coefficient < 0.8:
             '''
             if robot is stopped than there is possibility that robot will start moving
             '''
+            robot.Direction = Direction(0, 0)
+            #robot.Velocity = Velocity(0, 0)
+            self.robot.state = RobotState.STOPPED
             robot.iterator = robot.iterator + 1
+
             if robot.iterator < -1:  #> 5000: #replace -1 with natural number to obtain move after stop behavior
                 robot.state = RobotState.MOVINGAGAIN
                 robot.iterator = 0
-                robot.velocity = Velocity.generateRandom(robot.velocity_level)
 
         elif robot.state == RobotState.MOVINGAGAIN:
             '''
@@ -100,6 +106,7 @@ class PhaseOne(Phase):
             robot.iterator = robot.iterator + 1
             if robot.iterator > 50:
                 robot.state = RobotState.MOVING
+                robot.direction = Direction.generateRandom()
                 robot.iterator = 0
 
     def use_timer(self):
@@ -109,7 +116,7 @@ class PhaseOne(Phase):
         robot = self.robot
         if robot.state == RobotState.MOVING:  #only robots that are not moving can use timers
             return
-
+        
         if robot.cluster_id == robot.timer.cluster_id:
             if len(
                     robot.neighbors
@@ -140,6 +147,14 @@ class PhaseOne(Phase):
         else:
             robot.setRandomTimer()
 
+    def __makeMove(self):
+        if self.robot.state == RobotState.MOVING:
+            self.robot.velocity.x = self.robot.direction.x * self.robot.velocity_level
+            self.robot.velocity.y = self.robot.direction.y * self.robot.velocity_level
+            spot.border_return(self.robot)
+        else:
+            self.robot.velocity = Velocity(0, 0)
+
     def check_phase(self):
         robot = self.robot
         for m in robot.received_messages:
@@ -158,14 +173,17 @@ class PhaseOne(Phase):
         '''
         Performes all functions of the current phase in proper order.
         '''
+        #self.robot.Velocity = Velocity(0, 0)
         robot = self.robot
         aggregation_states = (RobotState.MOVING, RobotState.STOPPED,
                               RobotState.MOVINGAGAIN)
         if robot.state in aggregation_states:
             self.aggregate()  #???
+        self.__makeMove()
         self.autonomus_system()
         self.use_timer()
         self.check_phase()
+
 
     def upgrade(self, next_phase, superAS=None):
         '''
