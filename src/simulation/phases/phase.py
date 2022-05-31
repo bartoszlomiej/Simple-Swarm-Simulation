@@ -37,6 +37,7 @@ class Phase(ABC):
         self.robot.state = RobotState.MOVING
         self.robot.velocity.x = self.robot.direction.x * self.robot.velocity_level
         self.robot.velocity.y = self.robot.direction.y * self.robot.velocity_level
+        spot.border_return(self.robot)
 
 
     def checkAngle(self, n1, robot, n2):

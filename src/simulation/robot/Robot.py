@@ -95,13 +95,13 @@ class Robot(pg.sprite.Sprite):
         # boundary parameters
         if self.position.x < 0 or self.position.x > self.board_resolution.width - 2 * self.radius:
             if self.faza.phase == 2:  # just for dbg
-                self.direction.negate()
+                #                self.direction.negate()
                 self.agreement_state = SYN#_ACK
                 self.broadcast["Turn back"] = self.direction.copy()
             #self.velocity.x = -self.velocity.x
         if self.position.y < 0 or self.position.y > self.board_resolution.height - 2 * self.radius:
             if self.faza.phase == 2:  # just for dbg
-                self.direction.negate()
+                #self.direction.negate()
                 self.agreement_state = SYN#_ACK
                 self.broadcast["Turn back"] = self.direction.copy()
            # self.velocity.y = -self.velocity.y
@@ -153,12 +153,14 @@ class Robot(pg.sprite.Sprite):
         If any robot for any reason stays allone, then it come back to phase one, and it's AS is being created again
         '''
         if not self.neighbors:
+            self.direction = Direction.generateRandom()
             self.faza = PhaseOne(self)
             return
         for n in self.neighbors:
             if self.cluster_id == n.cluster_id:
                 return
         if not spot.is_collision_distance(self):
+            self.direction = Direction.generateRandom()
             self.faza = PhaseOne(self)
 
     def isAlloneInSupercluster(self):

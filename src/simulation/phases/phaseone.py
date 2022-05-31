@@ -85,13 +85,11 @@ class PhaseOne(Phase):
                 return
             robot.state = RobotState.STOPPED
             robot.Direction = Direction(0, 0)
-            #robot.Velocity = Velocity(0, 0)
         if robot.state == RobotState.STOPPED and p_coefficient < 0.8:
             '''
             if robot is stopped than there is possibility that robot will start moving
             '''
             robot.Direction = Direction(0, 0)
-            #robot.Velocity = Velocity(0, 0)
             self.robot.state = RobotState.STOPPED
             robot.iterator = robot.iterator + 1
 
@@ -194,7 +192,7 @@ class PhaseOne(Phase):
         elif next_phase == 2:
             self.robot.faza = dbg.AttractionPoint(self.robot)
             #self.robot.faza = ph2.PhaseTwo(self.robot)
-        elif next_phase == 3 or next_phase == 3.5:
+        elif next_phase >= 3:
             self.robot.faza = mg.MergeClustersToStaticLine(self.robot, superAS)
 
 
