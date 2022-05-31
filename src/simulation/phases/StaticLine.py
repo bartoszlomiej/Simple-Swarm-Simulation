@@ -104,7 +104,7 @@ class StaticLine(Phase):
             if distance < closest_distance:
                 closest_distance = distance
                 closest_neighbor = n
-        return closest_neighbor, distance
+        return closest_neighbor, closest_distance
 
     def __isOptimalDistance(self, distance_to_neighbor, distance_to_keep, epsilon):
         if distance_to_neighbor < distance_to_keep + epsilon and \
