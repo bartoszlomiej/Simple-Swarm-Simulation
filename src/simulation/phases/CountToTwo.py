@@ -11,7 +11,6 @@ class CountToTwo(StaticLine):
         self.phase = 3.5
         self.isIncreased = False
         self.robot.direction = Direction(1, 1)
-        print(self.robot.direction.x, self.robot.direction.y)
 
     def __getSuperclustersMembers(self):
         cluster_members = []
@@ -39,12 +38,12 @@ class CountToTwo(StaticLine):
             return best_neighbor.cluster_id
 
     def __setTimer(self):
-        self.robot.setTimer(20)
+        self.robot.setTimer(1000) #20
         self.timerSet = True
 
     def __upgradeIfTimerFinished(self):
         if self.robot.timer.duration < 0:
-            #self.upgrade(4, self.robot.super_cluster_id)
+            self.upgrade(4, self.robot.super_cluster_id)
             pass
 
     def __useTimerIfSet(self):
