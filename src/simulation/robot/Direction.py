@@ -1,3 +1,5 @@
+from numpy.random import rand
+
 class Direction:
     def __init__(self, x, y):
         self.x = x
@@ -20,3 +22,8 @@ class Direction:
 
     def copy(self):
         return Direction(self.x, self.y)
+    
+    @staticmethod
+    def generateRandom():
+        return Direction((rand() - 0.5), (rand() - 0.5))
+        

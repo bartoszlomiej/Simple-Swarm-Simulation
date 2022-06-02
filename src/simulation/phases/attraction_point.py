@@ -166,7 +166,7 @@ class AttractionPoint(Phase):
         return True
 
     def __moveIfPathIsFree(self):
-        if not spot.is_any_collision(self.robot, 0.2):
+        if not spot.is_any_collision(self.robot, 0.3):
             self.makeMove()
 
     def check_phase(self):

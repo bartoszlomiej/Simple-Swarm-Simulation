@@ -104,8 +104,40 @@ class StaticLine(Phase):
             if distance < closest_distance:
                 closest_distance = distance
                 closest_neighbor = n
-        return closest_neighbor, distance
+        return closest_neighbor, closest_distance
 
+    def __isOptimalDistance(self, distance_to_neighbor, distance_to_keep, epsilon):
+        if distance_to_neighbor < distance_to_keep + epsilon and \
+           distance_to_neighbor > distance_to_keep - epsilon:
+            return True
+        return False
+
+    def __isTooSmallDistance(self, distance_to_neighbor, distance_to_keep, epsilon):
+        if distance_to_neighbor < distance_to_keep - epsilon:
+            return True
+        return False
+
+    def __isTooBigDistance(self, distance_to_neighbor, distance_to_keep, epsilon):
+        if distance_to_neighbor > distance_to_keep + epsilon:
+            return True
+        return False
+    
+    def __keepDistance(self,
+                       neighbor,
+                       distance_to_neighbor,
+                       desired_distance=0.8):
+        distance_to_keep = desired_distance * (self.robot.sensor_range - self.robot.radius) + self.robot.radius
+        spot.direction_to_neighbor(self.robot, neighbor)
+        if self.__isOptimalDistance(distance_to_neighbor, distance_to_keep, 5):
+            return
+        elif self.__isTooSmallDistance(distance_to_neighbor, distance_to_keep, 5):
+            self.robot.direction.negate()
+            self.__moveIfPathIsFree()
+        elif self.__isTooBigDistance(distance_to_neighbor, distance_to_keep, 5):
+            self.__moveIfPathIsFree()
+
+
+    '''
     def __keepDistance(self,
                        neighbor,
                        distance_to_neighbor,
@@ -116,7 +148,7 @@ class StaticLine(Phase):
             spot.direction_to_neighbor(self.robot, neighbor)
             self.robot.direction.negate()
             self.__moveIfPathIsFree()
-
+    '''
     def __moveIfPathIsFree(self):
         if not spot.is_any_collision(self.robot, 0.2):
             self.robot.direction.normalize()

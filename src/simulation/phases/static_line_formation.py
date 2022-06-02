@@ -25,6 +25,7 @@ class StaticLineFormation(StaticLine):
         self.robot.agreement_state = SYN
         self.paintItBlack()
 
+
     def paintItBlack(self):
         BLACK = (0, 0, 0)
         pg.draw.circle(self.robot.image, BLACK,
@@ -67,7 +68,7 @@ class StaticLineFormation(StaticLine):
     def __setTimer(self):
         if not self.timerSet:
             self.timerSet = True
-            self.robot.setTimer(1500)
+            self.robot.setTimer(15000)
 
     def __insideRobotFlooding(self):
         self.__changeColorIfTimestamp(False)
@@ -87,7 +88,6 @@ class StaticLineFormation(StaticLine):
         return self.same_cluster_neighbors
 
     def __keepStaticLine(self):
-        self.same_cluster_neighbors.clear()
         self.same_cluster_neighbors = self.getSameClusterMembers()
         if self._isEdgeRobot():
             self.__edgeRobotFlooding()
@@ -97,10 +97,8 @@ class StaticLineFormation(StaticLine):
     def update(self):
         self.check_phase()
         self.robot.velocity = Velocity(0, 0)
-
         self.timestamp_flood.agreement.updateMessages(
             self.robot.received_messages)
-
         self.__keepStaticLine()
         self.robot.is_allone()
 
