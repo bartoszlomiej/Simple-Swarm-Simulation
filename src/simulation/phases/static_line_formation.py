@@ -68,7 +68,7 @@ class StaticLineFormation(StaticLine):
     def __setTimer(self):
         if not self.timerSet:
             self.timerSet = True
-            self.robot.setTimer(15000)
+            self.robot.setTimer(1000)
 
     def __insideRobotFlooding(self):
         self.__changeColorIfTimestamp(False)

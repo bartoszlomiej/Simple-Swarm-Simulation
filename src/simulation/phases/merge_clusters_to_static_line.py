@@ -28,6 +28,12 @@ class MergeClustersToStaticLine(Phase):
         self.robot.waiting = False
         self.robot.agreement_state = SYN
 
+    def paintItBlack(self):
+        BLACK = (0, 0, 0)
+        pg.draw.circle(self.robot.image, BLACK,
+                       (self.robot.radius, self.robot.radius),
+                       self.robot.radius)        
+
     def followerFunctionallity(self):
         spot.follower(self.robot)
         self.moveIfPathIsFree()
@@ -56,7 +62,7 @@ class MergeClustersToStaticLine(Phase):
     def getMainClusterNeighbors(self):
         main_cluster_neighbors = []
         for n in self.robot.neighbors:
-            if n.cluster_id == self.robot.super_cluster_id:
+            if abs(n.cluster_id - self.robot.super_cluster_id) <= 100: #important!!!
                 main_cluster_neighbors.append(n)
         return main_cluster_neighbors
 

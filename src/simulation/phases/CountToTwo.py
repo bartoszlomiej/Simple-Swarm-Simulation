@@ -10,7 +10,7 @@ class CountToTwo(StaticLine):
         super().__init__(Robot, superAS)
         self.phase = 3.5
         self.isIncreased = False
-        #        self.robot.direction = Direction(1, 1)
+        self.robot.direction = Direction(1, 1)
         print(self.robot.direction.x, self.robot.direction.y)
 
     def __getSuperclustersMembers(self):
@@ -96,6 +96,7 @@ class CountToTwo(StaticLine):
         
     def update(self):
         self.check_phase()
+        self.robot.direction = Direction(1, 1)
         self.__countToTwo()
         self.robot.velocity = Velocity(0, 0)
         self.__keepStaticLine()
