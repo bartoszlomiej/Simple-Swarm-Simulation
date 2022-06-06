@@ -200,3 +200,6 @@ class AttractionPoint(Phase):
                 self.robot.faza = mg.MergeClustersToStaticLine(
                     self.robot, superAS)
             #            self.robot.faza = ph3.PhaseThree(self.robot, superAS)
+
+    def serialize(self):            
+        return (self.phase, self.next_phase)

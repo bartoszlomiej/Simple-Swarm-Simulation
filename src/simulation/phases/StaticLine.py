@@ -187,3 +187,6 @@ class StaticLine(Phase):
             self.robot.faza = mg.MergeClustersToStaticLine(self.robot, superAS)
         #        elif next_phase == 4:
         #            self.robot.faza = ph4.PhaseFour(self.robot, superAS)
+
+    def serialize(self):        
+        return (self.phase, self.timerSet, self.same_cluster_neighbors)

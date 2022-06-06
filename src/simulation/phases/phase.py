@@ -32,7 +32,11 @@ class Phase(ABC):
         Performes all operations in the given phase
         '''
         pass
-
+    
+    @abstractmethod
+    def serialize(self):
+        pass
+    
     def makeMove(self):
         self.robot.state = RobotState.MOVING
         self.robot.velocity.x = self.robot.direction.x * self.robot.velocity_level

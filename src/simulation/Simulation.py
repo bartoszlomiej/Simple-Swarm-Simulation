@@ -10,6 +10,7 @@ from simulation.robot.Robot import Robot
 from simulation.robot.Position import Position
 from utils.colors import WHITE
 from utils.Resolution import Resolution
+from simulation.SaveState import SavedStates
 
 
 class Simulation:
@@ -20,7 +21,7 @@ class Simulation:
         clock = pg.time.Clock()
         time = 1000000
         for i in range(time):
-            self.__exitOnQuitEvent()
+            self.__eventHandler()
             self.__updateSwarm()
             self.__handleCollisions()
             self.__robotVision()
@@ -162,7 +163,19 @@ class Simulation:
                     if (0.15 * self.sensor_range ** 2) < (dx + dy):
                         r.in_range()
 
-    def __exitOnQuitEvent(self):
+    def __saveStateOnKeyPressedEvent(self, event):
+        if event.key == pg.K_s:
+            self.__saveAllRobotsState()
+            print("saved state correctly")
+
+    def __saveAllRobotsState(self):
+        save = SavedStates("test1.dat")
+        for robot in self.swarm:
+            save.saveRobotState(robot)
+
+    def __eventHandler(self):
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 sys.exit()
+            elif event.type == pg.KEYDOWN:
+                self.__saveStateOnKeyPressedEvent(event)

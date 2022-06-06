@@ -4,6 +4,11 @@ from simulation.phases.StaticLine import StaticLine
 from utils import SpotNeighbor as spot
 
 
+'''
+pickle dump
+pickle load
+'''
+
 class StepForward(StaticLine):
     def __init__(self, Robot, superAS):
         super().__init__(Robot, superAS)
@@ -102,7 +107,7 @@ class StepForward(StaticLine):
         self.same_cluster_neighbors.clear()
         self.same_cluster_neighbors = self.__getSameClusterMembers()
         if self._isEdgeRobot():
-            self.edgeRobotFunctionallity(0.5)
+            self.edgeRobotFunctionallity(0.4)
         else:
             self.insideRobotFunctionallity()
 

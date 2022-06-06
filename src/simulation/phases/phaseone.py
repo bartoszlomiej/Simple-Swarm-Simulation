@@ -195,7 +195,9 @@ class PhaseOne(Phase):
         elif next_phase >= 3:
             self.robot.faza = mg.MergeClustersToStaticLine(self.robot, superAS)
 
-
+    def serialize(self):        
+        return (self.phase, self.state)
+    
 class PhaseOneAndHalf(Phase):
     def __init__(self, Robot):
         super().__init__(Robot)
@@ -260,3 +262,6 @@ class PhaseOneAndHalf(Phase):
         elif next_phase == 4:
             self.robot.faza = ph4.PhaseFour(self.robot, superAS)
         '''
+
+    def serialize(self):        
+        return (self.phase, self.state)

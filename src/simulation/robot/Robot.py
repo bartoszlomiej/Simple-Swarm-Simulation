@@ -4,7 +4,7 @@ import math
 
 from simulation.robot.Timer import Timer
 from utils import SpotNeighbor as spot
-from simulation.phases.phaseone import PhaseOne
+from simulation.phases.phaseone import PhaseOne, PhaseOneAndHalf
 from simulation.robot import RobotState
 from simulation.robot.Velocity import Velocity
 from simulation.robot.Direction import Direction
@@ -327,3 +327,55 @@ class Robot(pg.sprite.Sprite):
         if direction.x == 0 and direction.y == 0:
             return False
         return True
+
+    def getRobotState(self):
+        state = (self.position, self.board_resolution, self.sensor_range,
+                 self.velocity, self.velocity_level, self.radius,
+                 self.detected_robots_number, self.iterator, self.sensors_number,
+                 self.broadcast, self.cluster_id, self.super_cluster_id,
+                 self.joined_to_cluster, self.timer, self.moved,
+                 self.ap, self.direction, self.sensors, self.S,
+                 self.is_downgrade, self.state, self.waiting,
+                 self.agreement_state, self.faza.serialize()
+                 )
+        return state
+
+    def readRobotState(self, serialized_data):
+        self.position = serialized_data[0]
+        self.board_resolution = serialized_data[1]
+        self.sensor_range = serialized_data[2]
+        self.velocity = serialized_data[3]
+        self.velocity_level = serialized_data[4]
+        self.radius = serialized_data[5]
+        self.detected_robots_number = serialized_data[6]
+        self.iterator = serialized_data[7]
+        self.sensors_number = serialized_data[8]
+        self.broadcast = serialized_data[9]
+        self.cluster_id = serialized_data[10]
+        self.super_cluster_id = serialized_data[11]
+        self.joined_to_cluster = serialized_data[12]
+        self.timer = serialized_data[13]
+        self.moved = serialized_data[14]
+        self.ap = serialized_data[15]
+        self.direction = serialized_data[16]
+        self.sensors = serialized_data[17]
+        self.S = serialized_data[18]
+        self.is_downgrade = serialized_data[19]
+        self.state = serialized_data[20]
+        self.waiting = serialized_data[21]
+        self.agreement_state = serialized_data[22]
+        self.faza = self.__readProperPhase(serialized_data[23])
+
+
+    def __readProperPhase(self, serialized_phase):
+        next_phase = serialized_phase[0]
+        if next_phase == 1:
+            self.robot.faza = PhaseOne(self)
+        if next_phase == 1.5:
+            self.robot.faza = PhaseOneAndHalf(self)
+        elif next_phase == 2:
+            self.robot.faza = AttractionPoint(self)
+        elif next_phase == 3:
+            self.robot.faza = MergeClustersToStaticLine(self, self.super_cluster_id)
+        elif next_phase == 4:
+            self.robot.faza = StepForward(self, self.super_cluster_id)            
