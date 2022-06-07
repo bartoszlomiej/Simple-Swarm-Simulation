@@ -189,4 +189,4 @@ class StaticLine(Phase):
         #            self.robot.faza = ph4.PhaseFour(self.robot, superAS)
 
     def serialize(self):        
-        return (self.phase, self.timerSet, self.same_cluster_neighbors)
+        return (self.phase, self.timerSet)

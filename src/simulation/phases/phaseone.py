@@ -264,4 +264,4 @@ class PhaseOneAndHalf(Phase):
         '''
 
     def serialize(self):        
-        return (self.phase, self.state)
+        return (self.phase)

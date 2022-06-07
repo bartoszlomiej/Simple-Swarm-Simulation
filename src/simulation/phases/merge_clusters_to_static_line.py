@@ -20,7 +20,6 @@ class MergeClustersToStaticLine(Phase):
         super().__init__(Robot)
         self.phase = 3
         self.robot.super_cluster_id = superAS
-        self.isIncreased = False
         self.robot.velocity = Velocity(0, 0)
         self.robot.update_color()
         self.robot.state = RobotState.MOVING
@@ -204,3 +203,6 @@ class MergeClustersToStaticLine(Phase):
             self.robot.faza = st.StaticLineFormation(self.robot, superAS)
         #        elif next_phase == 4:
         #            self.robot.faza = ph4.PhaseFour(self.robot, superAS)
+        
+    def serialize(self):            
+        return (self.phase, self.stacked)

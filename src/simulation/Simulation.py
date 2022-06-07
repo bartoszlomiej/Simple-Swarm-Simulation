@@ -38,13 +38,15 @@ class Simulation:
                  velocity_lvl=4,
                  multithreading=True,
                  attraction_point=(0, 0, 0),
-                 robot_radius=10):
+                 robot_radius=10,
+                 load_data_file=None):
         self.window_resolution = window_resolution
         self.sensor_range = sensor_range
         self.velocity_lvl = velocity_lvl
         self.multithreading = multithreading
         self.attraction_point = attraction_point
         self.robot_radius = robot_radius
+        self.load_data_file = load_data_file
 
         self.swarm = pg.sprite.Group()
         self.th_group = []
@@ -63,6 +65,9 @@ class Simulation:
 
             robot.ap = self.attraction_point
             self.swarm.add(robot)
+            
+        if self.load_data_file:
+            self.__loadDataFromFile()
 
     def __createNonCollidingRect(self):
         tries = 100_000
@@ -179,3 +184,10 @@ class Simulation:
                 sys.exit()
             elif event.type == pg.KEYDOWN:
                 self.__saveStateOnKeyPressedEvent(event)
+
+    def __loadDataFromFile(self):
+        load = SavedStates(self.load_data_file)
+        load.initializeLoading()
+        for robot in self.swarm:
+            robot.loadState(load.loadRobotState())
+            robot.update()

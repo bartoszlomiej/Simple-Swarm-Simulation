@@ -22,7 +22,7 @@ class AttractionPoint(Phase):
     def __init__(self, Robot):
         super().__init__(Robot)
         self.phase = 2
-        self.next_phase = False
+        #        self.next_phase = False
         Robot.clear_broadcast()
         Robot.initialize_sensors()
         self.robot.velocity_level /= 2  #just for dbg
@@ -202,4 +202,4 @@ class AttractionPoint(Phase):
             #            self.robot.faza = ph3.PhaseThree(self.robot, superAS)
 
     def serialize(self):            
-        return (self.phase, self.next_phase)
+        return (self.phase)

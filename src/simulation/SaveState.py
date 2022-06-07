@@ -16,7 +16,7 @@ class SavedStates:
 
     def loadRobotState(self):
         try:
-            yield pickle.load(filehandler)
+            return pickle.load(self.filehandler)
         except EOFError:
             return None
 

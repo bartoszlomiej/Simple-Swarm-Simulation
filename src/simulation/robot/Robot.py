@@ -5,6 +5,9 @@ import math
 from simulation.robot.Timer import Timer
 from utils import SpotNeighbor as spot
 from simulation.phases.phaseone import PhaseOne, PhaseOneAndHalf
+from simulation.phases.attraction_point import AttractionPoint
+from simulation.phases.merge_clusters_to_static_line import MergeClustersToStaticLine
+from simulation.phases.StepForward import StepForward
 from simulation.robot import RobotState
 from simulation.robot.Velocity import Velocity
 from simulation.robot.Direction import Direction
@@ -340,7 +343,7 @@ class Robot(pg.sprite.Sprite):
                  )
         return state
 
-    def readRobotState(self, serialized_data):
+    def loadState(self, serialized_data):
         self.position = serialized_data[0]
         self.board_resolution = serialized_data[1]
         self.sensor_range = serialized_data[2]
@@ -364,18 +367,24 @@ class Robot(pg.sprite.Sprite):
         self.state = serialized_data[20]
         self.waiting = serialized_data[21]
         self.agreement_state = serialized_data[22]
-        self.faza = self.__readProperPhase(serialized_data[23])
+        self.__loadProperPhase(serialized_data[23])
 
 
-    def __readProperPhase(self, serialized_phase):
-        next_phase = serialized_phase[0]
+    def __loadProperPhase(self, serialized_phase):
+        if type(serialized_phase) == tuple:
+            next_phase = serialized_phase[0]
+        else:
+            next_phase = serialized_phase
         if next_phase == 1:
-            self.robot.faza = PhaseOne(self)
+            self.faza = PhaseOne(self)
+            self.faza.state = serialized_phase[1]
         if next_phase == 1.5:
-            self.robot.faza = PhaseOneAndHalf(self)
+            self.faza = PhaseOneAndHalf(self)
         elif next_phase == 2:
-            self.robot.faza = AttractionPoint(self)
+            self.faza = AttractionPoint(self)
         elif next_phase == 3:
-            self.robot.faza = MergeClustersToStaticLine(self, self.super_cluster_id)
+            self.faza = MergeClustersToStaticLine(self, self.super_cluster_id)
+            self.faza.stacked = serialized_phase[1] 
         elif next_phase == 4:
-            self.robot.faza = StepForward(self, self.super_cluster_id)            
+            self.faza = StepForward(self, self.super_cluster_id) 
+            self.faza.timerSet = serialized_phase[1] 
