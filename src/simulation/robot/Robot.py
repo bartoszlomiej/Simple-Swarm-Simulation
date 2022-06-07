@@ -7,6 +7,7 @@ from utils import SpotNeighbor as spot
 from simulation.phases.phaseone import PhaseOne, PhaseOneAndHalf
 from simulation.phases.attraction_point import AttractionPoint
 from simulation.phases.merge_clusters_to_static_line import MergeClustersToStaticLine
+from simulation.phases.static_line_formation import StaticLineFormation
 from simulation.phases.StepForward import StepForward
 from simulation.robot import RobotState
 from simulation.robot.Velocity import Velocity
@@ -94,7 +95,6 @@ class Robot(pg.sprite.Sprite):
         self.clear_broadcast()
 
         self.faza.update()
-
         # boundary parameters
         if self.position.x < 0 or self.position.x > self.board_resolution.width - 2 * self.radius:
             if self.faza.phase == 2:  # just for dbg
@@ -384,7 +384,9 @@ class Robot(pg.sprite.Sprite):
             self.faza = AttractionPoint(self)
         elif next_phase == 3:
             self.faza = MergeClustersToStaticLine(self, self.super_cluster_id)
-            self.faza.stacked = serialized_phase[1] 
+            self.faza.stacked = serialized_phase[1]
+        elif next_phase == 3.2:
+            self.faza = StaticLineFormation(self, self.super_cluster_id)
         elif next_phase == 4:
             self.faza = StepForward(self, self.super_cluster_id) 
-            self.faza.timerSet = serialized_phase[1] 
+            self.faza.timerSet = serialized_phase[1]

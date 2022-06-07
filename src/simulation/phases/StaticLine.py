@@ -16,7 +16,7 @@ import simulation.phases.merge_clusters_to_static_line as mg
 class StaticLine(Phase):
     def __init__(self, Robot, superAS):
         super().__init__(Robot)
-        self.phase = 3
+        self.phase = 3.2
         self.robot.cluster_id = superAS
         self.robot.super_cluster_id = superAS
         self.timerSet = False

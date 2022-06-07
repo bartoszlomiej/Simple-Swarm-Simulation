@@ -190,4 +190,14 @@ class Simulation:
         load.initializeLoading()
         for robot in self.swarm:
             robot.loadState(load.loadRobotState())
-            robot.update()
+            '''
+            print(len(robot.neighbors))
+            robot.update_msg()
+            print(robot.received_messages)
+            if len(robot.neighbors) > 0:
+                print(robot.neighbors[0].broadcast)
+            print(robot.broadcast)
+            '''
+            #            robot.update()
+            #            print(type(robot.faza))
+        self.__robotVision()
