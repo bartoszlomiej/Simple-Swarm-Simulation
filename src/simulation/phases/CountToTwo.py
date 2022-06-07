@@ -38,7 +38,7 @@ class CountToTwo(StaticLine):
             return best_neighbor.cluster_id
 
     def __setTimer(self):
-        self.robot.setTimer(1000) #20
+        self.robot.setTimer(200) #20
         self.timerSet = True
 
     def __upgradeIfTimerFinished(self):

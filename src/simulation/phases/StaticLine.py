@@ -153,7 +153,7 @@ class StaticLine(Phase):
     def __moveIfPathIsFree(self):
         if not spot.is_any_collision(self.robot, 0.2):
             self.robot.direction.normalize()
-            self.makeMove()
+            self.makeMove(True)
 
     def update(self):
         self.check_phase()

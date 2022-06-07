@@ -37,11 +37,11 @@ class Phase(ABC):
     def serialize(self):
         pass
     
-    def makeMove(self):
+    def makeMove(self, next_move=False):
         self.robot.state = RobotState.MOVING
         self.robot.velocity.x = self.robot.direction.x * self.robot.velocity_level
         self.robot.velocity.y = self.robot.direction.y * self.robot.velocity_level
-        spot.border_return(self.robot)
+        spot.border_return(self.robot, next_move)
 
 
     def checkAngle(self, n1, robot, n2):

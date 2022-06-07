@@ -267,12 +267,12 @@ def is_collision_distance(robot):
         return False
     return True
 
-def isBorderReturn(robot):
-    '''
-    future_position = deepcopy(robot.position)
-    future_position.moveBy(robot.velocity)
-    '''
-    future_position = robot.position
+def isBorderReturn(robot, next_move=False):
+    if next_move:
+        future_position = deepcopy(robot.position)
+        future_position.moveBy(robot.velocity)
+    else:
+        future_position = robot.position
     x_is_out = False
     y_is_out = False
     if future_position.x <= 2 or future_position.x > robot.board_resolution.width - 2 * robot.radius - 2:
@@ -281,8 +281,8 @@ def isBorderReturn(robot):
         y_is_out = True
     return x_is_out, y_is_out
 
-def border_return(robot):
-    is_x, is_y = isBorderReturn(robot)
+def border_return(robot, next_move=False):
+    is_x, is_y = isBorderReturn(robot, next_move)
     if is_x:
         robot.direction.x = -robot.direction.x
         robot.velocity.x = -robot.velocity.x

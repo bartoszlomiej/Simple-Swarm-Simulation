@@ -90,7 +90,7 @@ class StepForward(StaticLine):
     def __moveIfPathIsFree(self):
         if not spot.is_any_collision(self.robot, 0.15):
             self.robot.direction.normalize()
-            self.makeMove()
+            self.makeMove(True)
 
     def __isInSameCluster(self, previous_robot_cluster_id):
         if previous_robot_cluster_id == self.robot.cluster_id:
