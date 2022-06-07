@@ -175,6 +175,7 @@ class Simulation:
 
     def __saveAllRobotsState(self):
         save = SavedStates("test1.dat")
+        save.initializeSaving()
         for robot in self.swarm:
             save.saveRobotState(robot)
 
@@ -190,14 +191,4 @@ class Simulation:
         load.initializeLoading()
         for robot in self.swarm:
             robot.loadState(load.loadRobotState())
-            '''
-            print(len(robot.neighbors))
-            robot.update_msg()
-            print(robot.received_messages)
-            if len(robot.neighbors) > 0:
-                print(robot.neighbors[0].broadcast)
-            print(robot.broadcast)
-            '''
-            #            robot.update()
-            #            print(type(robot.faza))
         self.__robotVision()

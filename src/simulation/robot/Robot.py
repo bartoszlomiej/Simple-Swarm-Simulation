@@ -95,20 +95,7 @@ class Robot(pg.sprite.Sprite):
         self.clear_broadcast()
 
         self.faza.update()
-        # boundary parameters
-        if self.position.x < 0 or self.position.x > self.board_resolution.width - 2 * self.radius:
-            if self.faza.phase == 2:  # just for dbg
-                #                self.direction.negate()
-                self.agreement_state = SYN#_ACK
-                self.broadcast["Turn back"] = self.direction.copy()
-            #self.velocity.x = -self.velocity.x
-        if self.position.y < 0 or self.position.y > self.board_resolution.height - 2 * self.radius:
-            if self.faza.phase == 2:  # just for dbg
-                #self.direction.negate()
-                self.agreement_state = SYN#_ACK
-                self.broadcast["Turn back"] = self.direction.copy()
-           # self.velocity.y = -self.velocity.y
-
+        
         if not self.is_downgrade:
             self.broadcast[
                 "Phase"] = self.faza.phase  # always broadcast the phase

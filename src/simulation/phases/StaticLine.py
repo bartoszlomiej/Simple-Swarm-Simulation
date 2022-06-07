@@ -149,6 +149,7 @@ class StaticLine(Phase):
             self.robot.direction.negate()
             self.__moveIfPathIsFree()
     '''
+    
     def __moveIfPathIsFree(self):
         if not spot.is_any_collision(self.robot, 0.2):
             self.robot.direction.normalize()

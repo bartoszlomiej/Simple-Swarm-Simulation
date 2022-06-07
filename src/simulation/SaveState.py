@@ -6,10 +6,11 @@ class SavedStates:
         self.filename = self.path + filename
         self.filehandler = None
 
+    def initializeSaving(self):
+        self.filehandler = open(self.filename, 'wb')        
     
     def saveRobotState(self, robot):
-        filehandler = open(self.filename, 'ab')
-        pickle.dump(robot.getRobotState(), filehandler)
+        pickle.dump(robot.getRobotState(), self.filehandler)
 
     def initializeLoading(self):
         self.filehandler = open(self.filename, 'rb')        
