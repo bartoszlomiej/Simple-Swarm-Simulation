@@ -5,7 +5,7 @@ from utils import SpotNeighbor as spot
 
 import pygame as pg #dbg
 
-class StepForward(StaticLine):
+class KeepDistanceInSuperCluster():
     def __init__(self, Robot, superAS):
         super().__init__(Robot, superAS)
         self.phase = 4
@@ -127,7 +127,7 @@ class StepForward(StaticLine):
     def __keepDistanceInsideSuperAS(self):
         neighbors_cluster_id = self.__getOtherSuperclusterNeighborsClustersID()
         closest_neighbor, rd = spot.find_best_neighbor(
-            self.robot, True, neighbors_cluster_id)
+            self.robot, False, neighbors_cluster_id)
         if not closest_neighbor:
             return
         self.__keepDistance(closest_neighbor, rd)
@@ -135,26 +135,14 @@ class StepForward(StaticLine):
     def __keepDistance(self,
                        neighbor,
                        distance_to_neighbor,
-                       max_distance = 0.8,
-                       min_distance = 0.3,
-                       epsilon = 5):
+                       max_distance = 0.8):
         distance_to_keep = max_distance * (self.robot.sensor_range - self.robot.radius) + self.robot.radius
-        min_distance_to_keep =  min_distance * (self.robot.sensor_range - self.robot.radius) + self.robot.radius
         spot.direction_to_neighbor(self.robot, neighbor)
-        if self.__isTooBigDistance(distance_to_neighbor, distance_to_keep, epsilon):
-            self.paintItBlack()
+        if self.__isTooBigDistance(distance_to_neighbor, distance_to_keep):
             self.__moveIfPathIsFree()
-        elif self.__isTooSmallDistance(distance_to_neighbor, min_distance_to_keep, epsilon):
-            self.robot.direction.negate()
-            self.__moveIfPathIsFree()
-
-    def __isTooSmallDistance(self, distance_to_neighbor, distance_to_keep, epsilon):
-        if distance_to_neighbor < distance_to_keep - epsilon:
-            return True
-        return False            
             
-    def __isTooBigDistance(self, distance_to_neighbor, distance_to_keep, epsilon):
-        if distance_to_neighbor > distance_to_keep + epsilon:
+    def __isTooBigDistance(self, distance_to_neighbor, distance_to_keep):
+        if distance_to_neighbor > distance_to_keep:
             return True
         return False            
 
@@ -163,7 +151,6 @@ class StepForward(StaticLine):
         self.same_cluster_neighbors = self.__getSameClusterMembers()
         if self._isEdgeRobot():
             self.edgeRobotFunctionallity(0.4)
-            self.__keepDistanceInsideSuperAS()
         else:
             self.insideRobotFunctionallity()
 
@@ -172,7 +159,7 @@ class StepForward(StaticLine):
         self.robot.velocity = Velocity(0, 0)
         self.__checkForStepForward()
         self.__keepStaticLine()
-
+        self.__keepDistanceInsideSuperAS()
         self.robot.isAlloneInSupercluster()
 
     def check_phase(self):
