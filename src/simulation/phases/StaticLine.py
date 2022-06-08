@@ -16,7 +16,7 @@ import simulation.phases.merge_clusters_to_static_line as mg
 class StaticLine(Phase):
     def __init__(self, Robot, superAS):
         super().__init__(Robot)
-        self.phase = 3
+        self.phase = 3.2
         self.robot.cluster_id = superAS
         self.robot.super_cluster_id = superAS
         self.timerSet = False
@@ -135,24 +135,11 @@ class StaticLine(Phase):
             self.__moveIfPathIsFree()
         elif self.__isTooBigDistance(distance_to_neighbor, distance_to_keep, 5):
             self.__moveIfPathIsFree()
-
-
-    '''
-    def __keepDistance(self,
-                       neighbor,
-                       distance_to_neighbor,
-                       desired_distance=0.8):
-        if distance_to_neighbor < (
-                desired_distance *
-            (self.robot.sensor_range - self.robot.radius)) + self.robot.radius:
-            spot.direction_to_neighbor(self.robot, neighbor)
-            self.robot.direction.negate()
-            self.__moveIfPathIsFree()
-    '''
+    
     def __moveIfPathIsFree(self):
         if not spot.is_any_collision(self.robot, 0.2):
             self.robot.direction.normalize()
-            self.makeMove()
+            self.makeMove(True)
 
     def update(self):
         self.check_phase()
@@ -187,3 +174,6 @@ class StaticLine(Phase):
             self.robot.faza = mg.MergeClustersToStaticLine(self.robot, superAS)
         #        elif next_phase == 4:
         #            self.robot.faza = ph4.PhaseFour(self.robot, superAS)
+
+    def serialize(self):        
+        return (self.phase, self.timerSet)

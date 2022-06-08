@@ -3,6 +3,7 @@ from simulation.robot.Direction import Direction
 from simulation.phases.StaticLine import StaticLine
 from utils import SpotNeighbor as spot
 
+import pygame as pg #dbg
 
 class StepForward(StaticLine):
     def __init__(self, Robot, superAS):
@@ -10,6 +11,12 @@ class StepForward(StaticLine):
         self.phase = 4
         self.isIncreased = False
         self.robot.direction = Direction(1, 1)
+
+    def paintItBlack(self):
+        BLACK = (0, 0, 0)
+        pg.draw.circle(self.robot.image, BLACK,
+                       (self.robot.radius, self.robot.radius),
+                       self.robot.radius)        
 
     def __getSuperclusterMembers(self):
         cluster_members = []
@@ -36,19 +43,33 @@ class StepForward(StaticLine):
         return self.same_cluster_neighbors
 
     def __checkForStepForward(self):
-        self.robot.follower_msg()  #there is a need of direction
+        self.robot.direction = Direction(1, 1)
+        #self.robot.follower_msg()  #there is a need of direction --this might cause some problems
         closest_neighbor, rd = spot.find_best_neighbor(
             self.robot, False, self.__getSuperclusterMembersID())
-        if not closest_neighbor:
+        if not closest_neighbor: #this is the leader
+            self.__leaderSpecialCase()
             return
         self.__stepForwardIfHigherPriority(closest_neighbor)
 
-    def __stepForwardIfHigherPriority(self, closest_neighbor):
+    def __leaderSpecialCase(self):
+        self.robot.direction.negate()
+        closest_neighbor, rd = spot.find_best_neighbor(
+            self.robot, False, self.__getSuperclusterMembersID())
+        self.__stepForwardIfHigherPriority(closest_neighbor, False)
+        
+        
+
+    def __stepForwardIfHigherPriority(self, closest_neighbor, clockwise=True):
         if self.__isHigherClusterID(closest_neighbor):
-            self.__stepOutFromLine()
+            self.__tryPerpendicularMotion(clockwise)
+            self.__moveIfPathIsFree()
+        '''
         else:
             self.__goCloserToPreviousNeighbor()
         self.__moveIfPathIsFree()
+        '''
+
 
     def __isHigherClusterID(self, closest_neighbor):
         if closest_neighbor.cluster_id < self.robot.cluster_id:
@@ -56,29 +77,34 @@ class StepForward(StaticLine):
         return False
 
     def __stepOutFromLine(self):
+        self.__tryPerpendicularMotion()
+        '''
         if spot.is_follower(self.robot):
             spot.follower(self.robot)
             if self.robot.direction.x == 0 or self.robot.direction.y == 0:
                 self.__tryPerpendicularMotion()
         else:
             self.__tryPerpendicularMotion()
-
-    def __tryPerpendicularMotion(self):
+        '''
+    def __tryPerpendicularMotion(self, clockwise=True):
         self.same_cluster_neighbors = self.__getSuperclusterMembers()
         if not self.same_cluster_neighbors:
             return
 
         best_neighbor, distance = self._findClosestNeighbor()
         spot.direction_to_neighbor(self.robot, best_neighbor)
-        self.robot.direction.perpendicular()
-
+        if clockwise:
+            self.robot.direction.perpendicular()
+        else:
+            self.robot.direction.rightRotation()
+            
     def __goCloserToPreviousNeighbor(self):
         spot.follower(self.robot)
 
     def __moveIfPathIsFree(self):
         if not spot.is_any_collision(self.robot, 0.15):
             self.robot.direction.normalize()
-            self.makeMove()
+            self.makeMove(True)
 
     def __isInSameCluster(self, previous_robot_cluster_id):
         if previous_robot_cluster_id == self.robot.cluster_id:
@@ -91,11 +117,53 @@ class StepForward(StaticLine):
         else:
             self.robot.update_color()  #just for dbg
 
+    def __getOtherSuperclusterNeighborsClustersID(self):
+        neighbors_cluster_id = []
+        for n in self.robot.neighbors:
+            if not n in self.same_cluster_neighbors:
+                neighbors_cluster_id.append(n.cluster_id)
+        return neighbors_cluster_id
+
+    def __keepDistanceInsideSuperAS(self):
+        neighbors_cluster_id = self.__getOtherSuperclusterNeighborsClustersID()
+        closest_neighbor, rd = spot.find_best_neighbor(
+            self.robot, True, neighbors_cluster_id)
+        if not closest_neighbor:
+            return
+        self.__keepDistance(closest_neighbor, rd)
+
+    def __keepDistance(self,
+                       neighbor,
+                       distance_to_neighbor,
+                       max_distance = 0.8,
+                       min_distance = 0.3,
+                       epsilon = 5):
+        distance_to_keep = max_distance * (self.robot.sensor_range - self.robot.radius) + self.robot.radius
+        min_distance_to_keep =  min_distance * (self.robot.sensor_range - self.robot.radius) + self.robot.radius
+        spot.direction_to_neighbor(self.robot, neighbor)
+        if self.__isTooBigDistance(distance_to_neighbor, distance_to_keep, epsilon):
+            self.paintItBlack()
+            self.__moveIfPathIsFree()
+        elif self.__isTooSmallDistance(distance_to_neighbor, min_distance_to_keep, epsilon):
+            self.robot.direction.negate()
+            self.__moveIfPathIsFree()
+
+    def __isTooSmallDistance(self, distance_to_neighbor, distance_to_keep, epsilon):
+        if distance_to_neighbor < distance_to_keep - epsilon:
+            return True
+        return False            
+            
+    def __isTooBigDistance(self, distance_to_neighbor, distance_to_keep, epsilon):
+        if distance_to_neighbor > distance_to_keep + epsilon:
+            return True
+        return False            
+
     def __keepStaticLine(self):
         self.same_cluster_neighbors.clear()
         self.same_cluster_neighbors = self.__getSameClusterMembers()
         if self._isEdgeRobot():
-            self.edgeRobotFunctionallity(0.5)
+            self.edgeRobotFunctionallity(0.4)
+            self.__keepDistanceInsideSuperAS()
         else:
             self.insideRobotFunctionallity()
 
@@ -103,7 +171,8 @@ class StepForward(StaticLine):
         self.check_phase()
         self.robot.velocity = Velocity(0, 0)
         self.__checkForStepForward()
-        #self.__keepStaticLine()
+        self.__keepStaticLine()
+
         self.robot.isAlloneInSupercluster()
 
     def check_phase(self):

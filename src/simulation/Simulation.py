@@ -10,6 +10,7 @@ from simulation.robot.Robot import Robot
 from simulation.robot.Position import Position
 from utils.colors import WHITE
 from utils.Resolution import Resolution
+from simulation.SaveState import SavedStates
 
 
 class Simulation:
@@ -20,14 +21,14 @@ class Simulation:
         clock = pg.time.Clock()
         time = 1000000
         for i in range(time):
-            self.__exitOnQuitEvent()
+            self.__eventHandler()
             self.__updateSwarm()
             self.__handleCollisions()
             self.__robotVision()
             screen.fill(WHITE)
             self.swarm.draw(screen)
             pg.display.flip()
-            clock.tick(100)
+            clock.tick(30)
         pg.quit()
 
     def __init__(self,
@@ -37,13 +38,15 @@ class Simulation:
                  velocity_lvl=4,
                  multithreading=True,
                  attraction_point=(0, 0, 0),
-                 robot_radius=10):
+                 robot_radius=10,
+                 load_data_file=None):
         self.window_resolution = window_resolution
         self.sensor_range = sensor_range
         self.velocity_lvl = velocity_lvl
         self.multithreading = multithreading
         self.attraction_point = attraction_point
         self.robot_radius = robot_radius
+        self.load_data_file = load_data_file
 
         self.swarm = pg.sprite.Group()
         self.th_group = []
@@ -62,6 +65,9 @@ class Simulation:
 
             robot.ap = self.attraction_point
             self.swarm.add(robot)
+            
+        if self.load_data_file:
+            self.__loadDataFromFile()
 
     def __createNonCollidingRect(self):
         tries = 100_000
@@ -162,7 +168,27 @@ class Simulation:
                     if (0.15 * self.sensor_range ** 2) < (dx + dy):
                         r.in_range()
 
-    def __exitOnQuitEvent(self):
+    def __saveStateOnKeyPressedEvent(self, event):
+        if event.key == pg.K_s:
+            self.__saveAllRobotsState()
+            print("saved state correctly")
+
+    def __saveAllRobotsState(self):
+        save = SavedStates("test1.dat")
+        save.initializeSaving()
+        for robot in self.swarm:
+            save.saveRobotState(robot)
+
+    def __eventHandler(self):
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 sys.exit()
+            elif event.type == pg.KEYDOWN:
+                self.__saveStateOnKeyPressedEvent(event)
+
+    def __loadDataFromFile(self):
+        load = SavedStates(self.load_data_file)
+        load.initializeLoading()
+        for robot in self.swarm:
+            robot.loadState(load.loadRobotState())
+        self.__robotVision()

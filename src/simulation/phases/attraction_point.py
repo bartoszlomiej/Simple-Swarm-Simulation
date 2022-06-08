@@ -10,7 +10,7 @@ import simulation.phases.phaseone as ph1
 import simulation.phases.phasethree as ph3
 import simulation.phases.static_line_formation as st
 import simulation.phases.merge_clusters_to_static_line as mg
-
+from simulation.robot.agreement.ThreeStateAgreement import SYN
 from utils.colors import GREY
 import pygame as pg
 
@@ -22,7 +22,6 @@ class AttractionPoint(Phase):
     def __init__(self, Robot):
         super().__init__(Robot)
         self.phase = 2
-        self.next_phase = False
         Robot.clear_broadcast()
         Robot.initialize_sensors()
         self.robot.velocity_level /= 2  #just for dbg
@@ -169,6 +168,15 @@ class AttractionPoint(Phase):
         if not spot.is_any_collision(self.robot, 0.3):
             self.makeMove()
 
+    def __turnBack(self):
+        is_x, is_y = spot.isBorderReturn(self.robot)
+        if is_x:
+            self.robot.agreement_state = SYN#_ACK
+            self.robot.broadcast["Turn back"] = self.robot.direction.copy()
+        if is_y:
+            self.robot.agreement_state = SYN#_ACK
+            self.robot.broadcast["Turn back"] = self.robot.direction.copy()
+
     def check_phase(self):
         robot = self.robot
         for m in robot.received_messages:
@@ -186,6 +194,7 @@ class AttractionPoint(Phase):
         robot.is_allone()
         self.check_phase()
         self.isPhaseUpgrade()
+        self.__turnBack()
 
     def upgrade(self, next_phase=3, superAS=None):
         '''
@@ -199,4 +208,6 @@ class AttractionPoint(Phase):
             else:
                 self.robot.faza = mg.MergeClustersToStaticLine(
                     self.robot, superAS)
-            #            self.robot.faza = ph3.PhaseThree(self.robot, superAS)
+
+    def serialize(self):            
+        return (self.phase)

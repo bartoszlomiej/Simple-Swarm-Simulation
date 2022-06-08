@@ -1,6 +1,7 @@
 import math
 import mpmath as mp
 from simulation.robot.Direction import Direction
+from copy import deepcopy
 '''
 Changing the approach:
 -the weight is the distance to the closest robot in given direction
@@ -266,11 +267,26 @@ def is_collision_distance(robot):
         return False
     return True
 
-def border_return(robot):
-    if robot.position.x <= 0 or robot.position.x > robot.board_resolution.width - 2 * robot.radius:
+def isBorderReturn(robot, next_move=False):
+    if next_move:
+        future_position = deepcopy(robot.position)
+        future_position.moveBy(robot.velocity)
+    else:
+        future_position = robot.position
+    x_is_out = False
+    y_is_out = False
+    if future_position.x <= 2 or future_position.x > robot.board_resolution.width - 2 * robot.radius - 2:
+        x_is_out = True
+    if future_position.y <= 2 or future_position.y > robot.board_resolution.height - 2 * robot.radius - 2:
+        y_is_out = True
+    return x_is_out, y_is_out
+
+def border_return(robot, next_move=False):
+    is_x, is_y = isBorderReturn(robot, next_move)
+    if is_x:
         robot.direction.x = -robot.direction.x
         robot.velocity.x = -robot.velocity.x
-    if robot.position.y <= 0 or robot.position.y > robot.board_resolution.height - 2 * robot.radius:
+    if is_y:
         robot.direction.y = -robot.direction.y
         robot.velocity.y = -robot.velocity.y
         

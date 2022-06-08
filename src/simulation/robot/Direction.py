@@ -12,6 +12,12 @@ class Direction:
     def perpendicular(self):
         (self.x, self.y) = (self.y, -self.x)
 
+    def leftRotation(self):
+        (self.x, self.y) = (self.y, -self.x)
+
+    def rightRotation(self):
+        (self.x, self.y) = (-self.y, self.x)        
+
     def normalize(self):
         while (self.x**2 + self.y**2) > 1:
             self.x /= 2

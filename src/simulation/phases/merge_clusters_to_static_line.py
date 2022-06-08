@@ -20,13 +20,18 @@ class MergeClustersToStaticLine(Phase):
         super().__init__(Robot)
         self.phase = 3
         self.robot.super_cluster_id = superAS
-        self.isIncreased = False
         self.robot.velocity = Velocity(0, 0)
         self.robot.update_color()
         self.robot.state = RobotState.MOVING
         self.stacked = None
         self.robot.waiting = False
         self.robot.agreement_state = SYN
+
+    def paintItBlack(self):
+        BLACK = (0, 0, 0)
+        pg.draw.circle(self.robot.image, BLACK,
+                       (self.robot.radius, self.robot.radius),
+                       self.robot.radius)        
 
     def followerFunctionallity(self):
         spot.follower(self.robot)
@@ -56,7 +61,7 @@ class MergeClustersToStaticLine(Phase):
     def getMainClusterNeighbors(self):
         main_cluster_neighbors = []
         for n in self.robot.neighbors:
-            if n.cluster_id == self.robot.super_cluster_id:
+            if abs(n.cluster_id - self.robot.super_cluster_id) <= 100: #important!!!
                 main_cluster_neighbors.append(n)
         return main_cluster_neighbors
 
@@ -198,3 +203,6 @@ class MergeClustersToStaticLine(Phase):
             self.robot.faza = st.StaticLineFormation(self.robot, superAS)
         #        elif next_phase == 4:
         #            self.robot.faza = ph4.PhaseFour(self.robot, superAS)
+        
+    def serialize(self):            
+        return (self.phase, self.stacked)
