@@ -28,7 +28,7 @@ class Simulation:
             screen.fill(WHITE)
             self.swarm.draw(screen)
             pg.display.flip()
-            clock.tick(100)
+            clock.tick(30)
         pg.quit()
 
     def __init__(self,

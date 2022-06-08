@@ -38,7 +38,7 @@ class CountToTwo(StaticLine):
             return best_neighbor.cluster_id
 
     def __setTimer(self):
-        self.robot.setTimer(200) #20
+        self.robot.setTimer(500) #20
         self.timerSet = True
 
     def __upgradeIfTimerFinished(self):
@@ -89,7 +89,7 @@ class CountToTwo(StaticLine):
         self.same_cluster_neighbors.clear()
         self.same_cluster_neighbors = self.__getSuperclustersMembers()
         if self._isEdgeRobot():
-            self.edgeRobotFunctionallity(0.4)
+            self.edgeRobotFunctionallity(0.2)
         else:
             self.insideRobotFunctionallity()
         
@@ -109,6 +109,8 @@ class CountToTwo(StaticLine):
                     robot.broadcast["superAS"] = self.robot.super_cluster_id
                     self.upgrade(m["Phase"], self.robot.super_cluster_id)
                     return
+
+        self.robot.update_color()  #just for dbg                
                 
     def upgrade(self, next_phase=4, superAS=None):
         if next_phase == 1.5:
@@ -118,3 +120,8 @@ class CountToTwo(StaticLine):
         elif next_phase == 4:
             self.robot.faza = StepForward(self.robot, superAS)
         #            self.robot.faza = ph4.PhaseFour(self.robot, superAS)
+'''
+Observation:
+the distances between robots must be relatively small so as to make them see each other.
+This takes some time.
+'''

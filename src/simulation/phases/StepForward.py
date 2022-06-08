@@ -3,11 +3,7 @@ from simulation.robot.Direction import Direction
 from simulation.phases.StaticLine import StaticLine
 from utils import SpotNeighbor as spot
 
-
-'''
-pickle dump
-pickle load
-'''
+import pygame as pg #dbg
 
 class StepForward(StaticLine):
     def __init__(self, Robot, superAS):
@@ -15,6 +11,12 @@ class StepForward(StaticLine):
         self.phase = 4
         self.isIncreased = False
         self.robot.direction = Direction(1, 1)
+
+    def paintItBlack(self):
+        BLACK = (0, 0, 0)
+        pg.draw.circle(self.robot.image, BLACK,
+                       (self.robot.radius, self.robot.radius),
+                       self.robot.radius)        
 
     def __getSuperclusterMembers(self):
         cluster_members = []
@@ -45,13 +47,23 @@ class StepForward(StaticLine):
         #self.robot.follower_msg()  #there is a need of direction --this might cause some problems
         closest_neighbor, rd = spot.find_best_neighbor(
             self.robot, False, self.__getSuperclusterMembersID())
-        if not closest_neighbor:
+        if not closest_neighbor: #this is the leader
+            self.paintItBlack()
+            self.__leaderSpecialCase()
             return
         self.__stepForwardIfHigherPriority(closest_neighbor)
 
-    def __stepForwardIfHigherPriority(self, closest_neighbor):
+    def __leaderSpecialCase(self):
+        self.robot.direction.negate()
+        closest_neighbor, rd = spot.find_best_neighbor(
+            self.robot, False, self.__getSuperclusterMembersID())
+        self.__stepForwardIfHigherPriority(closest_neighbor, False)
+        
+        
+
+    def __stepForwardIfHigherPriority(self, closest_neighbor, clockwise=True):
         if self.__isHigherClusterID(closest_neighbor):
-            self.__stepOutFromLine()
+            self.__tryPerpendicularMotion(clockwise)
             self.__moveIfPathIsFree()
         '''
         else:
@@ -75,15 +87,18 @@ class StepForward(StaticLine):
         else:
             self.__tryPerpendicularMotion()
         '''
-    def __tryPerpendicularMotion(self):
+    def __tryPerpendicularMotion(self, clockwise=True):
         self.same_cluster_neighbors = self.__getSuperclusterMembers()
         if not self.same_cluster_neighbors:
             return
 
         best_neighbor, distance = self._findClosestNeighbor()
         spot.direction_to_neighbor(self.robot, best_neighbor)
-        self.robot.direction.perpendicular()
-
+        if clockwise:
+            self.robot.direction.perpendicular()
+        else:
+            self.robot.direction.rightRotation()
+            
     def __goCloserToPreviousNeighbor(self):
         spot.follower(self.robot)
 
