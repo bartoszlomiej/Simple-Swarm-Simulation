@@ -17,7 +17,6 @@ class StaticLine(Phase):
     def __init__(self, Robot, superAS):
         super().__init__(Robot)
         self.phase = 3.2
-        self.robot.cluster_id = superAS
         self.robot.super_cluster_id = superAS
         self.timerSet = False
         self.robot.velocity = Velocity(0, 0)

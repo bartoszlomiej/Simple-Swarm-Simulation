@@ -4,7 +4,6 @@ from simulation.robot.agreement.ThreeStateAgreement import SYN_ACK, ACK
 
 ANT = "Timestamp flooding"
 
-
 class TimestampFlood:
     def __init__(self, threeStateAgreement, flooding):
         self.threeStateAgreement = threeStateAgreement

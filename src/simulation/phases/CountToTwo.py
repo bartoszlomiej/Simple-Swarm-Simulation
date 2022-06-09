@@ -8,6 +8,7 @@ from simulation.phases.StepForward import StepForward
 class CountToTwo(StaticLine):
     def __init__(self, Robot, superAS):
         super().__init__(Robot, superAS)
+        self.robot.cluster_id = superAS
         self.phase = 3.5
         self.isIncreased = False
         self.robot.direction = Direction(1, 1)

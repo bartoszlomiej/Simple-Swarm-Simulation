@@ -20,6 +20,7 @@ import simulation.phases.merge_clusters_to_static_line as mg
 class StaticLineFormation(StaticLine):
     def __init__(self, Robot, superAS):
         super().__init__(Robot, superAS)
+        self.robot.cluster_id = superAS        
         self.timestamp_flood = TimestampFlood(self.robot.threeStateAgreement, \
                                               Flooding(superAS, self.robot.received_messages, self.robot.broadcastMessage))
         self.robot.agreement_state = SYN
