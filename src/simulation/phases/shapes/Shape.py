@@ -63,13 +63,13 @@ class Shape(StaticLine):
                 neighbors_cluster_id.append(n.cluster_id)
         return neighbors_cluster_id
 
-    def _keepDistanceInsideSuperAS(self):
+    def _keepDistanceInsideSuperAS(self, max_distance=0.8, min_distance=0.3):
         neighbors_cluster_id = self.__getOtherSuperclusterNeighborsClustersID()
         closest_neighbor, rd = spot.find_best_neighbor(
             self.robot, True, neighbors_cluster_id)
         if not closest_neighbor:
             return
-        self.__keepDistance(closest_neighbor, rd)
+        self.__keepDistance(closest_neighbor, rd, max_distance, min_distance)
 
     def __keepDistance(self,
                        neighbor,

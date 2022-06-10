@@ -27,7 +27,7 @@ class V_Shape(Shape):
         return False
 
     def __cornerEdgeRobotFunctionallity(self):
-        self._keepDistanceInsideSuperAS()
+        self._keepDistanceInsideSuperAS(0.25, 0.2)
 
     def __nonCornerEdgeRobotFunctionallity(self):
         #        self.paintItBlack()
@@ -71,10 +71,9 @@ class V_Shape(Shape):
         return other_neighbors
 
     def __moveUntilAngleIsObtained(self):
-        desired_angle = 110
+        desired_angle = 100
         obtained_angle = self.__evaluateAngle()
         if obtained_angle < desired_angle:
-            print("Angle that moves me", obtained_angle)
             self.robot.direction = self.perpendicular_direction.copy()
             self.__moveIfPathIsFree()
 
