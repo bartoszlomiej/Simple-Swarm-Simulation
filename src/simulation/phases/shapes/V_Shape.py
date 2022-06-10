@@ -30,7 +30,7 @@ class V_Shape(Shape):
         self._keepDistanceInsideSuperAS()
 
     def __nonCornerEdgeRobotFunctionallity(self):
-        self.paintItBlack()
+        #        self.paintItBlack()
         if not self.perpendicular_direction:
             self.__saveDirectionToNeighbor()
             self.__savePerpendicularDirection()
@@ -49,17 +49,19 @@ class V_Shape(Shape):
         other_neighbor = other_neighbor[-1]
         self.perpendicular_direction = self.direction_to_neighbor.copy()
         self.perpendicular_direction.leftRotation()
-        if self.__checkAngleFromDirectionToNeighbor(other_neighbor) >= 90:
+        if self.__checkAngleFromDirectionToNeighbor(other_neighbor) < 0:
             self.perpendicular_direction.rightRotation()
             self.perpendicular_direction.rightRotation()
 
     def __checkAngleFromDirectionToNeighbor(self, n):
-        angle = math.atan2(n.position.y - self.robot.position.y,
-                           n.position.x - self.robot.position.x) - math.atan2(
+        current_direction = self.robot.direction.copy()
+        spot.direction_to_neighbor(self.robot, n)
+        angle = math.atan2(self.robot.direction.y,
+                           self.robot.direction.x) - math.atan2(
                                self.direction_to_neighbor.y,
                                self.direction_to_neighbor.x)
-
-        return math.degrees(abs(angle))        
+        self.robot.direction = current_direction
+        return math.degrees(angle)
     
     def __getOtherSuperclusterNeighbors(self):
         other_neighbors = []
@@ -69,19 +71,22 @@ class V_Shape(Shape):
         return other_neighbors
 
     def __moveUntilAngleIsObtained(self):
-        desired_angle = 60
-        if self.__evaluateAngle() < desired_angle:
+        desired_angle = 110
+        obtained_angle = self.__evaluateAngle()
+        if obtained_angle < desired_angle:
+            print("Angle that moves me", obtained_angle)
             self.robot.direction = self.perpendicular_direction.copy()
             self.__moveIfPathIsFree()
 
     def __evaluateAngle(self):
         if self.direction_to_neighbor:
-            self.robot.direction = self.direction_to_neighbor
+            self.robot.direction = self.direction_to_neighbor.copy()
         else:
             self.robot.direction = Direction(1, 1)
         spot.follower(self.robot)
-        direction_to_neighbor = self.robot.direction.copy()
-        angle = math.atan2(direction_to_neighbor.y, direction_to_neighbor.x) \
+        self.direction_to_neighbor = self.robot.direction.copy()
+        
+        angle = math.atan2(self.direction_to_neighbor.y, self.direction_to_neighbor.x) \
             - math.atan2(self.perpendicular_direction.y, self.perpendicular_direction.x)
         return math.degrees(abs(angle))
     
@@ -98,11 +103,11 @@ class V_Shape(Shape):
                 self.__cornerEdgeRobotFunctionallity()
             else:
                 self.__nonCornerEdgeRobotFunctionallity()            
-            self._keepDistanceInsideSuperAS()
         else:
             self.insideRobotFunctionallity()            
 
     def update(self):
+        self.robot.update_color()
         self.check_phase()
         self.robot.velocity = Velocity(0, 0)
         self._keepStaticLine()
