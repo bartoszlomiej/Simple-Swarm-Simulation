@@ -69,9 +69,9 @@ class Shape(StaticLine):
             self.robot, True, neighbors_cluster_id)
         if not closest_neighbor:
             return
-        self.__keepDistance(closest_neighbor, rd, max_distance, min_distance)
+        self._keepDistance(closest_neighbor, rd, max_distance, min_distance)
 
-    def __keepDistance(self,
+    def _keepDistance(self,
                        neighbor,
                        distance_to_neighbor,
                        max_distance = 0.8,

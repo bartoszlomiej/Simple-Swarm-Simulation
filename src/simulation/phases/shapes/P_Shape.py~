@@ -1,13 +1,12 @@
 from simulation.robot.Velocity import Velocity
 from simulation.robot.Direction import Direction
 from simulation.phases.shapes.Shape import Shape
-#from simulation.phases.shapes.W_shape import W_shape
 from utils import SpotNeighbor as spot
 import math
 
 import pygame as pg #dbg
 
-class V_Shape(Shape):
+class P_Shape(Shape):
     def __init__(self, Robot, superAS):
         super().__init__(Robot, superAS)
         self.perpendicular_direction = None
@@ -40,10 +39,13 @@ class V_Shape(Shape):
         self._keepDistanceInsideSuperAS(0.25, 0.2)
         self.__useTimerIfSet()
 
-    def __nonCornerEdgeRobotFunctionallity(self):
+    def __savePerpendicularDirectionIfEmpty(self):
         if not self.perpendicular_direction:
             self.__saveDirectionToNeighbor()
             self.__savePerpendicularDirection()
+
+    def __nonCornerEdgeRobotFunctionallity(self):
+        self.__savePerpendicularDirectionIfEmpty()
         self.robot.direction = self.direction_to_neighbor.copy()
         self.__moveUntilAngleIsObtained()
 
@@ -98,6 +100,13 @@ class V_Shape(Shape):
         angle = math.atan2(self.direction_to_neighbor.y, self.direction_to_neighbor.x) \
             - math.atan2(self.perpendicular_direction.y, self.perpendicular_direction.x)
         return math.degrees(abs(angle))
+
+    def __insideRobotArchCreation(self):
+        self.__savePerpendicularDirectionIfEmpty()
+        if not spot.is_any_collision(self.robot, 0.3):
+            self.robot.Direction = self.perpendicular_direction.copy()
+            self.__moveIfPathIsFree()
+        self.robot.direction = self.direction_to_neighbor.copy()
     
     def __moveIfPathIsFree(self):
         if not spot.is_any_collision(self.robot, 0.15):
@@ -113,7 +122,8 @@ class V_Shape(Shape):
             else:
                 self.__nonCornerEdgeRobotFunctionallity()            
         else:
-            self.insideRobotFunctionallity()            
+            self.insideRobotFunctionallity()
+            self.__insideRobotArchCreation()
 
     def update(self):
         self.robot.update_color()
@@ -136,7 +146,3 @@ class V_Shape(Shape):
             self.robot.faza = ph1.PhaseOneAndHalf(self.robot)
         elif next_phase == 2:
             self.robot.faza = ph2.PhaseTwo(self.robot)
-        '''
-        elif next_phase == 6:
-            self.robot.faza = W_Shape(self.robot, superAS, self.perpendicular_direction)
-        '''

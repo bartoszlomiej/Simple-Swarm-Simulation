@@ -44,10 +44,11 @@ class Phase(ABC):
         spot.border_return(self.robot, next_move)
 
 
-    def checkAngle(self, n1, robot, n2):
+    def checkAngle(self, n1, robot, n2, absolute=True):
         angle = math.atan2(n1.position.y - robot.position.y,
                            n1.position.x - robot.position.x) - math.atan2(
                                n2.position.y - robot.position.y,
                                n2.position.x - robot.position.x)
-
+        if not absolute:
+            return math.degrees(angle)
         return math.degrees(abs(angle))

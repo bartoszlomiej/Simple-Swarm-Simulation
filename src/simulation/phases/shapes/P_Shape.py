@@ -1,18 +1,89 @@
 from simulation.robot.Velocity import Velocity
 from simulation.robot.Direction import Direction
 from simulation.phases.shapes.Shape import Shape
-#from simulation.phases.shapes.W_shape import W_shape
 from utils import SpotNeighbor as spot
 import math
 
 import pygame as pg #dbg
 
-class V_Shape(Shape):
+ANT = "Higher Priority"
+
+class P_Shape(Shape):
     def __init__(self, Robot, superAS):
         super().__init__(Robot, superAS)
         self.perpendicular_direction = None
         self.direction_to_neighbor = None
         self.robot.direction = Direction(1, 1)
+        self.higher_priority = None
+
+    def __executeInsidePriorities(self):
+        if self.higher_priority:
+            self.__makeArch()
+            self.__keepAngleBetweenNeighbors()
+        else:
+            self.__stay()
+            self.insideRobotFunctionallity()
+
+    def __executeEdgePriorities(self):
+        if self.higher_priority:
+            if self.__checkIfAngleIsProper():
+                self.robot.direction = self.direction_to_neighbor.copy()
+                self.__moveIfPathIsFree()            
+            self._keepDistanceInsideSuperAS(0.5, 0.4)
+        else:
+            self.__stay()
+
+    def __findClosestOtherClusterNeighbor(self):
+        other_neighbor = self.__getOtherSuperclusterNeighbors()
+        closest_distance = 10000
+        closest_neighbor = None
+        distance = None
+        for n in other_neighbor:
+            distance = spot.relative_distance(self.robot.position.x,
+                                              self.robot.position.y,
+                                              n.position.x, n.position.y)
+            if distance < closest_distance:
+                closest_distance = distance
+                closest_neighbor = n
+        return closest_neighbor, closest_distance
+            
+    def __checkIfAngleIsProper(self, angle=140):
+        closest_neighbor, closest_distance = self._findClosestNeighbor()
+        other_cluster_neighbor, other_distance = self.__findClosestOtherClusterNeighbor()
+        if not other_cluster_neighbor:
+            return False
+        if self.checkAngle(closest_neighbor, self.robot, other_cluster_neighbor) < angle:
+            return True
+        return False
+            
+    def __isPrioritySet(self):
+        if self.higher_priority == None:
+            self.__checkIfHigherPriority()
+            return False
+        return True
+        
+    def __makeArch(self):
+        self.__insideRobotArchCreation()
+
+    def __stay(self):
+        pass
+
+    def __checkIfHigherPriority(self):
+        other_neighbor = self.__getOtherSuperclusterNeighbors()
+        if not other_neighbor:
+            self.__checkClusterPriorityInMessages()
+        if other_neighbor[-1].cluster_id < self.robot.cluster_id:
+            self.higher_priority = True
+            self.robot.broadcastMessage(ANT, True)
+        else:
+            self.higher_priority = False
+            self.robot.broadcastMessage(ANT, False)
+
+    def __checkClusterPriorityInMessages(self):
+        for m in self.robot.received_messages:
+            if ANT in m.keys():
+                self.higher_priority = m[ANT]
+                return
 
     def __setTimer(self):
         self.robot.setTimer(500) 
@@ -40,12 +111,18 @@ class V_Shape(Shape):
         self._keepDistanceInsideSuperAS(0.25, 0.2)
         self.__useTimerIfSet()
 
-    def __nonCornerEdgeRobotFunctionallity(self):
+    def __saveDirectionsIfEmpty(self):
         if not self.perpendicular_direction:
             self.__saveDirectionToNeighbor()
             self.__savePerpendicularDirection()
-        self.robot.direction = self.direction_to_neighbor.copy()
-        self.__moveUntilAngleIsObtained()
+
+    def __nonCornerEdgeRobotFunctionallity(self):
+        self.__saveDirectionsIfEmpty()
+
+        
+        if self.__isPrioritySet():
+            self.__executeEdgePriorities()        
+        #self.__moveUntilAngleIsObtained()
 
     def __saveDirectionToNeighbor(self):
         self.robot.direction = Direction(1, 1)
@@ -98,7 +175,28 @@ class V_Shape(Shape):
         angle = math.atan2(self.direction_to_neighbor.y, self.direction_to_neighbor.x) \
             - math.atan2(self.perpendicular_direction.y, self.perpendicular_direction.x)
         return math.degrees(abs(angle))
-    
+
+    def __keepAngleBetweenNeighbors(self):
+        closest_neighbor, closest_neighbor_distance = self._findClosestNeighbor()
+        opposite_neighbor, opposite_neighbor_distance = self._findRobotOnOppositeSide(
+            closest_neighbor)
+        angle = self.checkAngle(closest_neighbor, self.robot, opposite_neighbor)
+        if angle < 160:
+            if self.robot.velocity_level >= 1:
+                self.robot.velocity_level /= 4
+            print(angle)
+            self._equalizeDistances(closest_neighbor, opposite_neighbor)
+        
+    def __insideRobotArchCreation(self):
+        self.__saveDirectionsIfEmpty()
+        self.__saveDirectionToNeighbor()
+        self.robot.direction = self.direction_to_neighbor.copy()
+        self.robot.direction.negate()
+        if spot.is_any_collision(self.robot, 0.3):
+            self.robot.direction = self.perpendicular_direction.copy()
+            self.__moveIfPathIsFree()
+        self.robot.direction = self.direction_to_neighbor.copy()
+
     def __moveIfPathIsFree(self):
         if not spot.is_any_collision(self.robot, 0.15):
             self.robot.direction.normalize()
@@ -113,7 +211,9 @@ class V_Shape(Shape):
             else:
                 self.__nonCornerEdgeRobotFunctionallity()            
         else:
-            self.insideRobotFunctionallity()            
+            if self.__isPrioritySet():
+                self.__executeInsidePriorities()
+
 
     def update(self):
         self.robot.update_color()
@@ -136,7 +236,3 @@ class V_Shape(Shape):
             self.robot.faza = ph1.PhaseOneAndHalf(self.robot)
         elif next_phase == 2:
             self.robot.faza = ph2.PhaseTwo(self.robot)
-        '''
-        elif next_phase == 6:
-            self.robot.faza = W_Shape(self.robot, superAS, self.perpendicular_direction)
-        '''
