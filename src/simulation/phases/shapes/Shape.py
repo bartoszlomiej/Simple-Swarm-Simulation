@@ -12,11 +12,13 @@ class Shape(StaticLine):
         self.isIncreased = False
         self.robot.direction = Direction(1, 1)
 
-    def paintItBlack(self):
-        BLACK = (0, 0, 0)
-        pg.draw.circle(self.robot.image, BLACK,
-                       (self.robot.radius, self.robot.radius),
-                       self.robot.radius)        
+    def paintItBlack(self, color = (0, 0, 0), robot=None):
+        if not robot:
+            robot = self.robot
+        BLACK = color
+        pg.draw.circle(robot.image, BLACK,
+                       (robot.radius, robot.radius),
+                       robot.radius)        
 
     def __getSuperclusterMembers(self):
         cluster_members = []
@@ -81,7 +83,7 @@ class Shape(StaticLine):
         min_distance_to_keep =  min_distance * (self.robot.sensor_range - self.robot.radius) + self.robot.radius
         spot.direction_to_neighbor(self.robot, neighbor)
         if self.__isTooBigDistance(distance_to_neighbor, distance_to_keep, epsilon):
-            self.paintItBlack()
+            #self.paintItBlack()
             self.__moveIfPathIsFree()
         elif self.__isTooSmallDistance(distance_to_neighbor, min_distance_to_keep, epsilon):
             self.robot.direction.negate()
