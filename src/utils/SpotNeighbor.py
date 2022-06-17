@@ -190,7 +190,7 @@ def point_to_direction_rd(robot, neighbor):
     '''
     A = robot.direction.x
     B = robot.direction.y
-    C = robot.position.y - (robot.position.x * A)
+    C = -B * robot.position.y - (robot.position.x * A)
     if not A and not B:
         return 1000
     return abs((neighbor.position.x * A) +

@@ -140,14 +140,20 @@ class StaticLine(Phase):
             self.robot.direction.normalize()
             self.makeMove(True)
 
+    def getSameClusterMembers(self):
+        self.same_cluster_neighbors.clear()
+        for n in self.robot.neighbors:
+            if n.cluster_id != self.robot.cluster_id:
+                continue
+            self.same_cluster_neighbors.append(n)
+        return self.same_cluster_neighbors            
+
     def update(self):
         self.check_phase()
         self.robot.velocity = Velocity(0, 0)
-
         if self._isEdgeRobot():
             self.edgeRobotFunctionallity()
         else:
-
             self.insideRobotFunctionallity()
         self.robot.broadcast["superAS"] = self.robot.super_cluster_id
         self.robot.is_allone()

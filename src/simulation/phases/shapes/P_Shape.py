@@ -48,6 +48,7 @@ class P_Shape(Shape):
         self.__saveDirectionsIfEmpty()
         self.__saveDirectionToNeighbor(False)
         self.__keepAngleBetweenNeighbors()
+        self.__concentrateInsideRobots()
         self.robot.direction = self.direction_to_neighbor.copy()        
 
     def __stay(self):
@@ -105,7 +106,7 @@ class P_Shape(Shape):
         self.__saveDirectionsIfEmpty()
         if self.__isPrioritySet():
             self.__executeEdgePriorities()
-            self.paintItBlack((200, 0, 0))
+            #self.paintItBlack((200, 0, 0))
 
     def __executeEdgePriorities(self):
         if self.higher_priority:
@@ -193,7 +194,6 @@ class P_Shape(Shape):
             return True
         return False
 
-
     def __isDistancePreserved(self, distance_to_closest, distance_to_opposite, desired_distance):
         distance_to_keep = desired_distance * (self.robot.sensor_range - self.robot.radius) + self.robot.radius
         if distance_to_closest < distance_to_keep \
@@ -201,14 +201,16 @@ class P_Shape(Shape):
             return True
         return False
 
-    def __moveIfDistanceIsKept(self, distance_to_closest, distance_to_opposite):
-        if self.__isDistancePreserved(distance_to_closest, distance_to_opposite, 0.7):
-            self.__moveIfPathIsFree()        
+    def __moveIfDistanceIsKept(self, distance_to_closest, distance_to_opposite, closest_neighbor, opposite_neighbor):
+        if self.__isDistancePreserved(distance_to_closest, distance_to_opposite, 0.6):
+            self.__moveIfPathIsFree()
+        elif self.__isDistancePreserved(distance_to_closest, distance_to_opposite, 0.7):
+            self._equalizeDistances(closest_neighbor, opposite_neighbor)
     
     def __keepMaximalAngle(self, angle_to_closest, angle_to_opposite):
         if self.__isSmaller(angle_to_closest + angle_to_opposite, 200):
             self.robot.direction = self.perpendicular_direction.copy()
-            self.paintItBlack()
+            #            self.paintItBlack()
             return True
         return False
 
@@ -217,10 +219,11 @@ class P_Shape(Shape):
         angle_to_opposite, opposite_neighbor, opposite_neighbor_distance = self.__getAngleToOppositeNeighbor(closest_neighbor)
 
         if not self.__keepMaximalAngle(angle_to_closest, angle_to_opposite):
-            self.paintItBlack((0, 200, 0), closest_neighbor)
+            pass
+            #            self.paintItBlack((0, 200, 0), closest_neighbor)
             #            self._equalizeDistances(closest_neighbor, opposite_neighbor)
         else:
-            self.__moveIfDistanceIsKept(closest_neighbor_distance, opposite_neighbor_distance)
+            self.__moveIfDistanceIsKept(closest_neighbor_distance, opposite_neighbor_distance, closest_neighbor, opposite_neighbor)
 
     def __getAngleToClosestNeighbor(self):
         closest_neighbor, closest_neighbor_distance = self._findClosestNeighbor()
@@ -233,7 +236,53 @@ class P_Shape(Shape):
             closest_neighbor)
         angle_to_opposite = self.__evaluateAngleBetween(opposite_neighbor, self.perpendicular_direction)
         return angle_to_opposite, opposite_neighbor, opposite_neighbor_distance
-    
+
+
+    def __concentrateInsideRobots(self, desired_distance=0.5):
+        closest_neighbor, opposite_neighbor = self.__getTwoOppositeNeighbors()
+        if not opposite_neighbor:
+            return
+        distance = spot.point_to_direction_rd(self.robot, opposite_neighbor)
+        distance_to_keep = desired_distance* (self.robot.sensor_range - self.robot.radius) + self.robot.radius
+        if distance < distance_to_keep:
+            self.__setRobotPerpendicularDirection(opposite_neighbor)
+            if not self.__isSurpassed(closest_neighbor):
+                self.paintItBlack()
+                self.__moveIfPathIsFree()
+
+    def __getTwoOppositeNeighbors(self):
+        self.same_cluster_neighbors.clear()
+        self.same_cluster_neighbors = self._getSameClusterMembers()        
+        self.robot.direction = self.perpendicular_direction.copy()        
+        closest_neighbor, closest_neighbor_distance = self._findClosestNeighbor()
+        spot.direction_to_neighbor(self.robot, closest_neighbor)
+        opposite_neighbor, opposite_neighbor_distance = self._findRobotOnOppositeSide(
+            closest_neighbor)
+        return closest_neighbor, opposite_neighbor
+
+    def __isSurpassed(self, closest_neighbor):
+        epsilon = 20
+        if self.__checkAngleFromDirectionToNeighbor(closest_neighbor) > 90 - epsilon:
+            return True
+        return False
+            
+            
+    def __setRobotPerpendicularDirection(self, opposite_neighbor):
+        self.robot.direction.leftRotation()
+        if self.__checkAngleFromDirectionToNeighbor(opposite_neighbor) > 90:
+            self.robot.direction.rightRotation()
+            self.robot.direction.rightRotation()
+
+    def __checkAngleFromDirectionToNeighbor(self, n):
+        current_direction = self.robot.direction.copy()
+        spot.direction_to_neighbor(self.robot, n)
+        angle = math.atan2(self.robot.direction.y,
+                           self.robot.direction.x) - math.atan2(
+                               self.perpendicular_direction.y,
+                               self.perpendicular_direction.x)
+        self.robot.direction = current_direction
+        return math.degrees(abs(angle))    
+
     def __moveIfPathIsFree(self):
         if not spot.is_any_collision(self.robot, 0.15):
             self.robot.direction.normalize()
