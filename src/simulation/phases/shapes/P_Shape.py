@@ -7,15 +7,42 @@ import math
 import pygame as pg #dbg
 
 ANT = "Higher Priority"
+EQUALIZE = "Equalize Distances"
 
 class P_Shape(Shape):
     def __init__(self, Robot, superAS):
         super().__init__(Robot, superAS)
         self.perpendicular_direction = None
         self.direction_to_neighbor = None
-        self.robot.direction = Direction(1, 1)
         self.higher_priority = None
 
+    def __makePFormation(self):
+        self.same_cluster_neighbors.clear()
+        self.same_cluster_neighbors = self._getSameClusterMembers()
+        if self._isEdgeRobot():
+            if self.__isCornerEdgeRobot():
+                self.__cornerEdgeRobotFunctionallity()
+            else:
+                self.__nonCornerEdgeRobotFunctionallity()            
+        else:
+            if self.__isPrioritySet():
+                self.__executeInsidePriorities()
+
+    def __isCornerEdgeRobot(self):
+        self.robot.direction = Direction(1, 1)
+        neighbor, rd = spot.find_best_neighbor(self.robot, True)
+        if not neighbor:
+            return True
+        return False
+
+    def __cornerEdgeRobotFunctionallity(self):
+        self._keepDistanceInsideSuperAS(0.25, 0.2)
+
+    def __nonCornerEdgeRobotFunctionallity(self):
+        self.__saveDirectionsIfEmpty()
+        if self.__isPrioritySet():
+            self.__executeEdgePriorities()
+        
     def __executeInsidePriorities(self):
         if self.higher_priority:
             self.__makeArch()
@@ -23,36 +50,26 @@ class P_Shape(Shape):
             self.__stay()
             self.insideRobotFunctionallity()
 
-    def __findClosestOtherClusterNeighbor(self):
-        other_neighbor = self.__getOtherSuperclusterNeighbors()
-        closest_distance = 10000
-        closest_neighbor = None
-        distance = None
-        for n in other_neighbor:
-            distance = spot.relative_distance(self.robot.position.x,
-                                              self.robot.position.y,
-                                              n.position.x, n.position.y)
-            if distance < closest_distance:
-                closest_distance = distance
-                closest_neighbor = n
-        return closest_neighbor, closest_distance
-            
+    def __makeArch(self):
+        self.__saveDirectionsIfEmpty()
+        self.__saveDirectionToNeighbor(False)
+        self.__keepAngleBetweenNeighbors()
+        #        self.__concentrateInsideRobots()
+
+
+    def __stay(self):
+        pass
+
+    def __saveDirectionsIfEmpty(self):
+        if not self.perpendicular_direction:
+            self.__saveDirectionToNeighbor()
+            self.__savePerpendicularDirection()
 
     def __isPrioritySet(self):
         if self.higher_priority == None:
             self.__checkIfHigherPriority()
             return False
         return True
-        
-    def __makeArch(self):
-        self.__saveDirectionsIfEmpty()
-        self.__saveDirectionToNeighbor(False)
-        self.__keepAngleBetweenNeighbors()
-        self.__concentrateInsideRobots()
-        self.robot.direction = self.direction_to_neighbor.copy()        
-
-    def __stay(self):
-        pass
 
     def __checkIfHigherPriority(self):
         other_neighbor = self.__getOtherSuperclusterNeighbors()
@@ -69,63 +86,68 @@ class P_Shape(Shape):
         for m in self.robot.received_messages:
             if ANT in m.keys():
                 self.higher_priority = m[ANT]
-                return
-
-    def __setTimer(self):
-        self.robot.setTimer(500) 
-        self.timerSet = True
-
-    def __upgradeIfTimerFinished(self):
-        if self.robot.timer.duration < 0:
-            self.upgrade(6, self.robot.super_cluster_id)
-
-    def __useTimerIfSet(self):
-        if not self.timerSet:
-            self.__setTimer()
-        else:
-            self.robot.timer.tick()
-            self.__upgradeIfTimerFinished()        
-
-    def __isCornerEdgeRobot(self):
-        self.robot.direction = Direction(1, 1)
-        neighbor, rd = spot.find_best_neighbor(self.robot, True)
-        if not neighbor:
-            return True
-        return False
-
-    def __cornerEdgeRobotFunctionallity(self):
-        self._keepDistanceInsideSuperAS(0.25, 0.2)
-        self.__useTimerIfSet()
-
-    def __saveDirectionsIfEmpty(self):
-        if not self.perpendicular_direction:
-            self.__saveDirectionToNeighbor()
-            self.__savePerpendicularDirection()
-
-    def __nonCornerEdgeRobotFunctionallity(self):
-        self.__saveDirectionsIfEmpty()
-        if self.__isPrioritySet():
-            self.__executeEdgePriorities()
-            #self.paintItBlack((200, 0, 0))
+                return            
 
     def __executeEdgePriorities(self):
         if self.higher_priority:
-            if self.__checkIfAngleIsProper(180):
-                self.robot.direction = self.direction_to_neighbor.copy()
-                self.__moveIfPathIsFree()            
+            self.robot.direction = self.direction_to_neighbor.copy()
+            if self.__checkIfAngleIsProper(170):
+                self.__resetTimer()
+                #                self.robot.direction = self.perpendicular_direction.copy()
+                #                self.robot.direction.rightRotation()
+                self.__moveIfPathIsFree()
+            else:
+                self.__useTimerIfSet()
             self._keepDistanceInsideSuperAS(0.5, 0.4)
         else:
             self.__stay()
 
     def __checkIfAngleIsProper(self, angle=140):
         closest_neighbor, closest_distance = self._findClosestNeighbor()
+        self.robot.direction.negate()
         other_cluster_neighbor, other_distance = self.__findClosestOtherClusterNeighbor()
+        self.robot.direction.negate()
         if not other_cluster_neighbor:
             return False
         if self.checkAngle(closest_neighbor, self.robot, other_cluster_neighbor) < angle:
             return True
         return False
-                        
+
+
+    def __useTimerIfSet(self):
+        if not self.timerSet:
+            self.__setTimer()
+        else:
+            self.robot.timer.tick()
+            self.__setEqualizeDistanceSignal()
+
+    def __setTimer(self):
+        self.robot.setTimer(500) 
+        self.timerSet = True
+
+    def __setEqualizeDistanceSignal(self):
+        if self.robot.timer.duration < 0:
+            self.robot.broadcastMessage(EQUALIZE, True)
+            self.paintItBlack((200, 0, 0))
+            print("target executed properly.")
+
+    def __resetTimer(self):
+        self.timerSet = False            
+
+    def __findClosestOtherClusterNeighbor(self):
+        other_neighbor = self.__getOtherSuperclusterNeighbors()
+        closest_distance = 10000
+        closest_neighbor = None
+        distance = None
+        for n in other_neighbor:
+            distance = spot.relative_distance(self.robot.position.x,
+                                              self.robot.position.y,
+                                              n.position.x, n.position.y)
+            if distance < closest_distance:
+                closest_distance = distance
+                closest_neighbor = n
+        return closest_neighbor, closest_distance
+            
     def __saveDirectionToNeighbor(self, initial=True):
         if initial:
             self.robot.direction = Direction(1, 1)
@@ -207,6 +229,25 @@ class P_Shape(Shape):
         elif self.__isDistancePreserved(distance_to_closest, distance_to_opposite, 0.7):
             self._equalizeDistances(closest_neighbor, opposite_neighbor)
     
+
+    def __keepAngleBetweenNeighbors(self):
+        #        angle_to_closest, closest_neighbor, closest_neighbor_distance = self.__getAngleToClosestNeighbor()
+        #        angle_to_opposite, opposite_neighbor, opposite_neighbor_distance = self.__getAngleToOppositeNeighbor(closest_neighbor)
+        closest_neighbor, closest_neighbor_distance = self._findClosestNeighbor()
+        self.robot.direction = self.direction_to_neighbor.copy()
+        opposite_neighbor, opposite_neighbor_distance = self._findRobotOnOppositeSide(
+            closest_neighbor)
+        
+        self.robot.direction = self.perpendicular_direction.copy()
+
+        #if not self.__keepMaximalAngle(angle_to_closest, angle_to_opposite):
+        if self.checkAngle(closest_neighbor, self.robot, opposite_neighbor) < 160:
+            self._equalizeDistances(closest_neighbor, opposite_neighbor)
+        else:
+            self.__moveIfDistanceIsKept(closest_neighbor_distance, opposite_neighbor_distance, closest_neighbor, opposite_neighbor)
+
+        self.__equalizeOnSignal(closest_neighbor, opposite_neighbor)
+
     def __keepMaximalAngle(self, angle_to_closest, angle_to_opposite):
         if self.__isSmaller(angle_to_closest + angle_to_opposite, 200):
             self.robot.direction = self.perpendicular_direction.copy()
@@ -214,29 +255,28 @@ class P_Shape(Shape):
             return True
         return False
 
-    def __keepAngleBetweenNeighbors(self):
-        angle_to_closest, closest_neighbor, closest_neighbor_distance = self.__getAngleToClosestNeighbor()
-        angle_to_opposite, opposite_neighbor, opposite_neighbor_distance = self.__getAngleToOppositeNeighbor(closest_neighbor)
-
-        if not self.__keepMaximalAngle(angle_to_closest, angle_to_opposite):
-            pass
-            #            self.paintItBlack((0, 200, 0), closest_neighbor)
-            #            self._equalizeDistances(closest_neighbor, opposite_neighbor)
-        else:
-            self.__moveIfDistanceIsKept(closest_neighbor_distance, opposite_neighbor_distance, closest_neighbor, opposite_neighbor)
-
     def __getAngleToClosestNeighbor(self):
         closest_neighbor, closest_neighbor_distance = self._findClosestNeighbor()
         angle_to_closest = self.__evaluateAngleBetween(closest_neighbor, self.perpendicular_direction)
         return angle_to_closest, closest_neighbor, closest_neighbor_distance
 
     def __getAngleToOppositeNeighbor(self, closest_neighbor):
-        spot.direction_to_neighbor(self.robot, closest_neighbor)
+        self.robot.direction = self.direction_to_neighbor
         opposite_neighbor, opposite_neighbor_distance = self._findRobotOnOppositeSide(
             closest_neighbor)
         angle_to_opposite = self.__evaluateAngleBetween(opposite_neighbor, self.perpendicular_direction)
         return angle_to_opposite, opposite_neighbor, opposite_neighbor_distance
 
+    def __equalizeOnSignal(self, closest_neighbor, opposite_neighbor):
+        if self.__checkEqualizeInMessages():
+            self._equalizeDistances(closest_neighbor, opposite_neighbor)
+    
+    def __checkEqualizeInMessages(self):
+        for m in self.robot.received_messages:
+            if EQUALIZE in m.keys():
+                self.robot.broadcastMessage(EQUALIZE, True)
+                return True
+        return False
 
     def __concentrateInsideRobots(self, desired_distance=0.5):
         closest_neighbor, opposite_neighbor = self.__getTwoOppositeNeighbors()
@@ -288,24 +328,11 @@ class P_Shape(Shape):
             self.robot.direction.normalize()
             self.makeMove(True)
 
-    def _keepStaticLine(self):
-        self.same_cluster_neighbors.clear()
-        self.same_cluster_neighbors = self._getSameClusterMembers()
-        if self._isEdgeRobot():
-            if self.__isCornerEdgeRobot():
-                self.__cornerEdgeRobotFunctionallity()
-            else:
-                self.__nonCornerEdgeRobotFunctionallity()            
-        else:
-            if self.__isPrioritySet():
-                self.__executeInsidePriorities()
-
-
     def update(self):
         #self.robot.update_color()
         self.check_phase()
         self.robot.velocity = Velocity(0, 0)
-        self._keepStaticLine()
+        self.__makePFormation()
         self.robot.isAlloneInSupercluster()            
 
     def check_phase(self):

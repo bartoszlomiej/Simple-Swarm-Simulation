@@ -80,13 +80,6 @@ class StaticLineFormation(StaticLine):
         self.__changeColorIfTimestamp(self)
         self.edgeRobotFunctionallity(0.8)
 
-    def getSameClusterMembers(self):
-        self.same_cluster_neighbors.clear()
-        for n in self.robot.neighbors:
-            if n.cluster_id != self.robot.cluster_id:
-                continue
-            self.same_cluster_neighbors.append(n)
-        return self.same_cluster_neighbors
 
     def __keepStaticLine(self):
         self.same_cluster_neighbors = self.getSameClusterMembers()
