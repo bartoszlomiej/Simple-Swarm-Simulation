@@ -318,6 +318,14 @@ class Robot(pg.sprite.Sprite):
             return False
         return True
 
+    def getMessages(self, announcement):
+        messages = []
+        for m in self.received_messages:
+            if m["AS"] == self.cluster_id:
+                if announcement in m.keys():
+                    messages.append(m[announcement])
+        return messages
+
     def getRobotState(self):
         state = (self.position, self.board_resolution, self.sensor_range,
                  self.velocity, self.velocity_level, self.radius,

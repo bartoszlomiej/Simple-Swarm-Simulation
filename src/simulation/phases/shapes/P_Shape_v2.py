@@ -8,13 +8,73 @@ import pygame as pg #dbg
 
 ANT = "Higher Priority"
 EQUALIZE = "Equalize Distances"
+ANGLE = "ANGLE"
 
-class P_Shape(Shape):
+class P_Shape_v2(Shape):
     def __init__(self, Robot, superAS):
         super().__init__(Robot, superAS)
         self.perpendicular_direction = None
         self.direction_to_neighbor = None
         self.higher_priority = None
+
+    def __makeNewAngle(self):
+        self.same_cluster_neighbors.clear() #for dbg
+        self.same_cluster_neighbors = self._getSameClusterMembers() #for dbg
+        closest_neighbor, closest_distance = self._findClosestNeighbor()
+        self.robot.direction = self.direction_to_neighbor.copy()
+        opposite_neighbor, opposite_neighbor_distance = self._findRobotOnOppositeSide(
+            closest_neighbor)
+        self.__setDesiredDirection(closest_neighbor, opposite_neighbor)
+        self.__equalizeDistances(closest_distance, opposite_neighbor_distance)
+        self.__normalizeAngle(closest_neighbor, opposite_neighbor)
+
+    def __setDirectionTo(self, point):
+        delta_x = (point[0] - self.robot.position.x)
+        delta_y = (point[1] - self.robot.position.y)
+        suma = math.sqrt(delta_x**2 + delta_y**2)
+        if not suma:
+            print("XDXDXD suma < 0")
+            return
+        self.robot.direction = Direction(delta_x / suma, delta_y / suma)
+
+    def __setDesiredDirection(self, closest_neighbor, opposite_neighbor):
+        if (closest_neighbor.position.x - opposite_neighbor.position.x):
+            slope = (closest_neighbor.position.y - opposite_neighbor.position.y) / (closest_neighbor.position.x - opposite_neighbor.position.x)
+            b = self.robot.position.y - (self.robot.position.x * slope)
+            point_of_reference = ( self.robot.position.x + 5, (self.robot.position.x + 5) * slope + b)            
+        else:
+            point_of_reference = (self.robot.direction.x, self.robot.direction.y + 1)
+        self.__setDirectionTo(point_of_reference)
+        
+    def __equalizeDistances(self, distance_to_closest, distance_to_opposite, desired_distance = 0.4):
+        desired_distance *= (self.robot.sensor_range - self.robot.radius) + self.robot.radius
+        epsilon = 5
+        '''
+        if distance_to_closest <  desired_distance and distance_to_opposite < desired_distance:
+            return
+        '''
+        if distance_to_closest > distance_to_opposite + epsilon:
+            self.__moveIfPathIsFree()
+        elif distance_to_closest < distance_to_opposite - epsilon:
+            self.robot.direction.negate()
+            self.__moveIfPathIsFree()
+            
+    def __normalizeAngle(self, closest_neighbor, opposite_neighbor):
+        current_angle = self.checkAngle(closest_neighbor, self.robot, opposite_neighbor)
+        desired_angle = self.__getDesiredAngle(current_angle)
+        epsilon = 5
+        self.robot.direction.leftRotation()
+        if current_angle < desired_angle - epsilon:
+            self.robot.direction.negate()
+            self.__moveIfPathIsFree()
+        elif current_angle > desired_angle + epsilon:
+            self.__moveIfPathIsFree()
+        
+    def __getDesiredAngle(self, current_angle):
+        theta = self.robot.getMessages(ANGLE)
+        theta.append(current_angle)
+        return (max(theta)+min(theta))/2
+        
 
     def __makePFormation(self):
         self.same_cluster_neighbors.clear()
@@ -53,6 +113,7 @@ class P_Shape(Shape):
     def __makeArch(self):
         self.__saveDirectionsIfEmpty()
         self.__saveDirectionToNeighbor(False)
+
         self.__keepAngleBetweenNeighbors()
         #        self.__concentrateInsideRobots()
 
@@ -271,9 +332,14 @@ class P_Shape(Shape):
 
     def __equalizeOnSignal(self, closest_neighbor, distance_to_closest, \
                            opposite_neighbor, distance_to_opposite):
+
         if self.__checkEqualizeInMessages():
+            self.__makeNewAngle()
+            '''
             if not self.__isDistancePreserved(distance_to_closest, distance_to_opposite, 0.4):
                 self._equalizeDistances(closest_neighbor, opposite_neighbor)
+            '''
+
     
     def __checkEqualizeInMessages(self):
         for m in self.robot.received_messages:

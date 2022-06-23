@@ -132,8 +132,7 @@ def direction_line_equation(robot):
         else:
             d = False
         return a, b, d
-
-
+    
 def relative_distance(x0, y0, x1, y1):
     '''
     Calculates the relative distance between two points
