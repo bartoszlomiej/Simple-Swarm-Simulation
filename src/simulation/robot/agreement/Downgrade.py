@@ -9,6 +9,7 @@ class Downgrade(ThreeStateAgreement):
         super().__init__(cluster_id, messages, broadcastMessage)
         self.repeatDirection = repeatDirection
         self.is_downgrade = False
+        self.state = SYN
 
     def _syn(self, message):
         self.broadcastMessage(ANT, message[ANT])
@@ -37,5 +38,6 @@ class Downgrade(ThreeStateAgreement):
         message = self._searchInMessages(ANT)
         if not message and self.state != SYN_ACK:
             return False
+        print(self.state)
         self.__downgrade(message)
         return True

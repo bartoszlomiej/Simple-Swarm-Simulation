@@ -10,7 +10,7 @@ class Shape(StaticLine):
         super().__init__(Robot, superAS)
         self.phase = 5
         self.isIncreased = False
-        self.robot.direction = Direction(1, 1)
+        #        self.robot.direction = Direction(1, 1)
 
     def paintItBlack(self, color = (0, 0, 0), robot=None):
         if not robot:

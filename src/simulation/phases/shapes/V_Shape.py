@@ -2,6 +2,7 @@ from simulation.robot.Velocity import Velocity
 from simulation.robot.Direction import Direction
 from simulation.phases.shapes.Shape import Shape
 #from simulation.phases.shapes.W_shape import W_shape
+from simulation.phases.shapes.Proxy_shape import W_Shape_Proxy
 from utils import SpotNeighbor as spot
 import math
 
@@ -136,7 +137,7 @@ class V_Shape(Shape):
             self.robot.faza = ph1.PhaseOneAndHalf(self.robot)
         elif next_phase == 2:
             self.robot.faza = ph2.PhaseTwo(self.robot)
-        '''
         elif next_phase == 6:
-            self.robot.faza = W_Shape(self.robot, superAS, self.perpendicular_direction)
-        '''
+            self.robot.faza = W_Shape_Proxy(self.robot, superAS)
+            #            self.robot.faza = W_Shape(self.robot, superAS, self.perpendicular_direction)
+

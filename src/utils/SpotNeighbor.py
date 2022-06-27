@@ -1,5 +1,6 @@
 import math
 import mpmath as mp
+import numpy as np
 from simulation.robot.Direction import Direction
 from copy import deepcopy
 '''
@@ -195,7 +196,21 @@ def point_to_direction_rd(robot, neighbor):
     return abs((neighbor.position.x * A) +
                (neighbor.position.y * B) + C) / math.sqrt(A**2 + B**2)
 
+def check_if_similar_direction(robot, neighbor):
+    direction = Direction(0, 0)
+    direction.x, direction.y = get_direction_to_neighbor(robot, neighbor)
+    if np.sign(direction.x) == np.sign(robot.direction.x) and \
+       np.sign(direction.y) == np.sign(robot.direction.y):
+        return True
+    return False
 
+def get_direction_to_neighbor(robot, neighbor):
+    delta_x = (neighbor.position.x - robot.position.x
+               )  #it must be greater than 0 - robots cannot overlap
+    delta_y = (neighbor.position.y - robot.position.y)
+    suma = math.sqrt(delta_x**2 + delta_y**2)
+    return delta_x / suma, delta_y / suma
+    
 def direction_to_neighbor(robot, neighbor):
     '''
     Change the robot direction to approach the given neighbor.

@@ -3,7 +3,7 @@ from simulation.robot.Direction import Direction
 from simulation.phases.StaticLine import StaticLine
 from simulation.phases.shapes.V_Shape import V_Shape
 #from simulation.phases.shapes.P_Shape import P_Shape
-from simulation.phases.shapes.P_Shape_v2 import P_Shape_v2
+#from simulation.phases.shapes.P_Shape_v2 import P_Shape_v2
 from utils import SpotNeighbor as spot
 
 import pygame as pg #dbg
@@ -211,5 +211,6 @@ class StepForward(StaticLine):
         elif next_phase == 2:
             self.robot.faza = ph2.PhaseTwo(self.robot)
         elif next_phase == 5:
+            self.robot.faza = V_Shape(self.robot, superAS)
             #            self.robot.faza = P_Shape(self.robot, superAS)
-            self.robot.faza = P_Shape_v2(self.robot, superAS)
+            #            self.robot.faza = P_Shape_v2(self.robot, superAS)
