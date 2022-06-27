@@ -21,7 +21,7 @@ class V_Shape(Shape):
 
     def __upgradeIfTimerFinished(self):
         if self.robot.timer.duration < 0:
-            self.upgrade(6, self.robot.super_cluster_id)
+            self.upgrade(5.5, self.robot.super_cluster_id)
 
     def __useTimerIfSet(self):
         if not self.timerSet:
@@ -114,7 +114,10 @@ class V_Shape(Shape):
             else:
                 self.__nonCornerEdgeRobotFunctionallity()            
         else:
-            self.insideRobotFunctionallity()            
+            self.insideRobotFunctionallity()
+            
+    def serialize(self):
+        return (self.phase, self.timerSet, self.perpendicular_direction, self.direction_to_neighbor)
 
     def update(self):
         self.robot.update_color()
@@ -127,7 +130,7 @@ class V_Shape(Shape):
         robot = self.robot
         for m in robot.received_messages:
             if "Phase" in m.keys():
-                if m["Phase"] >= 6:
+                if m["Phase"] >= 5.5:
                     robot.broadcast["superAS"] = self.robot.super_cluster_id
                     self.upgrade(m["Phase"], self.robot.super_cluster_id)
                     return
@@ -137,7 +140,7 @@ class V_Shape(Shape):
             self.robot.faza = ph1.PhaseOneAndHalf(self.robot)
         elif next_phase == 2:
             self.robot.faza = ph2.PhaseTwo(self.robot)
-        elif next_phase == 6:
+        elif next_phase == 5.5:
             self.robot.faza = W_Shape_Proxy(self.robot, superAS)
             #            self.robot.faza = W_Shape(self.robot, superAS, self.perpendicular_direction)
 

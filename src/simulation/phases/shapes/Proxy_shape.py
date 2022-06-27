@@ -26,7 +26,7 @@ class W_Shape_Proxy(StaticLine):
 
     def downgrade(self):
         self.robot.broadcast["Downgrade"] = 3.5
-        #        print("it happens only once")
+        print("it happens only once")
         '''
         self.robot.direction = self.robot.find_direction()
         self.robot.broadcast["Direction"] = self.robot.direction.copy()
@@ -38,17 +38,17 @@ class W_Shape_Proxy(StaticLine):
                               self.robot.broadcastMessage,
                               self.robot.repeatDirection)
         if self.robot.threeStateAgreement(downgrade):
+            print(self.robot.broadcast)
+            #            print(self.robot.received_messages)
             self.robot.is_downgrade = True
-            print("downgrade status:", downgrade.status)
             if downgrade.state == ACK:
                 print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-
                 self.robot.is_downgrade = False
                 self.robot.communicationFinished()
-                self.upgrade(3.5)
+                #                self.upgrade(3.5)
 
     def __setTimer(self):
-        self.robot.setTimer(20)
+        self.robot.setTimer(200)
         self.timerSet = True
 
     def __upgradeIfTimerFinished(self):
@@ -95,11 +95,10 @@ class W_Shape_Proxy(StaticLine):
             self.robot.faza = ph2.PhaseTwo(self.robot)
         elif next_phase == 3.5:
             self.paintItBlack()
-            print(self.robot.received_messages)
+            #            print(self.robot.received_messages)
             self.robot.faza = ct.CountToTwo(self.robot, superAS)
 
 '''
 todo:
-robot have only 1 agreeent state, but it has several agreements!!!
--hence in function threeStateAgreement(self, agreement) in first line it breaks
+-downgrade shall occur only once!!!
 '''

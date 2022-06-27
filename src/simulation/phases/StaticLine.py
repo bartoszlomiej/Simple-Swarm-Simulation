@@ -46,7 +46,7 @@ class StaticLine(Phase):
         self.__repeatCommonDirection()
 
     def __repeatCommonDirection(self):
-        self.robot.follower_msg()
+        self.robot.findCommonDirection()
 
     def _equalizeDistances(self, closest_neighbor, opposite_neighbor):
         point_x = (closest_neighbor.position.x +

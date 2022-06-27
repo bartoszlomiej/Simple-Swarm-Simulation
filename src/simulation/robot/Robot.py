@@ -17,6 +17,7 @@ from utils.colors import WHITE, GREEN
 from simulation.robot.agreement.ThreeStateAgreement import SYN, SYN_ACK, ACK
 from simulation.robot.agreement.TurnBack import TurnBack
 from simulation.robot.agreement.Downgrade import Downgrade
+from simulation.phases.shapes.V_Shape import V_Shape
 
 
 class Robot(pg.sprite.Sprite):
@@ -280,6 +281,14 @@ class Robot(pg.sprite.Sprite):
             self.direction = message["Direction"].copy()
             self.broadcast["Direction"] = self.direction.copy()
 
+    def findCommonDirection(self):
+        for m in self.received_messages:
+            if "Direction" in m.keys() and m["AS"] == self.cluster_id:
+                if not self.checkCorrectness(m["Direction"]):
+                    continue
+                self.broadcast["Direction"] = m["Direction"].copy()
+                self.getDirection(m["Direction"])        
+
     def follower_msg(self):
         turn_back = TurnBack(self.cluster_id, self.received_messages,
                              self.broadcastMessage, self.getDirection,
@@ -287,15 +296,11 @@ class Robot(pg.sprite.Sprite):
         if self.threeStateAgreement(turn_back):
             self.communicationFinished()
             return
-        for m in self.received_messages:
-            if "Direction" in m.keys() and m["AS"] == self.cluster_id:
-                if not self.checkCorrectness(m["Direction"]):
-                    continue
-                self.broadcast["Direction"] = m["Direction"].copy()
-                self.getDirection(m["Direction"])
+        self.findCommonDirection()
 
     def threeStateAgreement(self, agreement):
         agreement.state = self.agreement_state
+        agreement.updateMessages(self.received_messages)
         if agreement.isAgreementOn():
             self.agreement_state = agreement.state
             return True
@@ -387,8 +392,9 @@ class Robot(pg.sprite.Sprite):
             self.faza = StepForward(self, self.super_cluster_id) 
             self.faza.timerSet = serialized_phase[1]
         elif next_phase == 5:
-            self.faza = P_Shape_v2(self, self.super_cluster_id)
+            self.faza = V_Shape(self, self.super_cluster_id)
+            #            self.faza = P_Shape_v2(self, self.super_cluster_id)
             self.faza.perpendicular_direction = serialized_phase[2]
-            #self.faza.direction_to_neighbor = serialized_phase[3]
-            self.faza.higher_priority = serialized_phase[4]
+            self.faza.direction_to_neighbor = serialized_phase[3]
+            #            self.faza.higher_priority = serialized_phase[4]
             self.faza.timerSet = False

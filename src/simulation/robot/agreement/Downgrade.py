@@ -23,7 +23,7 @@ class Downgrade(ThreeStateAgreement):
             self.broadcastMessage(ANT, message[ANT])
 
     def _ack(self, message):
-        self.repeatDirection(message)
+        #        self.repeatDirection(message)
         self.state = ACK
 
     def __downgrade(self, message):
@@ -36,8 +36,8 @@ class Downgrade(ThreeStateAgreement):
 
     def isAgreementOn(self):
         message = self._searchInMessages(ANT)
+        #        print(self.state, message)
         if not message and self.state != SYN_ACK:
             return False
-        print(self.state)
         self.__downgrade(message)
         return True
