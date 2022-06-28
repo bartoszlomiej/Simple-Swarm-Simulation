@@ -36,7 +36,6 @@ class Downgrade(ThreeStateAgreement):
 
     def isAgreementOn(self):
         message = self._searchInMessages(ANT)
-        #        print(self.state, message)
         if not message and self.state != SYN_ACK:
             return False
         self.__downgrade(message)

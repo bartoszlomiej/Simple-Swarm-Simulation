@@ -1,7 +1,6 @@
 from simulation.robot.Velocity import Velocity
 from simulation.robot.Direction import Direction
 from simulation.phases.shapes.Shape import Shape
-#from simulation.phases.shapes.W_shape import W_shape
 from simulation.phases.shapes.Proxy_shape import W_Shape_Proxy
 from utils import SpotNeighbor as spot
 import math
@@ -33,7 +32,7 @@ class V_Shape(Shape):
     def __isCornerEdgeRobot(self):
         self.robot.direction = Direction(1, 1)
         neighbor, rd = spot.find_best_neighbor(self.robot, True)
-        if not neighbor:
+        if not neighbor or self.__WShapeCreation():
             return True
         return False
 
@@ -82,7 +81,7 @@ class V_Shape(Shape):
         return other_neighbors
 
     def __moveUntilAngleIsObtained(self):
-        desired_angle = 100
+        desired_angle = 100 if self.robot.divisions == 0 else 105
         obtained_angle = self.__evaluateAngle()
         if obtained_angle < desired_angle:
             self.robot.direction = self.perpendicular_direction.copy()
@@ -99,6 +98,15 @@ class V_Shape(Shape):
         angle = math.atan2(self.direction_to_neighbor.y, self.direction_to_neighbor.x) \
             - math.atan2(self.perpendicular_direction.y, self.perpendicular_direction.x)
         return math.degrees(abs(angle))
+
+    def __WShapeCreation(self):
+        if not self.robot.super_super_cluster_id:
+            return False
+        for n in self.robot.neighbors:
+            if n.super_super_cluster_id == self.robot.super_super_cluster_id \
+               and n.super_cluster_id != self.robot.super_cluster_id:
+                return True
+        return False
     
     def __moveIfPathIsFree(self):
         if not spot.is_any_collision(self.robot, 0.15):
