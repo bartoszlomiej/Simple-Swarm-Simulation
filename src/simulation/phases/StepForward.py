@@ -85,7 +85,7 @@ class StepForward(StaticLine):
         
     def __stepForwardIfHigherPriority(self, closest_neighbor, clockwise=True):
         if self.__isHigherClusterID(closest_neighbor):
-            self.__tryPerpendicularMotion(clockwise)
+            self.__tryPerpendicularMotion(closest_neighbor, clockwise)
             self.__moveIfPathIsFree()
             self.dbgMsg()
         '''
@@ -99,12 +99,14 @@ class StepForward(StaticLine):
             return True
         return False
     
-    def __tryPerpendicularMotion(self, clockwise=True):
+    def __tryPerpendicularMotion(self, closest_neighbor = None, clockwise=True):
         self.same_cluster_neighbors = self.__getSuperclusterMembers()
         if not self.same_cluster_neighbors:
             return
-
-        best_neighbor, distance = self._findClosestNeighbor()
+        if not closest_neighbor:
+            best_neighbor, distance = self._findClosestNeighbor()
+        else:
+            best_neighbor = closest_neighbor
         spot.direction_to_neighbor(self.robot, best_neighbor)
         if clockwise:
             self.robot.direction.perpendicular()
