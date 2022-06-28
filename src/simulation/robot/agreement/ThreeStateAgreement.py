@@ -43,3 +43,6 @@ class ThreeStateAgreement(ABC):
     @abstractmethod    
     def isAgreementOn(self):
         pass
+
+    def updateMessages(self, messages):
+        self.messages = messages    

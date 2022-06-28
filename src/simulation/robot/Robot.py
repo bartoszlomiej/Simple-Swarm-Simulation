@@ -9,6 +9,7 @@ from simulation.phases.attraction_point import AttractionPoint
 from simulation.phases.merge_clusters_to_static_line import MergeClustersToStaticLine
 from simulation.phases.static_line_formation import StaticLineFormation
 from simulation.phases.StepForward import StepForward
+from simulation.phases.shapes.P_Shape_v2 import P_Shape_v2
 from simulation.robot import RobotState
 from simulation.robot.Velocity import Velocity
 from simulation.robot.Direction import Direction
@@ -16,6 +17,7 @@ from utils.colors import WHITE, GREEN
 from simulation.robot.agreement.ThreeStateAgreement import SYN, SYN_ACK, ACK
 from simulation.robot.agreement.TurnBack import TurnBack
 from simulation.robot.agreement.Downgrade import Downgrade
+from simulation.phases.shapes.V_Shape import V_Shape
 
 
 class Robot(pg.sprite.Sprite):
@@ -45,6 +47,7 @@ class Robot(pg.sprite.Sprite):
 
         self.cluster_id = None
         self.super_cluster_id = None
+        self.super_super_cluster_id = None
         self.joined_to_cluster = True  # indicates if the AS was created by us or not
 
         self.timer = Timer(-1, -1, 0)
@@ -279,6 +282,14 @@ class Robot(pg.sprite.Sprite):
             self.direction = message["Direction"].copy()
             self.broadcast["Direction"] = self.direction.copy()
 
+    def findCommonDirection(self):
+        for m in self.received_messages:
+            if "Direction" in m.keys() and m["AS"] == self.cluster_id:
+                if not self.checkCorrectness(m["Direction"]):
+                    continue
+                self.broadcast["Direction"] = m["Direction"].copy()
+                self.getDirection(m["Direction"])        
+
     def follower_msg(self):
         turn_back = TurnBack(self.cluster_id, self.received_messages,
                              self.broadcastMessage, self.getDirection,
@@ -286,15 +297,11 @@ class Robot(pg.sprite.Sprite):
         if self.threeStateAgreement(turn_back):
             self.communicationFinished()
             return
-        for m in self.received_messages:
-            if "Direction" in m.keys() and m["AS"] == self.cluster_id:
-                if not self.checkCorrectness(m["Direction"]):
-                    continue
-                self.broadcast["Direction"] = m["Direction"].copy()
-                self.getDirection(m["Direction"])
+        self.findCommonDirection()
 
     def threeStateAgreement(self, agreement):
         agreement.state = self.agreement_state
+        agreement.updateMessages(self.received_messages)
         if agreement.isAgreementOn():
             self.agreement_state = agreement.state
             return True
@@ -317,6 +324,14 @@ class Robot(pg.sprite.Sprite):
         if direction.x == 0 and direction.y == 0:
             return False
         return True
+
+    def getMessages(self, announcement):
+        messages = []
+        for m in self.received_messages:
+            if m["AS"] == self.cluster_id:
+                if announcement in m.keys():
+                    messages.append(m[announcement])
+        return messages
 
     def getRobotState(self):
         state = (self.position, self.board_resolution, self.sensor_range,
@@ -377,3 +392,10 @@ class Robot(pg.sprite.Sprite):
         elif next_phase == 4:
             self.faza = StepForward(self, self.super_cluster_id) 
             self.faza.timerSet = serialized_phase[1]
+        elif next_phase == 5:
+            self.faza = V_Shape(self, self.super_cluster_id)
+            #            self.faza = P_Shape_v2(self, self.super_cluster_id)
+            self.faza.perpendicular_direction = serialized_phase[2]
+            self.faza.direction_to_neighbor = serialized_phase[3]
+            #            self.faza.higher_priority = serialized_phase[4]
+            self.faza.timerSet = False

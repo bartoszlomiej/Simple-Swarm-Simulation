@@ -8,6 +8,7 @@ from simulation.phases.StepForward import StepForward
 class CountToTwo(StaticLine):
     def __init__(self, Robot, superAS):
         super().__init__(Robot, superAS)
+        self.robot.cluster_id = superAS
         self.phase = 3.5
         self.isIncreased = False
         self.robot.direction = Direction(1, 1)
@@ -78,7 +79,7 @@ class CountToTwo(StaticLine):
         else:
             self.robot.update_color()  #just for dbg
 
-    def __countToTwo(self):
+    def _countToTwo(self):
         previous_robot_cluster_id = self.__getClosestNeighborCluster()
         if not previous_robot_cluster_id: #only leader should not have a previous AS
             self.__useTimerIfSet()
@@ -96,7 +97,7 @@ class CountToTwo(StaticLine):
     def update(self):
         self.check_phase()
         self.robot.direction = Direction(1, 1)
-        self.__countToTwo()
+        self._countToTwo()
         self.robot.velocity = Velocity(0, 0)
         self.__keepStaticLine()
         self.robot.isAlloneInSupercluster()
@@ -119,7 +120,6 @@ class CountToTwo(StaticLine):
             self.robot.faza = ph2.PhaseTwo(self.robot)
         elif next_phase == 4:
             self.robot.faza = StepForward(self.robot, superAS)
-        #            self.robot.faza = ph4.PhaseFour(self.robot, superAS)
 '''
 Observation:
 the distances between robots must be relatively small so as to make them see each other.

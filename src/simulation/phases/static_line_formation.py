@@ -20,6 +20,7 @@ import simulation.phases.merge_clusters_to_static_line as mg
 class StaticLineFormation(StaticLine):
     def __init__(self, Robot, superAS):
         super().__init__(Robot, superAS)
+        self.robot.cluster_id = superAS        
         self.timestamp_flood = TimestampFlood(self.robot.threeStateAgreement, \
                                               Flooding(superAS, self.robot.received_messages, self.robot.broadcastMessage))
         self.robot.agreement_state = SYN
@@ -68,7 +69,7 @@ class StaticLineFormation(StaticLine):
     def __setTimer(self):
         if not self.timerSet:
             self.timerSet = True
-            self.robot.setTimer(100) #1500
+            self.robot.setTimer(100) #1500, 100
 
     def __insideRobotFlooding(self):
         self.__changeColorIfTimestamp(False)
@@ -79,13 +80,6 @@ class StaticLineFormation(StaticLine):
         self.__changeColorIfTimestamp(self)
         self.edgeRobotFunctionallity(0.8)
 
-    def getSameClusterMembers(self):
-        self.same_cluster_neighbors.clear()
-        for n in self.robot.neighbors:
-            if n.cluster_id != self.robot.cluster_id:
-                continue
-            self.same_cluster_neighbors.append(n)
-        return self.same_cluster_neighbors
 
     def __keepStaticLine(self):
         self.same_cluster_neighbors = self.getSameClusterMembers()

@@ -17,7 +17,6 @@ class StaticLine(Phase):
     def __init__(self, Robot, superAS):
         super().__init__(Robot)
         self.phase = 3.2
-        self.robot.cluster_id = superAS
         self.robot.super_cluster_id = superAS
         self.timerSet = False
         self.robot.velocity = Velocity(0, 0)
@@ -39,17 +38,17 @@ class StaticLine(Phase):
     def insideRobotFunctionallity(self):
         closest_neighbor, closest_neighbor_distance = self._findClosestNeighbor(
         )
-        opposite_neighbor, opposite_neighbor_distance = self.__findRobotOnOppositeSide(
+        opposite_neighbor, opposite_neighbor_distance = self._findRobotOnOppositeSide(
             closest_neighbor)
         if not opposite_neighbor:
             return
-        self.__equalizeDistances(closest_neighbor, opposite_neighbor)
+        self._equalizeDistances(closest_neighbor, opposite_neighbor)
         self.__repeatCommonDirection()
 
     def __repeatCommonDirection(self):
-        self.robot.follower_msg()
+        self.robot.findCommonDirection()
 
-    def __equalizeDistances(self, closest_neighbor, opposite_neighbor):
+    def _equalizeDistances(self, closest_neighbor, opposite_neighbor):
         point_x = (closest_neighbor.position.x +
                    opposite_neighbor.position.x) / 2
         point_y = (closest_neighbor.position.y +
@@ -63,7 +62,7 @@ class StaticLine(Phase):
         self.robot.direction = Direction(delta_x / suma, delta_y / suma)
         self.__moveIfPathIsFree()
 
-    def __findRobotOnOppositeSide(self, closest_neighbor):
+    def _findRobotOnOppositeSide(self, closest_neighbor):
         self.same_cluster_neighbors.remove(closest_neighbor)
 
         while self.same_cluster_neighbors:
@@ -141,14 +140,20 @@ class StaticLine(Phase):
             self.robot.direction.normalize()
             self.makeMove(True)
 
+    def getSameClusterMembers(self):
+        self.same_cluster_neighbors.clear()
+        for n in self.robot.neighbors:
+            if n.cluster_id != self.robot.cluster_id:
+                continue
+            self.same_cluster_neighbors.append(n)
+        return self.same_cluster_neighbors            
+
     def update(self):
         self.check_phase()
         self.robot.velocity = Velocity(0, 0)
-
         if self._isEdgeRobot():
             self.edgeRobotFunctionallity()
         else:
-
             self.insideRobotFunctionallity()
         self.robot.broadcast["superAS"] = self.robot.super_cluster_id
         self.robot.is_allone()
