@@ -92,4 +92,5 @@ class W_Shape_Proxy(StaticLine):
             self.robot.super_super_cluster_id = self.robot.super_cluster_id
             if self.robot.cluster_id != self.robot.super_cluster_id:
                 self.robot.cluster_id += 2000
-            self.robot.faza = ct.CountToTwo(self.robot, self.robot.cluster_id) #self.robot.cluster_id as we create the new supercluster
+            if self.robot.divisions < 1:
+                self.robot.faza = ct.CountToTwo(self.robot, self.robot.cluster_id) #self.robot.cluster_id as we create the new supercluster

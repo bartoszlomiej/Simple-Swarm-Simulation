@@ -78,6 +78,8 @@ class Robot(pg.sprite.Sprite):
         self.waiting = False
         self.agreement_state = SYN
 
+        self.divisions = 0
+
         if not self.sensors_number % 2:
             self.sensors_number += 1
         self.initialize_sensors()

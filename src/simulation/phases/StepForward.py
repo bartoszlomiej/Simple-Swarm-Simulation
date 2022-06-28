@@ -16,12 +16,7 @@ class StepForward(StaticLine):
         self.isIncreased = False
         self.robot.direction = Direction(1, 1)
         self.robot.cluster_id = superAS
-        self.dbg = False
-
-    def dbgMsg(self):
-        if not self.dbg:
-            self.dbg = True
-            print(self.robot.direction.x, self.robot.direction.y)
+        self.robot.divisions += 1
 
     def paintItBlack(self):
         BLACK = (0, 0, 0)
@@ -87,7 +82,6 @@ class StepForward(StaticLine):
         if self.__isHigherClusterID(closest_neighbor):
             self.__tryPerpendicularMotion(closest_neighbor, clockwise)
             self.__moveIfPathIsFree()
-            self.dbgMsg()
         '''
         else:
             self.__goCloserToPreviousNeighbor()
