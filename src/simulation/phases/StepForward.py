@@ -5,7 +5,6 @@ from simulation.phases.shapes.V_Shape import V_Shape
 #from simulation.phases.shapes.P_Shape import P_Shape
 #from simulation.phases.shapes.P_Shape_v2 import P_Shape_v2
 from utils import SpotNeighbor as spot
-from copy import deepcopy
 
 import pygame as pg #dbg
 

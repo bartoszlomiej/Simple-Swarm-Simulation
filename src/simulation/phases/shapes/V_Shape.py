@@ -1,7 +1,7 @@
 from simulation.robot.Velocity import Velocity
 from simulation.robot.Direction import Direction
 from simulation.phases.shapes.Shape import Shape
-from simulation.phases.shapes.Proxy_shape import W_Shape_Proxy
+from simulation.phases.shapes.W_Shape_Proxy import W_Shape_Proxy
 from utils import SpotNeighbor as spot
 import math
 
@@ -81,7 +81,7 @@ class V_Shape(Shape):
         return other_neighbors
 
     def __moveUntilAngleIsObtained(self):
-        desired_angle = 100 if self.robot.divisions == 0 else 105
+        desired_angle = 100 if self.robot.divisions == 0 else 107
         obtained_angle = self.__evaluateAngle()
         if obtained_angle < desired_angle:
             self.robot.direction = self.perpendicular_direction.copy()
