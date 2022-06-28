@@ -47,6 +47,7 @@ class Robot(pg.sprite.Sprite):
 
         self.cluster_id = None
         self.super_cluster_id = None
+        self.super_super_cluster_id = None
         self.joined_to_cluster = True  # indicates if the AS was created by us or not
 
         self.timer = Timer(-1, -1, 0)

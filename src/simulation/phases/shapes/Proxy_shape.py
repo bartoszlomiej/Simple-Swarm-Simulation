@@ -26,7 +26,6 @@ class W_Shape_Proxy(StaticLine):
 
     def downgrade(self):
         self.robot.broadcast["Downgrade"] = 3.5
-        print("it happens only once")
         '''
         self.robot.direction = self.robot.find_direction()
         self.robot.broadcast["Direction"] = self.robot.direction.copy()
@@ -38,22 +37,21 @@ class W_Shape_Proxy(StaticLine):
                               self.robot.broadcastMessage,
                               self.robot.repeatDirection)
         if self.robot.threeStateAgreement(downgrade):
-            print(self.robot.broadcast)
-            #            print(self.robot.received_messages)
             self.robot.is_downgrade = True
             if downgrade.state == ACK:
-                print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
                 self.robot.is_downgrade = False
                 self.robot.communicationFinished()
-                #                self.upgrade(3.5)
+                self.upgrade(3.5)
+        else:
+            self.__useTimerIfSet()
 
     def __setTimer(self):
-        self.robot.setTimer(200)
+        #        self.robot.setTimer(200)
+        self.robot.setRandomTimer(100, 800)
         self.timerSet = True
 
     def __upgradeIfTimerFinished(self):
         if self.robot.timer.duration < 0: #here there should be 3 state agreement
-            #            self.upgrade(3.5, self.robot.super_cluster_id)
             self.downgrade()
 
     def __useTimerIfSet(self):
@@ -76,7 +74,6 @@ class W_Shape_Proxy(StaticLine):
         self._keepStaticLine()
         self.robot.isAlloneInSupercluster()
         self.checkForDowngrade()
-        self.__useTimerIfSet()
         
     def check_phase(self):
         robot = self.robot
@@ -86,7 +83,7 @@ class W_Shape_Proxy(StaticLine):
                     robot.broadcast["superAS"] = self.robot.super_cluster_id
                     self.upgrade(m["Phase"], self.robot.super_cluster_id)
                     return
-        self.robot.update_color()  #just for dbg                
+        #        self.robot.update_color()  #just for dbg                
                 
     def upgrade(self, next_phase=4, superAS=None):
         if next_phase == 1.5:
@@ -94,11 +91,5 @@ class W_Shape_Proxy(StaticLine):
         elif next_phase == 2:
             self.robot.faza = ph2.PhaseTwo(self.robot)
         elif next_phase == 3.5:
-            self.paintItBlack()
-            #            print(self.robot.received_messages)
-            self.robot.faza = ct.CountToTwo(self.robot, superAS)
-
-'''
-todo:
--downgrade shall occur only once!!!
-'''
+            self.robot.super_super_cluster_id = self.robot.super_cluster_id
+            self.robot.faza = ct.CountToTwo(self.robot, self.robot.cluster_id) #self.robot.cluster_id as we create the new supercluster
