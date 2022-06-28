@@ -210,6 +210,16 @@ def get_direction_to_neighbor(robot, neighbor):
     delta_y = (neighbor.position.y - robot.position.y)
     suma = math.sqrt(delta_x**2 + delta_y**2)
     return delta_x / suma, delta_y / suma
+
+def isNeighborInDirection(robot, neighbor):
+    robot_direction = robot.direction.copy()
+    x, y = get_direction_to_neighbor(robot, neighbor)
+    direction_to_neighbor = Direction(x, y)
+    if np.sign(robot_direction.x) != np.sign(direction_to_neighbor.x):
+        return False
+    if np.sign(robot_direction.y) != np.sign(direction_to_neighbor.y):
+        return False
+    return True
     
 def direction_to_neighbor(robot, neighbor):
     '''

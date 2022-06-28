@@ -1,8 +1,6 @@
 from simulation.robot.Velocity import Velocity
 from simulation.robot.Direction import Direction
-#from simulation.phases.shapes.V_Shape import V_Shape
 from simulation.phases.StaticLine import StaticLine
-#from simulation.phases.CountToTwo import CountToTwo
 import simulation.phases.CountToTwo as ct
 from simulation.robot.agreement.Downgrade import Downgrade
 from simulation.robot.agreement.ThreeStateAgreement import SYN, SYN_ACK, ACK
@@ -92,4 +90,6 @@ class W_Shape_Proxy(StaticLine):
             self.robot.faza = ph2.PhaseTwo(self.robot)
         elif next_phase == 3.5:
             self.robot.super_super_cluster_id = self.robot.super_cluster_id
+            if self.robot.cluster_id != self.robot.super_cluster_id:
+                self.robot.cluster_id += 2000
             self.robot.faza = ct.CountToTwo(self.robot, self.robot.cluster_id) #self.robot.cluster_id as we create the new supercluster

@@ -5,6 +5,7 @@ from simulation.phases.shapes.V_Shape import V_Shape
 #from simulation.phases.shapes.P_Shape import P_Shape
 #from simulation.phases.shapes.P_Shape_v2 import P_Shape_v2
 from utils import SpotNeighbor as spot
+from copy import deepcopy
 
 import pygame as pg #dbg
 
@@ -15,6 +16,12 @@ class StepForward(StaticLine):
         self.isIncreased = False
         self.robot.direction = Direction(1, 1)
         self.robot.cluster_id = superAS
+        self.dbg = False
+
+    def dbgMsg(self):
+        if not self.dbg:
+            self.dbg = True
+            print(self.robot.direction.x, self.robot.direction.y)
 
     def paintItBlack(self):
         BLACK = (0, 0, 0)
@@ -49,8 +56,11 @@ class StepForward(StaticLine):
     def __checkForStepForward(self):
         self.robot.direction = Direction(1, 1)
         #self.robot.follower_msg()  #there is a need of direction --this might cause some problems
+        closest_neighbor, rd = self.__getNeighborInDirection()
+        '''
         closest_neighbor, rd = spot.find_best_neighbor(
             self.robot, False, self.__getSuperclusterMembersID())
+        '''
         if not closest_neighbor: #this is the leader
             self.__leaderSpecialCase()
             return
@@ -61,35 +71,34 @@ class StepForward(StaticLine):
         closest_neighbor, rd = spot.find_best_neighbor(
             self.robot, False, self.__getSuperclusterMembersID())
         self.__stepForwardIfHigherPriority(closest_neighbor, False)
-        
-        
 
+    def __getNeighborInDirection(self):
+        closest_neighbor, rd = spot.find_best_neighbor(
+            self.robot, False, self.__getSuperclusterMembersID())
+        if not closest_neighbor:
+            return None, None
+        if spot.isNeighborInDirection(self.robot, closest_neighbor):
+            return closest_neighbor, rd
+        else:
+            self.robot.neighbors.remove(closest_neighbor)
+            return self.__getNeighborInDirection()
+        
     def __stepForwardIfHigherPriority(self, closest_neighbor, clockwise=True):
         if self.__isHigherClusterID(closest_neighbor):
             self.__tryPerpendicularMotion(clockwise)
             self.__moveIfPathIsFree()
+            self.dbgMsg()
         '''
         else:
             self.__goCloserToPreviousNeighbor()
         self.__moveIfPathIsFree()
         '''
 
-
     def __isHigherClusterID(self, closest_neighbor):
         if closest_neighbor.cluster_id < self.robot.cluster_id:
             return True
         return False
-
-    def __stepOutFromLine(self):
-        self.__tryPerpendicularMotion()
-        '''
-        if spot.is_follower(self.robot):
-            spot.follower(self.robot)
-            if self.robot.direction.x == 0 or self.robot.direction.y == 0:
-                self.__tryPerpendicularMotion()
-        else:
-            self.__tryPerpendicularMotion()
-        '''
+    
     def __tryPerpendicularMotion(self, clockwise=True):
         self.same_cluster_neighbors = self.__getSuperclusterMembers()
         if not self.same_cluster_neighbors:
